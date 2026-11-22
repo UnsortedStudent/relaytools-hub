@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live DOI to APA 7th &amp; BibTeX Citation Generator + OpenAlex Paper Search — RelayTools Hub</title>
+  <meta name="description" content="Free live DOI citation generator powered by Crossref (APA 7th edition &amp; clean BibTeX download) plus live OpenAlex 250M+ academic paper search with citation counts and open-access PDF links.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <style>
+    .tab-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: var(--surface-alt);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .tab-btn:hover {
+      border-color: var(--accent);
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    body.dark .tab-btn.active {
+      color: #042f2e;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .chip {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .apa-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 16px 18px 16px 34px;
+      text-indent: -18px;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink);
+      margin: 10px 0 14px;
+      word-break: break-word;
+    }
+    .meta-list {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 8px 14px;
+      font-size: 14px;
+      margin: 14px 0;
+    }
+    .meta-list dt {
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .meta-list dd {
+      margin: 0;
+      color: var(--ink);
+      word-break: break-word;
+    }
+    .paper-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+    }
+    .paper-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+    .paper-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .paper-authors {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .status-line { min-height: 20px; margin-bottom: 10px; }
+    @media (max-width: 720px) {
+      .meta-list { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Live DOI to APA 7th & BibTeX Citation Generator + OpenAlex Paper Search",
+    "description": "Resolve any academic DOI via the live Crossref API into formatted APA 7th citations and downloadable BibTeX entries, or search 250M+ scholarly papers on OpenAlex with citation metrics and open-access PDF links.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Any (Web Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Live Crossref DOI metadata resolution (title, authors, venue, year, citation count, funders)",
+      "Publication-ready APA 7th Edition citation formatter with hanging indent",
+      "Clean BibTeX generator with 1-click Copy and .bib file download",
+      "Live OpenAlex 250M+ scholarly work search sorted by citation count",
+      "Open-access PDF detection and 1-click Resolve BibTeX workflow"
+    ],
+    "provider": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot" aria-hidden="true">R</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">API Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">Academic Research &amp; Citations</span>
+      <h1>DOI to APA 7th &amp; BibTeX Generator + OpenAlex Paper Search</h1>
+      <p>Resolve any DOI directly against Crossref for instant APA 7th citations, BibTeX `.bib` downloads, citation counts, and funder metadata &mdash; or search 250M+ scholarly papers on OpenAlex with 1-click BibTeX resolution.</p>
+    </section>
+
+    <div class="card">
+      <div class="tab-bar" role="tablist" aria-label="Research Tools">
+        <button type="button" class="tab-btn active" role="tab" id="tabBtnDoi" aria-selected="true" aria-controls="panelDoi" data-tab="doi">
+          1. DOI Resolver (Crossref &rarr; APA 7th &amp; BibTeX)
+        </button>
+        <button type="button" class="tab-btn" role="tab" id="tabBtnOpenAlex" aria-selected="false" aria-controls="panelOpenAlex" data-tab="openalex">
+          2. OpenAlex 250M+ Paper Search
+        </button>
+      </div>
+
+      <!-- TAB 1: DOI RESOLVER -->
+      <section id="panelDoi" class="tab-panel active" role="tabpanel" aria-labelledby="tabBtnDoi">
+        <form id="doiForm" class="form-row">
+          <div class="field">
+            <label for="doiInput">Digital Object Identifier (DOI or https://doi.org/&hellip; URL)</label>
+            <input type="text" id="doiInput" value="10.1038/nature14539" placeholder="e.g. 10.1038/nature14539" autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-primary" id="doiResolveBtn">Resolve DOI</button>
+        </form>
+
+        <div class="chip-row" aria-label="Preset DOI examples">
+          <span class="small muted" style="font-weight:700;">Try Famous DOIs:</span>
+          <button type="button" class="chip" data-doi="10.1038/nature14539">Deep Learning (Nature)</button>
+          <button type="button" class="chip" data-doi="10.1126/science.aac4716">Reproducibility (Science)</button>
+          <button type="button" class="chip" data-doi="10.1056/NEJMoa2034577">BNT162b2 Vaccine (NEJM)</button>
+          <button type="button" class="chip" data-doi="10.1145/3292500.3330701">Optuna HPO (KDD)</button>
+          <button type="button" class="chip" data-doi="10.1093/nar/gkac1072">UniProt (NAR)</button>
+        </div>
+
+        <div id="doiStatus" class="status-line" aria-live="polite"></div>
+
+        <div id="doiResults" style="display:none;">
+          <div class="section-header" style="margin-top:8px;">
+            <div>
+              <h2 id="doiTitle" style="margin:0 0 4px;">&mdash;</h2>
+              <div class="btn-group">
+                <span class="pill pill-teal" id="doiSourceBadge">Crossref Live</span>
+                <span class="pill pill-blue" id="doiTypeBadge">journal-article</span>
+              </div>
+            </div>
+            <div class="btn-group">
+              <a id="doiExternalLink" class="btn btn-secondary btn-sm" href="https://doi.org/10.1038/nature14539" target="_blank" rel="noopener noreferrer">Open DOI &nearr;</a>
+              <button type="button" class="btn btn-secondary btn-sm" id="copyRawJsonBtn">Copy Metadata JSON</button>
+            </div>
+          </div>
+
+          <div class="grid-4" style="margin:14px 0 18px;">
+            <div class="kpi">
+              <div class="kpi-label">Publication Year</div>
+              <div class="kpi-value" id="kpiYear">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Citation Count</div>
+              <div class="kpi-value" id="kpiCitations">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Journal / Venue</div>
+              <div class="kpi-value" id="kpiVenue" style="font-size:17px;line-height:1.3;">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Publisher</div>
+              <div class="kpi-value" id="kpiPublisher" style="font-size:17px;line-height:1.3;">&mdash;</div>
+            </div>
+          </div>
+
+          <dl class="meta-list">
+            <dt>Authors</dt>
+            <dd id="metaAuthors">&mdash;</dd>
+            <dt>Volume / Issue / Pages</dt>
+            <dd id="metaIssue">&mdash;</dd>
+            <dt>DOI</dt>
+            <dd id="metaDoi">&mdash;</dd>
+            <dt>Funding / Sponsors</dt>
+            <dd id="metaFunder">&mdash;</dd>
+          </dl>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+
+          <div class="section-header">
+            <h3 style="margin:0;">Formatted APA 7th Edition Citation</h3>
+            <button type="button" class="btn btn-primary btn-sm" id="copyApaBtn">Copy APA 7th</button>
+          </div>
+          <div id="apaRendered" class="apa-box"></div>
+
+          <div class="section-header" style="margin-top:20px;">
+            <h3 style="margin:0;">Clean BibTeX Entry</h3>
+            <div class="btn-group">
+              <button type="button" class="btn btn-primary btn-sm" id="copyBibtexBtn">Copy BibTeX</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="downloadBibBtn">Download .bib</button>
+            </div>
+          </div>
+          <pre id="bibtexOutput" class="code-block"></pre>
+        </div>
+      </section>
+
+      <!-- TAB 2: OPENALEX SEARCH -->
+      <section id="panelOpenAlex" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnOpenAlex">
+        <form id="oaForm" class="form-row">
+          <div class="field" style="flex:2;">
+            <label for="oaQuery">Research Topic, Paper Title, or Keywords (250M+ Scholarly Works)</label>
+            <input type="search" id="oaQuery" value="retrieval augmented generation" placeholder="e.g. retrieval augmented generation" autocomplete="off">
+          </div>
+          <div class="field" style="max-width:240px;">
+            <label for="oaSort">Sort Results By</label>
+            <select id="oaSort">
+              <option value="cited_by_count:desc" selected>Most Cited First</option>
+              <option value="relevance_score:desc">Relevance Score</option>
+              <option value="publication_year:desc">Newest First</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" id="oaSearchBtn">Search OpenAlex</button>
+        </form>
+
+        <div class="chip-row" aria-label="Preset OpenAlex queries">
+          <span class="small muted" style="font-weight:700;">Trending Topics:</span>
+          <button type="button" class="chip" data-topic="retrieval augmented generation">Retrieval Augmented Generation</button>
+          <button type="button" class="chip" data-topic="transformer attention mechanism">Transformer Attention</button>
+          <button type="button" class="chip" data-topic="CRISPR gene editing">CRISPR Gene Editing</button>
+          <button type="button" class="chip" data-topic="solid state lithium battery">Solid State Batteries</button>
+          <button type="button" class="chip" data-topic="protein folding deep learning">Protein Folding</button>
+        </div>
+
+        <div id="oaStatus" class="status-line" aria-live="polite"></div>
+
+        <div id="oaToolbar" class="section-header" style="display:none;">
+          <p class="small muted" id="oaMetaSummary" style="margin:0;"></p>
+          <button type="button" class="btn btn-secondary btn-sm" id="oaCopyCsvBtn">Copy Results CSV</button>
+        </div>
+
+        <div id="oaResultsList"></div>
+      </section>
+    </div>
+
+    <!-- APIFY BULK / MCP FUNNEL CTA -->
+    <section class="apify-cta" aria-label="Scale Research Pipelines with Apify Actors">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Automate Literature Reviews, Citation Graphs &amp; RAG Ingestion</span>
+        <h3>Batch-Resolve Thousands of DOIs, OpenAlex Citations &amp; arXiv Papers on Apify</h3>
+        <p>Connect our Crossref, OpenAlex, and arXiv Actors to scheduled data pipelines or attach them directly to Claude / Cursor via MCP for automated academic research.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/crossref-doi-citation-resolver" target="_blank" rel="noopener noreferrer">Crossref DOI Citation Resolver &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/openalex-academic-citations-api" target="_blank" rel="noopener noreferrer">OpenAlex Academic Citations API &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/arxiv-ai-research-extractor" target="_blank" rel="noopener noreferrer">arXiv AI Research Extractor &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <strong>RelayTools Hub</strong> &mdash; Free browser-native finance, research &amp; geo tools powered by live open public APIs.
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">API Catalog</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const state = {
+        currentApaPlain: '',
+        currentBibtex: '',
+        currentCiteKey: 'citation',
+        currentRawRecord: null,
+        oaWorks: [],
+        oaLoadedOnce: false
+      };
+
+      const els = {
+        tabButtons: document.querySelectorAll('.tab-btn'),
+        panelDoi: document.getElementById('panelDoi'),
+        panelOpenAlex: document.getElementById('panelOpenAlex'),
+        doiForm: document.getElementById('doiForm'),
+        doiInput: document.getElementById('doiInput'),
+        doiResolveBtn: document.getElementById('doiResolveBtn'),
+        doiStatus: document.getElementById('doiStatus'),
+        doiResults: document.getElementById('doiResults'),
+        doiTitle: document.getElementById('doiTitle'),
+        doiSourceBadge: document.getElementById('doiSourceBadge'),
+        doiTypeBadge: document.getElementById('doiTypeBadge'),
+        doiExternalLink: document.getElementById('doiExternalLink'),
+        copyRawJsonBtn: document.getElementById('copyRawJsonBtn'),
+        kpiYear: document.getElementById('kpiYear'),
+        kpiCitations: document.getElementById('kpiCitations'),
+        kpiVenue: document.getElementById('kpiVenue'),
+        kpiPublisher: document.getElementById('kpiPublisher'),
+        metaAuthors: document.getElementById('metaAuthors'),
+        metaIssue: document.getElementById('metaIssue'),
+        metaDoi: document.getElementById('metaDoi'),
+        metaFunder: document.getElementById('metaFunder'),
+        apaRendered: document.getElementById('apaRendered'),
+        copyApaBtn: document.getElementById('copyApaBtn'),
+        bibtexOutput: document.getElementById('bibtexOutput'),
+        copyBibtexBtn: document.getElementById('copyBibtexBtn'),
+        downloadBibBtn: document.getElementById('downloadBibBtn'),
+        oaForm: document.getElementById('oaForm'),
+        oaQuery: document.getElementById('oaQuery'),
+        oaSort: document.getElementById('oaSort'),
+        oaSearchBtn: document.getElementById('oaSearchBtn'),
+        oaStatus: document.getElementById('oaStatus'),
+        oaToolbar: document.getElementById('oaToolbar'),
+        oaMetaSummary: document.getElementById('oaMetaSummary'),
+        oaCopyCsvBtn: document.getElementById('oaCopyCsvBtn'),
+        oaResultsList: document.getElementById('oaResultsList')
+      };
+
+      function safeUrl(u) {
+        if (!u || typeof u !== 'string') return '';
+        const trimmed = u.trim();
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return '';
+      }
+
+      function stripHtmlTags(str) {
+        return String(str == null ? '' : str).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      }
+
+      function cleanDoiInput(raw) {
+        return String(raw || '')
+          .trim()
+          .replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')
+          .replace(/^doi:\s*/i, '')
+          .trim();
+      }
+
+      function switchTab(tabName) {
+        els.tabButtons.forEach(function (btn) {
+          const isActive = btn.getAttribute('data-tab') === tabName;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        els.panelDoi.classList.toggle('active', tabName === 'doi');
+        els.panelOpenAlex.classList.toggle('active', tabName === 'openalex');
+        if (tabName === 'openalex' && !state.oaLoadedOnce) {
+          searchOpenAlex(els.oaQuery.value);
+        }
+      }
+
+      function extractCrossrefYear(msg) {
+        const candidates = [
+          msg['published-print'],
+          msg['published-online'],
+          msg.issued,
+          msg.created
+        ];
+        for (let i = 0; i < candidates.length; i++) {
+          const c = candidates[i];
+          if (c && Array.isArray(c['date-parts']) && c['date-parts'][0] && c['date-parts'][0][0]) {
+            return String(c['date-parts'][0][0]);
+          }
+        }
+        return '';
+      }
+
+      function parseNameToParts(displayName) {
+        const clean = stripHtmlTags(displayName);
+        if (!clean) return { given: '', family: '', literal: '' };
+        if (clean.indexOf(',') !== -1) {
+          const parts = clean.split(',');
+          return {
+            family: parts[0].trim(),
+            given: parts.slice(1).join(' ').trim(),
+            literal: ''
+          };
+        }
+        const tokens = clean.split(/\s+/);
+        if (tokens.length === 1) return { given: '', family: '', literal: clean };
+        return {
+          given: tokens.slice(0, -1).join(' '),
+          family: tokens[tokens.length - 1],
+          literal: ''
+        };
+      }
+
+      function normalizeCrossrefWork(msg) {
+        const authors = Array.isArray(msg.author) ? msg.author.map(function (a) {
+          if (a.family) {
+            return { given: (a.given || '').trim(), family: a.family.trim(), literal: '' };
+          }
+          return { given: '', family: '', literal: (a.name || '').trim() };
+        }).filter(function (a) { return a.family || a.literal; }) : [];
+
+        const funders = Array.isArray(msg.funder) ? msg.funder.map(function (f) {
+          const awards = Array.isArray(f.award) && f.award.length ? ' (Award: ' + f.award.join(', ') + ')' : '';
+          return (f.name || 'Unnamed Funder') + awards;
+        }) : [];
+
+        return {
+          source: 'Crossref Live API',
+          doi: msg.DOI || '',
+          title: stripHtmlTags(Array.isArray(msg.title) ? msg.title[0] : msg.title) || 'Untitled Work',
+          authors: authors,
+          journal: stripHtmlTags(Array.isArray(msg['container-title']) ? msg['container-title'][0] : msg['container-title']) || '',
+          year: extractCrossrefYear(msg),
+          volume: msg.volume || '',
+          issue: msg.issue || '',
+          pages: msg.page || '',
+          publisher: msg.publisher || '',
+          type: msg.type || 'article',
+          citations: typeof msg['is-referenced-by-count'] === 'number' ? msg['is-referenced-by-count'] : null,
+          funders: funders,
+          url: msg.DOI ? 'https://doi.org/' + msg.DOI : (msg.URL || ''),
+          raw: msg
+        };
+      }
+
+      function normalizeOpenAlexWork(work) {
+        const cleanDoi = cleanDoiInput(work.doi || '');
+        const authors = Array.isArray(work.authorships) ? work.authorships.map(function (a) {
+          const name = (a.author && a.author.display_name) || a.raw_author_name || '';
+          return parseNameToParts(name);
+        }).filter(function (a) { return a.family || a.literal; }) : [];
+
+        const primarySource = work.primary_location && work.primary_location.source;
+        const biblio = work.biblio || {};
+        const pages = biblio.first_page
+          ? (biblio.last_page && biblio.last_page !== biblio.first_page ? biblio.first_page + '-' + biblio.last_page : biblio.first_page)
+          : '';
+
+        const grants = Array.isArray(work.grants) ? work.grants.map(function (g) {
+          return (g.funder_display_name || 'Funder') + (g.award_id ? ' (' + g.award_id + ')' : '');
+        }) : [];
+
+        return {
+          source: 'OpenAlex Fallback (DataCite / Non-Crossref Record)',
+          doi: cleanDoi,
+          title: stripHtmlTags(work.title || work.display_name || 'Untitled Work'),
+          authors: authors,
+          journal: (primarySource && primarySource.display_name) || '',
+          year: work.publication_year ? String(work.publication_year) : '',
+          volume: biblio.volume || '',
+          issue: biblio.issue || '',
+          pages: pages,
+          publisher: (primarySource && primarySource.host_organization_name) || '',
+          type: work.type || 'article',
+          citations: typeof work.cited_by_count === 'number' ? work.cited_by_count : null,
+          funders: grants,
+          url: cleanDoi ? 'https://doi.org/' + cleanDoi : (work.id || ''),
+          raw: work
+        };
+      }
+
+      function formatInitials(given) {
+        if (!given) return '';
+        return given
+          .split(/[\s]+/)
+          .filter(Boolean)
+          .map(function (part) {
+            if (part.indexOf('-') !== -1) {
+              return part.split('-').filter(Boolean).map(function (sub) {
+                return sub.charAt(0).toUpperCase() + '.';
+              }).join('-');
+            }
+            return part.charAt(0).toUpperCase() + '.';
+          })
+          .join(' ');
+      }
+
+      function formatApaAuthor(a) {
+        if (a.literal) return a.literal;
+        const initials = formatInitials(a.given);
+        return initials ? a.family + ', ' + initials : a.family;
+      }
+
+      function formatApaAuthorsList(authors) {
+        if (!authors || !authors.length) return '';
+        const list = authors.map(formatApaAuthor);
+        if (list.length === 1) return list[0];
+        if (list.length === 2) return list[0] + ', & ' + list[1];
+        if (list.length <= 20) {
+          return list.slice(0, -1).join(', ') + ', & ' + list[list.length - 1];
+        }
+        return list.slice(0, 19).join(', ') + ', ... ' + list[list.length - 1];
+      }
+
+      function buildApa7(rec) {
+        const authorsStr = formatApaAuthorsList(rec.authors);
+        const yearStr = rec.year ? '(' + rec.year + ').' : '(n.d.).';
+        const titleClean = rec.title.replace(/\.$/, '');
+        const doiLink = rec.doi ? 'https://doi.org/' + rec.doi : (rec.url || '');
+
+        let plainParts = [];
+        let htmlParts = [];
+
+        if (authorsStr) {
+          plainParts.push(authorsStr);
+          htmlParts.push(escapeHtml(authorsStr));
+        }
+        plainParts.push(yearStr);
+        htmlParts.push(escapeHtml(yearStr));
+
+        plainParts.push(titleClean + '.');
+        htmlParts.push(escapeHtml(titleClean + '.'));
+
+        if (rec.journal) {
+          let venuePlain = rec.journal;
+          let venueHtml = '<em>' + escapeHtml(rec.journal) + '</em>';
+          if (rec.volume) {
+            venuePlain += ', ' + rec.volume;
+            venueHtml += ', <em>' + escapeHtml(rec.volume) + '</em>';
+            if (rec.issue) {
+              venuePlain += '(' + rec.issue + ')';
+              venueHtml += '(' + escapeHtml(rec.issue) + ')';
+            }
+          }
+          if (rec.pages) {
+            venuePlain += ', ' + rec.pages.replace(/-/g, '\u2013');
+            venueHtml += ', ' + escapeHtml(rec.pages.replace(/-/g, '\u2013'));
+          }
+          venuePlain += '.';
+          venueHtml += '.';
+          plainParts.push(venuePlain);
+          htmlParts.push(venueHtml);
+        } else if (rec.publisher) {
+          plainParts.push(rec.publisher + '.');
+          htmlParts.push(escapeHtml(rec.publisher + '.'));
+        }
+
+        if (doiLink) {
+          plainParts.push(doiLink);
+          const safeHref = safeUrl(doiLink);
+          htmlParts.push(safeHref
+            ? '<a href="' + escapeHtml(safeHref) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(doiLink) + '</a>'
+            : escapeHtml(doiLink));
+        }
+
+        return {
+          plain: plainParts.join(' '),
+          html: htmlParts.join(' ')
+        };
+      }
+
+      function escapeBibValue(val) {
+        return String(val == null ? '' : val)
+          .replace(/\\/g, '\\textbackslash ')
+          .replace(/([&#%_$])/g, '\\$1')
+          .replace(/[{}]/g, '');
+      }
+
+      function makeCiteKey(rec) {
+        let first = 'ref';
+        if (rec.authors && rec.authors.length) {
+          const base = rec.authors[0].family || rec.authors[0].literal || 'ref';
+          first = base.toLowerCase().replace(/[^a-z0-9]/g, '') || 'ref';
+        }
+        const year = rec.year || 'nd';
+        const stopWords = { the: 1, a: 1, an: 1, of: 1, on: 1, in: 1, for: 1, to: 1, and: 1, with: 1 };
+        const titleWords = (rec.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+        let word = '';
+        for (let i = 0; i < titleWords.length; i++) {
+          if (!stopWords[titleWords[i]] && titleWords[i].length > 2) {
+            word = titleWords[i];
+            break;
+          }
+        }
+        return first + year + (word || 'work');
+      }
+
+      function mapBibEntryType(type) {
+        const t = String(type || '').toLowerCase();
+        if (t === 'journal-article' || t === 'article') return 'article';
+        if (t === 'proceedings-article' || t === 'conference-paper') return 'inproceedings';
+        if (t === 'book' || t === 'monograph') return 'book';
+        if (t === 'book-chapter') return 'incollection';
+        if (t === 'dissertation') return 'phdthesis';
+        return 'misc';
+      }
+
+      function buildBibtex(rec) {
+        const entryType = mapBibEntryType(rec.type);
+        const citeKey = makeCiteKey(rec);
+        const authorsBib = (rec.authors || []).map(function (a) {
+          if (a.literal) return '{' + escapeBibValue(a.literal) + '}';
+          return a.given ? escapeBibValue(a.family) + ', ' + escapeBibValue(a.given) : escapeBibValue(a.family);
+        }).join(' and ');
+
+        const fields = [];
+        if (authorsBib) fields.push(['author', authorsBib]);
+        fields.push(['title', '{' + escapeBibValue(rec.title) + '}']);
+        if (rec.journal) {
+          fields.push([entryType === 'inproceedings' ? 'booktitle' : 'journal', escapeBibValue(rec.journal)]);
+        }
+        if (rec.year) fields.push(['year', rec.year]);
+        if (rec.volume) fields.push(['volume', escapeBibValue(rec.volume)]);
+        if (rec.issue) fields.push(['number', escapeBibValue(rec.issue)]);
+        if (rec.pages) fields.push(['pages', rec.pages.replace(/-/g, '--')]);
+        if (rec.publisher) fields.push(['publisher', escapeBibValue(rec.publisher)]);
+        if (rec.doi) fields.push(['doi', rec.doi]);
+        if (rec.url) fields.push(['url', rec.url]);
+
+        const body = fields.map(function (pair) {
+          return '  ' + pair[0].padEnd(10, ' ') + '= {' + pair[1] + '}';
+        }).join(',\n');
+
+        return {
+          citeKey: citeKey,
+          text: '@' + entryType + '{' + citeKey + ',\n' + body + '\n}'
+        };
+      }
+
+      function renderNormalizedRecord(rec) {
+        state.currentRawRecord = rec.raw;
+
+        els.doiTitle.textContent = rec.title;
+        els.doiSourceBadge.textContent = rec.source;
+        els.doiTypeBadge.textContent = rec.type || 'scholarly-work';
+
+        const href = safeUrl(rec.url);
+        if (href) {
+          els.doiExternalLink.href = href;
+          els.doiExternalLink.style.display = 'inline-flex';
+        } else {
+          els.doiExternalLink.style.display = 'none';
+        }
+
+        els.kpiYear.textContent = rec.year || 'N/A';
+        els.kpiCitations.textContent = rec.citations != null ? rec.citations.toLocaleString('en-US') : 'N/A';
+        els.kpiVenue.textContent = rec.journal || 'Not specified';
+        els.kpiPublisher.textContent = rec.publisher || 'Not specified';
+
+        const authorNames = rec.authors.map(function (a) {
+          return a.literal || ((a.given ? a.given + ' ' : '') + a.family);
+        });
+        els.metaAuthors.textContent = authorNames.length ? authorNames.join('; ') : 'Not listed';
+
+        const issueParts = [];
+        if (rec.volume) issueParts.push('Vol. ' + rec.volume);
+        if (rec.issue) issueParts.push('Issue ' + rec.issue);
+        if (rec.pages) issueParts.push('pp. ' + rec.pages);
+        els.metaIssue.textContent = issueParts.length ? issueParts.join(' | ') : 'Not specified';
+
+        els.metaDoi.textContent = rec.doi || 'No DOI assigned';
+        els.metaFunder.textContent = rec.funders && rec.funders.length ? rec.funders.join('; ') : 'None listed in metadata';
+
+        const apa = buildApa7(rec);
+        state.currentApaPlain = apa.plain;
+        els.apaRendered.innerHTML = apa.html;
+
+        const bib = buildBibtex(rec);
+        state.currentCiteKey = bib.citeKey;
+        state.currentBibtex = bib.text;
+        els.bibtexOutput.textContent = bib.text;
+
+        els.doiResults.style.display = 'block';
+      }
+
+      async function resolveDoi(rawDoi) {
+        const doi = cleanDoiInput(rawDoi);
+        if (!doi) {
+          els.doiStatus.innerHTML = '<div class="alert alert-amber">Please enter a valid DOI (for example: <code>10.1038/nature14539</code>).</div>';
+          return;
+        }
+        els.doiInput.value = doi;
+        els.doiResolveBtn.disabled = true;
+        els.doiStatus.innerHTML = '<div class="alert alert-blue">Querying Crossref live for <code>' + escapeHtml(doi) + '</code>&hellip;</div>';
+
+        try {
+          const crossrefUrl = 'https://api.crossref.org/works/' + encodeURIComponent(doi);
+          const res = await fetch(crossrefUrl, { headers: { Accept: 'application/json' } });
+
+          if (res.ok) {
+            const json = await res.json();
+            if (!json || !json.message) throw new Error('Unexpected Crossref payload');
+            const normalized = normalizeCrossrefWork(json.message);
+            els.doiStatus.innerHTML = '';
+            renderNormalizedRecord(normalized);
+            return;
+          }
+
+          if (res.status === 404) {
+            // Fallback to OpenAlex for DataCite / arXiv DOIs not indexed in Crossref
+            const oaUrl = 'https://api.openalex.org/works/https://doi.org/' + encodeURIComponent(doi);
+            const oaRes = await fetch(oaUrl, { headers: { Accept: 'application/json' } });
+            if (oaRes.ok) {
+              const oaWork = await oaRes.json();
+              const normalized = normalizeOpenAlexWork(oaWork);
+              els.doiStatus.innerHTML = '<div class="alert alert-amber">This DOI is registered outside Crossref (e.g., DataCite/arXiv); resolved automatically via OpenAlex fallback.</div>';
+              renderNormalizedRecord(normalized);
+              return;
+            }
+            throw new Error('DOI not found in Crossref or OpenAlex (HTTP 404). Check for typos.');
+          }
+
+          throw new Error('Crossref API returned HTTP ' + res.status);
+        } catch (err) {
+          els.doiResults.style.display = 'none';
+          els.doiStatus.innerHTML = '<div class="alert alert-red">Resolution failed: ' + escapeHtml(err.message) + '</div>';
+        } finally {
+          els.doiResolveBtn.disabled = false;
+        }
+      }
+
+      async function searchOpenAlex(query) {
+        const q = String(query || '').trim();
+        if (!q) {
+          els.oaStatus.innerHTML = '<div class="alert alert-amber">Enter a topic or paper title to search OpenAlex.</div>';
+          return;
+        }
+        state.oaLoadedOnce = true;
+        els.oaQuery.value = q;
+        els.oaSearchBtn.disabled = true;
+        els.oaStatus.innerHTML = '<div class="alert alert-blue">Searching 250M+ OpenAlex scholarly works for <strong>' + escapeHtml(q) + '</strong>&hellip;</div>';
+
+        try {
+          const sort = els.oaSort.value || 'cited_by_count:desc';
+          const url = 'https://api.openalex.org/works?search=' + encodeURIComponent(q) +
+            '&per-page=8&sort=' + encodeURIComponent(sort);
+          const res = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('OpenAlex API returned HTTP ' + res.status);
+          const data = await res.json();
+          const works = Array.isArray(data.results) ? data.results : [];
+          state.oaWorks = works;
+
+          els.oaStatus.innerHTML = '';
+          const total = data.meta && typeof data.meta.count === 'number'
+            ? data.meta.count.toLocaleString('en-US')
+            : String(works.length);
+          els.oaMetaSummary.textContent = 'Showing top ' + works.length + ' results out of ' + total + ' matching works in OpenAlex.';
+          els.oaToolbar.style.display = works.length ? 'flex' : 'none';
+
+          if (!works.length) {
+            els.oaResultsList.innerHTML = '<div class="alert alert-amber">No OpenAlex works matched your query. Try broader keywords.</div>';
+            return;
+          }
+
+          els.oaResultsList.innerHTML = works.map(function (w, idx) {
+            const title = stripHtmlTags(w.title || w.display_name || 'Untitled Work');
+            const year = w.publication_year || 'n.d.';
+            const citations = typeof w.cited_by_count === 'number' ? w.cited_by_count.toLocaleString('en-US') : '0';
+            const cleanDoi = cleanDoiInput(w.doi || '');
+            const primaryHref = safeUrl(w.doi || w.id || '');
+            const pdfHref = safeUrl((w.primary_location && w.primary_location.pdf_url) || (w.open_access && w.open_access.oa_url) || '');
+            const isOa = Boolean((w.open_access && w.open_access.is_oa) || pdfHref);
+            const venue = (w.primary_location && w.primary_location.source && w.primary_location.source.display_name) || '';
+
+            const authorNames = Array.isArray(w.authorships) ? w.authorships.map(function (a) {
+              return (a.author && a.author.display_name) || a.raw_author_name || '';
+            }).filter(Boolean) : [];
+            const authorSummary = authorNames.length > 5
+              ? authorNames.slice(0, 5).join(', ') + ' et al. (' + authorNames.length + ' authors)'
+              : (authorNames.join(', ') || 'Unknown authors');
+
+            return '<article class="paper-card">' +
+              '<div class="paper-meta">' +
+                '<span class="pill pill-teal">' + escapeHtml(citations) + ' citations</span>' +
+                '<span class="pill pill-blue">' + escapeHtml(String(year)) + '</span>' +
+                (venue ? '<span class="pill pill-amber">' + escapeHtml(venue) + '</span>' : '') +
+                (isOa
+                  ? (pdfHref
+                      ? '<a class="pill pill-green" href="' + escapeHtml(pdfHref) + '" target="_blank" rel="noopener noreferrer">Open Access PDF &nearr;</a>'
+                      : '<span class="pill pill-green">Open Access</span>')
+                  : '<span class="pill" style="background:var(--surface-alt);color:var(--muted);border:1px solid var(--border);">Closed / Publisher Hosted</span>') +
+              '</div>' +
+              '<h3>' +
+                (primaryHref
+                  ? '<a href="' + escapeHtml(primaryHref) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(title) + '</a>'
+                  : escapeHtml(title)) +
+              '</h3>' +
+              '<p class="paper-authors">' + escapeHtml(authorSummary) + '</p>' +
+              '<div class="btn-group">' +
+                '<button type="button" class="btn btn-primary btn-sm" data-resolve-idx="' + idx + '">Resolve BibTeX &amp; APA</button>' +
+                (cleanDoi ? '<span class="small muted"><code>' + escapeHtml(cleanDoi) + '</code></span>' : '<span class="small muted">No DOI (direct OpenAlex metadata)</span>') +
+              '</div>' +
+            '</article>';
+          }).join('');
+        } catch (err) {
+          els.oaToolbar.style.display = 'none';
+          els.oaResultsList.innerHTML = '';
+          els.oaStatus.innerHTML = '<div class="alert alert-red">OpenAlex search failed: ' + escapeHtml(err.message) + '</div>';
+        } finally {
+          els.oaSearchBtn.disabled = false;
+        }
+      }
+
+      function csvEscape(v) {
+        const s = String(v == null ? '' : v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+
+      function buildOpenAlexCsv() {
+        const lines = [['title', 'year', 'cited_by_count', 'doi', 'venue', 'is_open_access', 'oa_url', 'authors'].join(',')];
+        state.oaWorks.forEach(function (w) {
+          const authors = Array.isArray(w.authorships)
+            ? w.authorships.map(function (a) { return (a.author && a.author.display_name) || ''; }).filter(Boolean).join('; ')
+            : '';
+          const venue = (w.primary_location && w.primary_location.source && w.primary_location.source.display_name) || '';
+          const oaUrl = (w.primary_location && w.primary_location.pdf_url) || (w.open_access && w.open_access.oa_url) || '';
+          lines.push([
+            stripHtmlTags(w.title || w.display_name || ''),
+            w.publication_year || '',
+            w.cited_by_count || 0,
+            cleanDoiInput(w.doi || ''),
+            venue,
+            Boolean(w.open_access && w.open_access.is_oa),
+            oaUrl,
+            authors
+          ].map(csvEscape).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      // Wire events
+      els.tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+
+      els.doiForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        resolveDoi(els.doiInput.value);
+      });
+
+      document.querySelectorAll('.chip[data-doi]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          resolveDoi(chip.getAttribute('data-doi'));
+        });
+      });
+
+      els.copyApaBtn.addEventListener('click', function () {
+        copyText(state.currentApaPlain, els.copyApaBtn);
+      });
+
+      els.copyBibtexBtn.addEventListener('click', function () {
+        copyText(state.currentBibtex, els.copyBibtexBtn);
+      });
+
+      els.downloadBibBtn.addEventListener('click', function () {
+        downloadFile((state.currentCiteKey || 'citation') + '.bib', state.currentBibtex + '\n', 'application/x-bibtex;charset=utf-8');
+      });
+
+      els.copyRawJsonBtn.addEventListener('click', function () {
+        if (!state.currentRawRecord) return;
+        copyText(JSON.stringify(state.currentRawRecord, null, 2), els.copyRawJsonBtn);
+      });
+
+      els.oaForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        searchOpenAlex(els.oaQuery.value);
+      });
+
+      els.oaSort.addEventListener('change', function () {
+        if (els.oaQuery.value.trim()) searchOpenAlex(els.oaQuery.value);
+      });
+
+      document.querySelectorAll('.chip[data-topic]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          searchOpenAlex(chip.getAttribute('data-topic'));
+        });
+      });
+
+      els.oaCopyCsvBtn.addEventListener('click', function () {
+        copyText(buildOpenAlexCsv(), els.oaCopyCsvBtn);
+      });
+
+      els.oaResultsList.addEventListener('click', function (ev) {
+        const btn = ev.target.closest('button[data-resolve-idx]');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-resolve-idx'), 10);
+        const work = state.oaWorks[idx];
+        if (!work) return;
+        const cleanDoi = cleanDoiInput(work.doi || '');
+        switchTab('doi');
+        if (cleanDoi) {
+          resolveDoi(cleanDoi);
+        } else {
+          els.doiInput.value = '';
+          els.doiStatus.innerHTML = '<div class="alert alert-blue">Generated APA 7th &amp; BibTeX directly from OpenAlex metadata (work has no DOI).</div>';
+          renderNormalizedRecord(normalizeOpenAlexWork(work));
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Auto-resolve preset DOI on load
+      resolveDoi('10.1038/nature14539');
+    })();
+  </script>
+</body>
+</html>

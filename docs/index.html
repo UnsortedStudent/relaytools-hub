@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RelayTools Hub — 12 Free Browser Tools &amp; 40 Public-Data APIs / MCP Servers</title>
+  <meta name="description" content="Use 12 free zero-signup browser tools for DNS/DMARC, CVSS v3.1, RAG Markdown, ECB FX, Crossref citations, FDA recalls &amp; SEO, plus browse 40 cloud public-data APIs and MCP servers.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://unsortedstudent.github.io/relaytools-hub/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RelayTools Hub">
+  <meta property="og:title" content="RelayTools Hub — 12 Free Browser Tools &amp; 40 Public-Data APIs / MCP Servers">
+  <meta property="og:description" content="Use 12 free zero-signup browser tools for DNS/DMARC, CVSS v3.1, RAG Markdown, ECB FX, Crossref citations, FDA recalls &amp; SEO, plus browse 40 cloud public-data APIs and MCP servers.">
+  <meta property="og:url" content="https://unsortedstudent.github.io/relaytools-hub/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RelayTools Hub — 12 Free Browser Tools &amp; 40 Public-Data APIs / MCP Servers">
+  <meta name="twitter:description" content="Use 12 free zero-signup browser tools for DNS/DMARC, CVSS v3.1, RAG Markdown, ECB FX, Crossref citations, FDA recalls &amp; SEO, plus browse 40 cloud public-data APIs and MCP servers.">
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.btn-hero-ghost {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.btn-hero-ghost:hover { background: rgba(255, 255, 255, 0.2); }
+.kpi-strip { margin-bottom: 28px; }
+.section-block { margin-bottom: 34px; }
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.section-head h2 { margin: 0 0 4px; font-size: 23px; }
+.section-head p { margin: 0; }
+.filter-panel { padding: 18px 20px; margin-bottom: 18px; }
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-pill {
+  background: var(--surface-alt);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.filter-pill:hover { border-color: var(--accent); }
+.filter-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+body.dark .filter-pill.active { color: #042f2e; }
+.pill-count {
+  font-size: 11px;
+  opacity: 0.85;
+  background: rgba(15, 23, 42, 0.12);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.tool-card, .api-feature-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  padding: 20px;
+  transition: transform .15s, border-color .15s;
+}
+.tool-card:hover, .api-feature-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tool-title { margin: 0 0 8px; font-size: 16.5px; line-height: 1.35; }
+.tool-title a { color: var(--ink); }
+.tool-title a:hover { color: var(--accent); text-decoration: none; }
+.tool-desc { margin: 0 0 12px; flex-grow: 1; }
+.slug-line { margin-bottom: 8px; word-break: break-all; }
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tag-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.tool-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.tool-backing {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  word-break: break-word;
+}
+.explore-all-card {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
+  border: 2px solid var(--accent);
+}
+.mcp-teaser-card { padding: 26px; }
+.mcp-teaser-grid { align-items: center; gap: 24px; }
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.empty-state { text-align: center; padding: 32px 20px; }
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://unsortedstudent.github.io/relaytools-hub/#website",
+      "name": "RelayTools Hub",
+      "url": "https://unsortedstudent.github.io/relaytools-hub/",
+      "description": "12 free interactive browser developer, security, finance, and compliance tools plus 40 public-data Apify Store APIs and MCP servers.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://unsortedstudent.github.io/relaytools-hub/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "ItemList",
+      "@id": "https://unsortedstudent.github.io/relaytools-hub/#free-tools",
+      "name": "12 Free Interactive Browser Tools",
+      "numberOfItems": 12,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live Email Auth, SPF, DMARC & DKIM DNS Checker",
+            "description": "Query live DNS-over-HTTPS records for any domain to inspect SPF, DMARC, DKIM selectors, MX hosts, and 10-lookup PermError risk instantly.",
+            "applicationCategory": "Security & DNS",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/email-auth-checker.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "WebApplication",
+            "name": "SPF Record Merger, 10-Lookup Simulator & 3-Phase DMARC Builder",
+            "description": "Safely combine multiple SPF records into one valid TXT string, simulate RFC 7208 lookup limits, and generate phased p=none to p=reject DMARC policies.",
+            "applicationCategory": "Security & DNS",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/dmarc-spf-generator.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "WebApplication",
+            "name": "CVSS v3.1 Severity Calculator & HTTP Security Headers Builder",
+            "description": "Calculate exact FIRST.org CVSS v3.1 vector scores and generate copy-paste HSTS, CSP, and Permissions-Policy configs for Nginx, Cloudflare, and Apache.",
+            "applicationCategory": "Security & DNS",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/cvss-security-headers-tool.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "item": {
+            "@type": "WebApplication",
+            "name": "JSON/CSV Flattener, Deduplicator & Schema Generator",
+            "description": "Flatten nested JSON arrays to clean CSV, deduplicate rows by key, normalize whitespace, and infer JSON Schema or TypeScript interfaces locally in your browser.",
+            "applicationCategory": "AI & Dev",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/json-csv-cleaner.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "item": {
+            "@type": "WebApplication",
+            "name": "HTML-to-Clean-Markdown & LLM RAG Chunk Splitter",
+            "description": "Strip noisy navigation and boilerplate HTML into crisp Markdown, estimate token counts, and split documents into overlap-aware RAG chunks for embeddings.",
+            "applicationCategory": "AI & Dev",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/html-to-markdown-rag.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 6,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live Hacker News Trends & GitHub Repo Health Explorer",
+            "description": "Browse live Hacker News front-page stories and Show HN launches alongside real-time GitHub repository stars, release cadence, and issue health metrics.",
+            "applicationCategory": "AI & Dev",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/hackernews-github-explorer.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 7,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live ECB FX Currency Converter & U.S. Treasury Interest Rates",
+            "description": "Convert 30+ global currencies using official European Central Bank reference rates and inspect live U.S. Treasury Fiscal Data average interest rates.",
+            "applicationCategory": "Finance & Research",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/fx-treasury-calculator.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 8,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live DOI to APA 7th & BibTeX Citation Generator + OpenAlex Search",
+            "description": "Resolve any academic DOI via Crossref into formatted APA 7th, MLA, Chicago, and BibTeX citations, plus search 250M+ OpenAlex scholarly works live.",
+            "applicationCategory": "Finance & Research",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/doi-citation-bibtex.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 9,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live US ZIP Geo, Global Weather/AQI & GLEIF LEI Verifier",
+            "description": "Enrich U.S. ZIP codes with coordinates and place info, check live Open-Meteo weather and air quality, and verify global corporate entities in the GLEIF LEI registry.",
+            "applicationCategory": "Finance & Research",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/zip-weather-lei-lookup.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 10,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Google SERP Preview & Schema.org JSON-LD Builder",
+            "description": "Preview desktop and mobile Google search snippets with pixel-width truncation checks and build valid Organization, FAQPage, Product, and Article JSON-LD markup.",
+            "applicationCategory": "SEO & Compliance",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/seo-meta-serp-preview.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 11,
+          "item": {
+            "@type": "WebApplication",
+            "name": "Live U.S. FDA Recall & Federal Register Regulatory Search",
+            "description": "Search official openFDA Food, Drug, and Medical Device enforcement recalls alongside live U.S. Federal Register rules, proposed regulations, and executive orders.",
+            "applicationCategory": "SEO & Compliance",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/fda-fedreg-compliance-search.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 12,
+          "item": {
+            "@type": "WebApplication",
+            "name": "AI-Aware robots.txt (GPTBot/ClaudeBot) & XML Sitemap Generator",
+            "description": "Generate tailored robots.txt rules for search crawlers and AI bots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) plus valid XML sitemaps in seconds.",
+            "applicationCategory": "SEO & Compliance",
+            "operatingSystem": "All",
+            "url": "https://unsortedstudent.github.io/relaytools-hub/tools/robots-sitemap-builder.html",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+<header class="site-nav">
+  <div class="site-nav-inner">
+    <a class="brand-logo" href="index.html">
+      <span class="brand-dot" aria-hidden="true">R</span>
+      <span>RelayTools Hub</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link active" href="index.html" aria-current="page">Free Tools</a><a class="nav-link" href="catalog.html">40 APIs &amp; MCP</a><a class="nav-link" href="mcp-guide.html">MCP Guide</a><a class="nav-link" href="deploy-free.html">$0 Deploy Guide</a>
+      <button class="nav-btn" id="themeToggleBtn" type="button" onclick="toggleTheme()">Dark Mode</button>
+      <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+    </nav>
+  </div>
+</header>
+<main class="container">
+<section class="hero">
+  <span class="eyebrow">12 Free Browser Tools &bull; 40 Public-Data APIs &amp; MCP Servers</span>
+  <h1>Zero-Signup Developer, Security &amp; Public-Data Tools &mdash; Backed by 40 Cloud APIs</h1>
+  <p>Run instant live DNS/SPF/DMARC audits, CVSS v3.1 scoring, RAG Markdown chunking, ECB FX &amp; Treasury lookups, Crossref citations, FDA/Federal Register compliance searches, and AI-aware <code>robots.txt</code> generation right in your browser. Scale to thousands of records anytime with our pay-per-event Apify Store APIs &amp; MCP tools.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#free-tools">Use 12 Free Tools &darr;</a>
+    <a class="btn btn-hero-ghost" href="catalog.html">Browse All 40 APIs</a>
+    <a class="btn btn-hero-ghost" href="mcp-guide.html">Connect to Claude / Cursor (MCP)</a>
+  </div>
+</section>
+
+<section class="grid-4 kpi-strip" aria-label="Platform highlights">
+  <div class="kpi">
+    <div class="kpi-label">Free Browser Tools</div>
+    <div class="kpi-value">12</div>
+    <div class="small muted">Instant &bull; No login required</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Deployed Cloud APIs</div>
+    <div class="kpi-value">40</div>
+    <div class="small muted">40/40 cloud smoke-verified</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Live in Apify Store</div>
+    <div class="kpi-value">5</div>
+    <div class="small muted">+35 staged for rollout</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Pay-Per-Event Scale</div>
+    <div class="kpi-value">$0.002&ndash;$0.008</div>
+    <div class="small muted">MCP, Python, REST &amp; n8n ready</div>
+  </div>
+</section>
+
+<section id="free-tools" class="section-block">
+  <div class="section-head">
+    <div>
+      <h2>12 Free Interactive Browser Tools</h2>
+      <p class="muted small">Runs directly in your browser using public APIs or 100% local processing. Filter by workflow or search by keyword.</p>
+    </div>
+    <div class="small muted" id="toolCountLabel" aria-live="polite">Showing 12 of 12 free tools</div>
+  </div>
+
+  <div class="card filter-panel">
+    <div class="form-row" style="margin-bottom: 12px;">
+      <div class="field">
+        <label for="toolSearchInput">Search free tools</label>
+        <input type="search" id="toolSearchInput" placeholder="Try: DMARC, CVSS, RAG, BibTeX, FDA, Treasury, SERP, GPTBot, LEI..." autocomplete="off">
+      </div>
+    </div>
+    <div class="filter-bar" role="group" aria-label="Filter tools by category">
+      <button type="button" class="filter-pill active" data-category="All" aria-pressed="true">All <span class="pill-count">12</span></button><button type="button" class="filter-pill" data-category="Security &amp; DNS" aria-pressed="false">Security &amp; DNS <span class="pill-count">3</span></button><button type="button" class="filter-pill" data-category="AI &amp; Dev" aria-pressed="false">AI &amp; Dev <span class="pill-count">3</span></button><button type="button" class="filter-pill" data-category="Finance &amp; Research" aria-pressed="false">Finance &amp; Research <span class="pill-count">3</span></button><button type="button" class="filter-pill" data-category="SEO &amp; Compliance" aria-pressed="false">SEO &amp; Compliance <span class="pill-count">3</span></button>
+    </div>
+  </div>
+
+  <div class="grid-3" id="toolsGrid">
+    <article class="card tool-card" data-category="Security &amp; DNS" data-search="live email auth, spf, dmarc &amp; dkim dns checker email auth &amp; dns checker security &amp; dns query live dns-over-https records for any domain to inspect spf, dmarc, dkim selectors, mx hosts, and 10-lookup permerror risk instantly. live doh spf/dmarc/dkim 0-100 grade email-auth-dns-auditor">
+  <div class="card-top">
+    <span class="pill pill-teal">Security &amp; DNS</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/email-auth-checker.html">Live Email Auth, SPF, DMARC &amp; DKIM DNS Checker</a></h3>
+  <p class="muted small tool-desc">Query live DNS-over-HTTPS records for any domain to inspect SPF, DMARC, DKIM selectors, MX hosts, and 10-lookup PermError risk instantly.</p>
+  <div class="tag-row"><span class="tag-chip">Live DoH</span><span class="tag-chip">SPF/DMARC/DKIM</span><span class="tag-chip">0-100 Grade</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/email-auth-checker.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/email-auth-dns-auditor" target="_blank" rel="noopener" title="Bulk Email Auth, SPF, DKIM, DMARC &amp; DNSBL Auditor">email-auth-dns-auditor &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="Security &amp; DNS" data-search="spf record merger, 10-lookup simulator &amp; 3-phase dmarc builder spf merger &amp; dmarc builder security &amp; dns safely combine multiple spf records into one valid txt string, simulate rfc 7208 lookup limits, and generate phased p=none to p=reject dmarc policies. spf flattener 10-lookup sim 3-phase dmarc email-auth-dns-auditor">
+  <div class="card-top">
+    <span class="pill pill-teal">Security &amp; DNS</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/dmarc-spf-generator.html">SPF Record Merger, 10-Lookup Simulator &amp; 3-Phase DMARC Builder</a></h3>
+  <p class="muted small tool-desc">Safely combine multiple SPF records into one valid TXT string, simulate RFC 7208 lookup limits, and generate phased p=none to p=reject DMARC policies.</p>
+  <div class="tag-row"><span class="tag-chip">SPF Flattener</span><span class="tag-chip">10-Lookup Sim</span><span class="tag-chip">3-Phase DMARC</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/dmarc-spf-generator.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/email-auth-dns-auditor" target="_blank" rel="noopener" title="Bulk Email Auth, SPF, DKIM, DMARC &amp; DNSBL Auditor">email-auth-dns-auditor &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="Security &amp; DNS" data-search="cvss v3.1 severity calculator &amp; http security headers builder cvss v3.1 &amp; security headers security &amp; dns calculate exact first.org cvss v3.1 vector scores and generate copy-paste hsts, csp, and permissions-policy configs for nginx, cloudflare, and apache. cvss v3.1 math csp &amp; hsts nginx/cloudflare cve-kev-security-intel website-tech-security-profiler">
+  <div class="card-top">
+    <span class="pill pill-teal">Security &amp; DNS</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/cvss-security-headers-tool.html">CVSS v3.1 Severity Calculator &amp; HTTP Security Headers Builder</a></h3>
+  <p class="muted small tool-desc">Calculate exact FIRST.org CVSS v3.1 vector scores and generate copy-paste HSTS, CSP, and Permissions-Policy configs for Nginx, Cloudflare, and Apache.</p>
+  <div class="tag-row"><span class="tag-chip">CVSS v3.1 Math</span><span class="tag-chip">CSP &amp; HSTS</span><span class="tag-chip">Nginx/Cloudflare</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/cvss-security-headers-tool.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/cve-kev-security-intel" target="_blank" rel="noopener" title="CVE, CISA KEV &amp; Open-Source Package Vulnerability Intelligence">cve-kev-security-intel &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/website-tech-security-profiler" target="_blank" rel="noopener" title="Website Tech-Stack, Security Headers &amp; SSL Profiler">website-tech-security-profiler &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="AI &amp; Dev" data-search="json/csv flattener, deduplicator &amp; schema generator json/csv cleaner &amp; schema ai &amp; dev flatten nested json arrays to clean csv, deduplicate rows by key, normalize whitespace, and infer json schema or typescript interfaces locally in your browser. 100% local deduplicate json schema json-csv-schema-cleaner-utility">
+  <div class="card-top">
+    <span class="pill pill-blue">AI &amp; Dev</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/json-csv-cleaner.html">JSON/CSV Flattener, Deduplicator &amp; Schema Generator</a></h3>
+  <p class="muted small tool-desc">Flatten nested JSON arrays to clean CSV, deduplicate rows by key, normalize whitespace, and infer JSON Schema or TypeScript interfaces locally in your browser.</p>
+  <div class="tag-row"><span class="tag-chip">100% Local</span><span class="tag-chip">Deduplicate</span><span class="tag-chip">JSON Schema</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/json-csv-cleaner.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/json-csv-schema-cleaner-utility" target="_blank" rel="noopener" title="JSON &amp; CSV Deduplicator, Flattener &amp; Schema Cleaner">json-csv-schema-cleaner-utility &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="AI &amp; Dev" data-search="html-to-clean-markdown &amp; llm rag chunk splitter html to markdown &amp; rag chunker ai &amp; dev strip noisy navigation and boilerplate html into crisp markdown, estimate token counts, and split documents into overlap-aware rag chunks for embeddings. clean markdown token counter rag overlap web-markdown-llm-cleaner pdf-table-json-extractor">
+  <div class="card-top">
+    <span class="pill pill-blue">AI &amp; Dev</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/html-to-markdown-rag.html">HTML-to-Clean-Markdown &amp; LLM RAG Chunk Splitter</a></h3>
+  <p class="muted small tool-desc">Strip noisy navigation and boilerplate HTML into crisp Markdown, estimate token counts, and split documents into overlap-aware RAG chunks for embeddings.</p>
+  <div class="tag-row"><span class="tag-chip">Clean Markdown</span><span class="tag-chip">Token Counter</span><span class="tag-chip">RAG Overlap</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/html-to-markdown-rag.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/web-markdown-llm-cleaner" target="_blank" rel="noopener" title="Webpage to Clean LLM Markdown &amp; RAG Chunks Converter">web-markdown-llm-cleaner &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/pdf-table-json-extractor" target="_blank" rel="noopener" title="PDF to Structured JSON, Markdown &amp; Entities Extractor">pdf-table-json-extractor &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="AI &amp; Dev" data-search="live hacker news trends &amp; github repo health explorer hn trends &amp; github explorer ai &amp; dev browse live hacker news front-page stories and show hn launches alongside real-time github repository stars, release cadence, and issue health metrics. live hn api github signals csv/json export hackernews-trends-jobs-extractor github-repo-signals-analyzer">
+  <div class="card-top">
+    <span class="pill pill-blue">AI &amp; Dev</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/hackernews-github-explorer.html">Live Hacker News Trends &amp; GitHub Repo Health Explorer</a></h3>
+  <p class="muted small tool-desc">Browse live Hacker News front-page stories and Show HN launches alongside real-time GitHub repository stars, release cadence, and issue health metrics.</p>
+  <div class="tag-row"><span class="tag-chip">Live HN API</span><span class="tag-chip">GitHub Signals</span><span class="tag-chip">CSV/JSON Export</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/hackernews-github-explorer.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/hackernews-trends-jobs-extractor" target="_blank" rel="noopener" title="Hacker News Trends, Show HN &amp; Tech Jobs Extractor">hackernews-trends-jobs-extractor &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/github-repo-signals-analyzer" target="_blank" rel="noopener" title="GitHub Repo Health, Releases &amp; Startup Signals API">github-repo-signals-analyzer &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="Finance &amp; Research" data-search="live ecb fx currency converter &amp; u.s. treasury interest rates ecb fx &amp; treasury rates finance &amp; research convert 30+ global currencies using official european central bank reference rates and inspect live u.s. treasury fiscal data average interest rates. official ecb fx u.s. treasury api multi-currency open-exchange-crypto-fx-rates us-treasury-fiscal-rates-api">
+  <div class="card-top">
+    <span class="pill pill-green">Finance &amp; Research</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/fx-treasury-calculator.html">Live ECB FX Currency Converter &amp; U.S. Treasury Interest Rates</a></h3>
+  <p class="muted small tool-desc">Convert 30+ global currencies using official European Central Bank reference rates and inspect live U.S. Treasury Fiscal Data average interest rates.</p>
+  <div class="tag-row"><span class="tag-chip">Official ECB FX</span><span class="tag-chip">U.S. Treasury API</span><span class="tag-chip">Multi-Currency</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/fx-treasury-calculator.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/open-exchange-crypto-fx-rates" target="_blank" rel="noopener" title="ECB Global FX Exchange Rates &amp; Crypto Markets API">open-exchange-crypto-fx-rates &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/us-treasury-fiscal-rates-api" target="_blank" rel="noopener" title="US Treasury Interest Rates, Debt &amp; FX Fiscal Data API">us-treasury-fiscal-rates-api &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="Finance &amp; Research" data-search="live doi to apa 7th &amp; bibtex citation generator + openalex search doi citation &amp; openalex finance &amp; research resolve any academic doi via crossref into formatted apa 7th, mla, chicago, and bibtex citations, plus search 250m+ openalex scholarly works live. crossref doi apa 7th &amp; bibtex openalex live crossref-doi-citation-resolver openalex-academic-citations-api">
+  <div class="card-top">
+    <span class="pill pill-green">Finance &amp; Research</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/doi-citation-bibtex.html">Live DOI to APA 7th &amp; BibTeX Citation Generator + OpenAlex Search</a></h3>
+  <p class="muted small tool-desc">Resolve any academic DOI via Crossref into formatted APA 7th, MLA, Chicago, and BibTeX citations, plus search 250M+ OpenAlex scholarly works live.</p>
+  <div class="tag-row"><span class="tag-chip">Crossref DOI</span><span class="tag-chip">APA 7th &amp; BibTeX</span><span class="tag-chip">OpenAlex Live</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/doi-citation-bibtex.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/crossref-doi-citation-resolver" target="_blank" rel="noopener" title="Crossref DOI Metadata, Citations &amp; BibTeX Resolver">crossref-doi-citation-resolver &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/openalex-academic-citations-api" target="_blank" rel="noopener" title="OpenAlex Academic Papers, Citations &amp; Authors API">openalex-academic-citations-api &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="Finance &amp; Research" data-search="live us zip geo, global weather/aqi &amp; gleif lei verifier zip geo, weather &amp; gleif lei finance &amp; research enrich u.s. zip codes with coordinates and place info, check live open-meteo weather and air quality, and verify global corporate entities in the gleif lei registry. u.s. zip geo open-meteo aqi gleif kyb us-zip-census-geo-enricher open-meteo-climate-weather-api gleif-lei-company-registry">
+  <div class="card-top">
+    <span class="pill pill-green">Finance &amp; Research</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/zip-weather-lei-lookup.html">Live US ZIP Geo, Global Weather/AQI &amp; GLEIF LEI Verifier</a></h3>
+  <p class="muted small tool-desc">Enrich U.S. ZIP codes with coordinates and place info, check live Open-Meteo weather and air quality, and verify global corporate entities in the GLEIF LEI registry.</p>
+  <div class="tag-row"><span class="tag-chip">U.S. ZIP Geo</span><span class="tag-chip">Open-Meteo AQI</span><span class="tag-chip">GLEIF KYB</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/zip-weather-lei-lookup.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/us-zip-census-geo-enricher" target="_blank" rel="noopener" title="US ZIP Code &amp; Census Demographics Enricher (ACS)">us-zip-census-geo-enricher &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/open-meteo-climate-weather-api" target="_blank" rel="noopener" title="Global Weather Forecast &amp; Air Quality Bulk API">open-meteo-climate-weather-api &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/gleif-lei-company-registry" target="_blank" rel="noopener" title="GLEIF Global Legal Entity (LEI) &amp; KYB Registry API">gleif-lei-company-registry &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="SEO &amp; Compliance" data-search="google serp preview &amp; schema.org json-ld builder serp preview &amp; json-ld builder seo &amp; compliance preview desktop and mobile google search snippets with pixel-width truncation checks and build valid organization, faqpage, product, and article json-ld markup. pixel-width check opengraph tags schema json-ld seo-onpage-broken-links-auditor schema-org-jsonld-contact-miner">
+  <div class="card-top">
+    <span class="pill pill-amber">SEO &amp; Compliance</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/seo-meta-serp-preview.html">Google SERP Preview &amp; Schema.org JSON-LD Builder</a></h3>
+  <p class="muted small tool-desc">Preview desktop and mobile Google search snippets with pixel-width truncation checks and build valid Organization, FAQPage, Product, and Article JSON-LD markup.</p>
+  <div class="tag-row"><span class="tag-chip">Pixel-Width Check</span><span class="tag-chip">OpenGraph Tags</span><span class="tag-chip">Schema JSON-LD</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/seo-meta-serp-preview.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/seo-onpage-broken-links-auditor" target="_blank" rel="noopener" title="Bulk On-Page Technical SEO &amp; Broken Links Auditor">seo-onpage-broken-links-auditor &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/schema-org-jsonld-contact-miner" target="_blank" rel="noopener" title="Schema.org JSON-LD, Products &amp; Business Info Extractor">schema-org-jsonld-contact-miner &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="SEO &amp; Compliance" data-search="live u.s. fda recall &amp; federal register regulatory search fda recalls &amp; federal register seo &amp; compliance search official openfda food, drug, and medical device enforcement recalls alongside live u.s. federal register rules, proposed regulations, and executive orders. openfda live federal register compliance export fda-recalls-compliance-monitor federal-register-rules-monitor">
+  <div class="card-top">
+    <span class="pill pill-amber">SEO &amp; Compliance</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/fda-fedreg-compliance-search.html">Live U.S. FDA Recall &amp; Federal Register Regulatory Search</a></h3>
+  <p class="muted small tool-desc">Search official openFDA Food, Drug, and Medical Device enforcement recalls alongside live U.S. Federal Register rules, proposed regulations, and executive orders.</p>
+  <div class="tag-row"><span class="tag-chip">openFDA Live</span><span class="tag-chip">Federal Register</span><span class="tag-chip">Compliance Export</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/fda-fedreg-compliance-search.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/fda-recalls-compliance-monitor" target="_blank" rel="noopener" title="FDA Recalls, Enforcement &amp; 510(k) Compliance Monitor">fda-recalls-compliance-monitor &nearr;</a> &middot; <a class="small" href="https://apify.com/regenerative_cornice/federal-register-rules-monitor" target="_blank" rel="noopener" title="US Federal Register Rules &amp; Executive Orders Monitor">federal-register-rules-monitor &nearr;</a>
+  </div>
+</article><article class="card tool-card" data-category="SEO &amp; Compliance" data-search="ai-aware robots.txt (gptbot/claudebot) &amp; xml sitemap generator ai robots.txt &amp; xml sitemap seo &amp; compliance generate tailored robots.txt rules for search crawlers and ai bots (gptbot, claudebot, perplexitybot, google-extended) plus valid xml sitemaps in seconds. ai bot controls valid xml sitemap 1-click download sitemap-url-inventory-auditor">
+  <div class="card-top">
+    <span class="pill pill-amber">SEO &amp; Compliance</span>
+    <span class="pill pill-green">Free &bull; Browser</span>
+  </div>
+  <h3 class="tool-title"><a href="tools/robots-sitemap-builder.html">AI-Aware robots.txt (GPTBot/ClaudeBot) &amp; XML Sitemap Generator</a></h3>
+  <p class="muted small tool-desc">Generate tailored robots.txt rules for search crawlers and AI bots (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) plus valid XML sitemaps in seconds.</p>
+  <div class="tag-row"><span class="tag-chip">AI Bot Controls</span><span class="tag-chip">Valid XML Sitemap</span><span class="tag-chip">1-Click Download</span></div>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="tools/robots-sitemap-builder.html">Launch Free Tool &rarr;</a>
+  </div>
+  <div class="tool-backing small muted">
+    <span>Bulk API:</span> <a class="small" href="https://apify.com/regenerative_cornice/sitemap-url-inventory-auditor" target="_blank" rel="noopener" title="Recursive XML Sitemap &amp; robots.txt URL Extractor">sitemap-url-inventory-auditor &nearr;</a>
+  </div>
+</article>
+  </div>
+
+  <div class="card empty-state" id="toolsEmptyState" hidden>
+    <h3>No matching tools found</h3>
+    <p class="muted small">Try a broader keyword (e.g., <code>DNS</code>, <code>JSON</code>, <code>FDA</code>, <code>FX</code>) or reset your category filter.</p>
+    <button type="button" class="btn btn-secondary btn-sm" id="resetToolFiltersBtn">Reset Filters</button>
+  </div>
+</section>
+
+<section class="section-block" id="featured-apis">
+  <div class="section-head">
+    <div>
+      <h2>Featured Apify Store Bulk APIs</h2>
+      <p class="muted small">Need to process 100 to 100,000 domains, filings, CVEs, or recalls on a schedule? Launch our live pay-per-event cloud Actors with built-in JSON/CSV datasets and webhook alerts.</p>
+    </div>
+    <a class="btn btn-secondary btn-sm" href="catalog.html">View All 40 APIs &rarr;</a>
+  </div>
+  <div class="grid-3">
+    <article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.005 / event</span>
+  </div>
+  <h3>Bulk Email Auth, SPF, DKIM, DMARC &amp; DNSBL Auditor</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/email-auth-dns-auditor</code></div>
+  <p class="small muted tool-desc">Bulk passive DNS email authentication auditor for 1 to 1,000+ domains: recursive SPF lookup counting, DMARC alignment &amp; duplicate checks, Google/M365/GoHighLevel/Klaviyo DKIM &amp; subdomain scan, MTA-STS, RDAP age, safe DNSBL check, and 0-100 grade.</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/email-auth-dns-auditor" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-email-auth-dns-auditor">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.005 / event</span>
+  </div>
+  <h3>CVE, CISA KEV &amp; Open-Source Package Vulnerability Intelligence</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/cve-kev-security-intel</code></div>
+  <p class="small muted tool-desc">Unified real-time cybersecurity intelligence from CISA Known Exploited Vulnerabilities (KEV), OSV.dev (npm, PyPI, Go, Maven, Cargo, NuGet), and NIST NVD CVE API v2. Built for DevSecOps alerts, MSPs, n8n Slack bots, and AI coding agents (MCP).</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/cve-kev-security-intel" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-cve-kev-security-intel">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.006 / event</span>
+  </div>
+  <h3>FDA Recalls, Enforcement &amp; 510(k) Compliance Monitor</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/fda-recalls-compliance-monitor</code></div>
+  <p class="small muted tool-desc">Extract structured U.S. FDA Food, Drug, and Medical Device recalls plus 510(k) clearances from the official openFDA API. Filter by recall class, keyword, state, or date range for compliance, legal-tech, n8n alerts, and AI agents (MCP).</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/fda-recalls-compliance-monitor" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-fda-recalls-compliance-monitor">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.006 / event</span>
+  </div>
+  <h3>SEC EDGAR Form D Fundraising &amp; 8-K/10-K Extractor</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/sec-edgar-form-d-fundraising</code></div>
+  <p class="small muted tool-desc">Extract freshly funded startups &amp; private rounds from official SEC EDGAR Form D filings (offering amount, amount sold, industry, state, executives) plus 8-K/10-K/10-Q/S-1 search. Built for VCs, B2B sales enrichment, n8n, and AI agents (MCP).</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/sec-edgar-form-d-fundraising" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-sec-edgar-form-d-fundraising">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.005 / event</span>
+  </div>
+  <h3>Website Tech-Stack, Security Headers &amp; SSL Profiler</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/website-tech-security-profiler</code></div>
+  <p class="small muted tool-desc">Bulk website profiler extracting 50+ tech-stack fingerprints (Shopify, WordPress, Webflow, Next.js, Klaviyo, HubSpot, Stripe), HTTP security header grade, TLS/SSL expiry days, robots/sitemap stats, and public social/email links for n8n &amp; MCP.</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/website-tech-security-profiler" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-website-tech-security-profiler">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card explore-all-card">
+  <div class="card-top">
+    <span class="pill pill-blue">Complete Fleet</span>
+    <span class="pill pill-teal">40 Actors</span>
+  </div>
+  <h3>Explore All 40 Public-Data APIs &amp; MCP Servers</h3>
+  <p class="small muted tool-desc">Search by category, inspect exact pay-per-event pricing ($0.002&ndash;$0.008/event), and copy ready-to-run MCP configs and Python SDK snippets for every deployed Actor.</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="catalog.html">Browse All 40 APIs &rarr;</a>
+    <a class="btn btn-secondary btn-sm" href="mcp-guide.html">MCP Setup</a>
+  </div>
+</article>
+  </div>
+</section>
+
+<section class="card mcp-teaser-card">
+  <div class="grid-2 mcp-teaser-grid">
+    <div>
+      <span class="pill pill-teal" style="margin-bottom: 10px;">Model Context Protocol (MCP)</span>
+      <h2>Give Claude Desktop, Cursor, Windsurf &amp; n8n Live Public-Data Superpowers</h2>
+      <p class="muted">Every single one of our 40 Apify Actors works natively over Apify&rsquo;s official MCP server (<code>@apify/actors-mcp-server</code>). Plug live CISA KEV vulnerability feeds, SPF/DMARC domain audits, SEC Form D fundraising data, and FDA recall alerts straight into your AI coding assistant in 60 seconds.</p>
+      <div class="hero-actions" style="margin-top: 16px;">
+        <a class="btn btn-primary" href="mcp-guide.html">Read Complete MCP Setup Guide &rarr;</a>
+        <a class="btn btn-secondary" href="deploy-free.html">Host This Hub for $0/Month</a>
+      </div>
+    </div>
+    <div>
+      <div class="code-header">
+        <span class="small"><strong>Quick Claude Desktop / Cursor MCP Snippet</strong></span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('homeMcpSnippet', this)">Copy JSON</button>
+      </div>
+      <pre id="homeMcpSnippet"><code>{
+  &quot;mcpServers&quot;: {
+    &quot;apify-relaytools&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [
+        &quot;-y&quot;,
+        &quot;@apify/actors-mcp-server&quot;,
+        &quot;--actors&quot;,
+        &quot;regenerative_cornice/email-auth-dns-auditor,regenerative_cornice/cve-kev-security-intel,regenerative_cornice/fda-recalls-compliance-monitor&quot;
+      ],
+      &quot;env&quot;: {
+        &quot;APIFY_TOKEN&quot;: &quot;&lt;YOUR_APIFY_API_TOKEN&gt;&quot;
+      }
+    }
+  }
+}</code></pre>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <strong>RelayTools Hub</strong> &mdash; 12 Free Browser Tools &amp; 40 Cloud Public-Data APIs / MCP Servers.
+      <div class="small muted">Catalog synced 2026-11-22 &bull; All browser utilities run client-side with zero sign-up.</div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="catalog.html">All 40 APIs</a>
+      <a href="mcp-guide.html">MCP Guide</a>
+      <a href="deploy-free.html">$0 Deploy Guide</a>
+      <a href="sitemap.xml">Sitemap</a>
+      <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store</a>
+    </div>
+  </div>
+</footer>
+<script src="assets/common.js"></script>
+  <script>
+(function () {
+  var searchInput = document.getElementById('toolSearchInput');
+  var pills = Array.prototype.slice.call(document.querySelectorAll('.filter-pill'));
+  var cards = Array.prototype.slice.call(document.querySelectorAll('#toolsGrid .tool-card'));
+  var countLabel = document.getElementById('toolCountLabel');
+  var emptyState = document.getElementById('toolsEmptyState');
+  var resetBtn = document.getElementById('resetToolFiltersBtn');
+  var activeCategory = 'All';
+
+  function applyFilters() {
+    var query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    var visible = 0;
+
+    cards.forEach(function (card) {
+      var cat = card.getAttribute('data-category') || '';
+      var hay = card.getAttribute('data-search') || '';
+      var catOk = activeCategory === 'All' || cat === activeCategory;
+      var queryOk = !query || hay.indexOf(query) !== -1;
+      var show = catOk && queryOk;
+      card.style.display = show ? '' : 'none';
+      if (show) visible += 1;
+    });
+
+    if (countLabel) {
+      countLabel.textContent = 'Showing ' + visible + ' of ' + cards.length + ' free tools';
+    }
+    if (emptyState) {
+      emptyState.hidden = visible > 0;
+    }
+  }
+
+  pills.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeCategory = btn.getAttribute('data-category') || 'All';
+      pills.forEach(function (p) {
+        var isSel = p === btn;
+        p.classList.toggle('active', isSel);
+        p.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+      });
+      applyFilters();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilters);
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      activeCategory = 'All';
+      if (searchInput) searchInput.value = '';
+      pills.forEach(function (p) {
+        var isAll = p.getAttribute('data-category') === 'All';
+        p.classList.toggle('active', isAll);
+        p.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+      });
+      applyFilters();
+    });
+  }
+
+  // Support deep link ?q=term from WebSite SearchAction
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var q = params.get('q');
+    if (q && searchInput) {
+      searchInput.value = q;
+      applyFilters();
+    }
+  } catch (_) {}
+})();
+  </script>
+</body>
+</html>

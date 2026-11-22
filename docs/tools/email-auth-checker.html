@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Email Auth Checker (SPF, DMARC, DKIM, MTA-STS) — RelayTools Hub</title>
+  <meta name="description" content="Free live browser DNS-over-HTTPS email authentication checker. Recursively counts RFC 7208 SPF lookups, audits DMARC alignment and aspf=s risks, probes DKIM selectors, MX, MTA-STS, and TLS-RPT with 0-100 grading.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Live Email Auth, SPF, DMARC & DKIM Checker",
+    "description": "Live client-side email deliverability and DNS security auditor using Cloudflare DNS-over-HTTPS. Performs recursive RFC 7208 SPF lookup counting, DMARC tag and aspf=s risk parsing, DKIM selector probing, MX provider detection, MTA-STS and TLS-RPT verification, and 0-100 scoring.",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires modern browser with Fetch API support",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Cloudflare DNS-over-HTTPS live TXT and MX lookup",
+      "Recursive RFC 7208 SPF lookup counting up to depth 5 with >10 PermError detection",
+      "Duplicate SPF and DMARC record detection",
+      "DMARC policy, pct, rua, sp, and aspf=s billing risk auditing",
+      "Common DKIM selector probing (google, selector1, selector2, k1, s1, mailo)",
+      "MTA-STS and SMTP TLS-RPT checks",
+      "0-100 deliverability score with Grade A-F and JSON/Markdown export"
+    ]
+  }
+  </script>
+  <style>
+    .preset-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+    .preset-label { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+    .grade-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 54px; height: 54px; border-radius: 14px; font-size: 28px; font-weight: 900;
+    }
+    .grade-A { background: var(--green-soft); color: var(--green); border: 2px solid var(--green); }
+    .grade-B { background: var(--accent-soft); color: var(--accent); border: 2px solid var(--accent); }
+    .grade-C { background: var(--amber-soft); color: var(--amber); border: 2px solid var(--amber); }
+    .grade-D { background: var(--amber-soft); color: var(--amber); border: 2px solid var(--amber); }
+    .grade-F { background: var(--red-soft); color: var(--red); border: 2px solid var(--red); }
+    .score-hero {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+      padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+    }
+    .score-left { display: flex; align-items: center; gap: 16px; }
+    .score-bar-track {
+      height: 10px; border-radius: 999px; background: var(--surface-alt);
+      border: 1px solid var(--border); overflow: hidden; margin-top: 8px; min-width: 220px;
+    }
+    .score-bar-fill { height: 100%; border-radius: 999px; transition: width .35s ease; }
+    .dkim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+    .dkim-tile {
+      background: var(--surface-alt); border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+    }
+    .dkim-tile.found { border-color: var(--green); background: var(--green-soft); }
+    .dkim-tile.revoked { border-color: var(--amber); background: var(--amber-soft); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; word-break: break-all; }
+    .tree-indent { display: inline-block; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .status-bar { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); padding: 10px 0; }
+    .spinner {
+      width: 18px; height: 18px; border: 2.5px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .75s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .export-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 820px) { .dkim-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">RT</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">API Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button type="button" id="themeToggleBtn" class="nav-btn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">Live DNS-over-HTTPS &bull; Zero Backend</span>
+      <h1>Live Email Auth, SPF, DMARC &amp; DKIM Checker</h1>
+      <p>Audit any domain directly from your browser via Cloudflare DNS-over-HTTPS. Recursively counts RFC 7208 SPF DNS lookups (detecting &gt;10 PermError &amp; duplicates), inspects DMARC enforcement &amp; <code>aspf=s</code> billing risks, probes common DKIM selectors, MX, MTA-STS, and TLS-RPT.</p>
+    </section>
+
+    <section class="card">
+      <form id="auditForm" onsubmit="runAudit(event)">
+        <div class="form-row">
+          <div class="field" style="flex:2;min-width:240px;">
+            <label for="domainInput">Domain Name (or Email Address)</label>
+            <input type="text" id="domainInput" placeholder="cloudflare.com" autocomplete="off" spellcheck="false" required>
+          </div>
+          <div class="field" style="flex:1;min-width:180px;">
+            <label for="customDkimInput">Extra DKIM Selector (Optional)</label>
+            <input type="text" id="customDkimInput" placeholder="e.g. mandrill, resend, dkim" autocomplete="off" spellcheck="false">
+          </div>
+          <div>
+            <button type="submit" id="runBtn" class="btn btn-primary" style="height:43px;">Audit Live DNS</button>
+          </div>
+        </div>
+      </form>
+      <div class="preset-row">
+        <span class="preset-label">1-Click Live Demos:</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runPreset('cloudflare.com')">cloudflare.com</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runPreset('github.com')">github.com</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runPreset('stripe.com')">stripe.com</button>
+        <span class="small muted" style="margin-left:auto;">Queries <code>cloudflare-dns.com/dns-query</code> directly from your browser</span>
+      </div>
+      <div id="statusBar" class="status-bar hidden" role="status" aria-live="polite">
+        <span class="spinner"></span>
+        <span id="statusText">Resolving DNS records via Cloudflare DoH...</span>
+      </div>
+      <div id="errorBox" class="alert alert-red hidden"></div>
+    </section>
+
+    <div id="resultsContainer" class="hidden">
+      <!-- Summary & Score Card -->
+      <section class="card">
+        <div class="score-hero">
+          <div class="score-left">
+            <div id="gradeBadge" class="grade-badge grade-A">A</div>
+            <div>
+              <h2 id="resultDomainTitle" style="margin:0;">domain.com</h2>
+              <div class="small muted" id="resultMeta">Audited via Cloudflare DNS-over-HTTPS</div>
+              <div class="score-bar-track">
+                <div id="scoreBarFill" class="score-bar-fill" style="width:0%;background:var(--green);"></div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="kpi-label">Deliverability &amp; Auth Score</div>
+            <div id="scoreBig" style="font-size:36px;font-weight:900;line-height:1.1;">0 / 100</div>
+          </div>
+        </div>
+
+        <div class="grid-4" style="margin-bottom:16px;">
+          <div class="kpi">
+            <div class="kpi-label">SPF Lookups</div>
+            <div id="kpiSpf" class="kpi-value">0 / 10</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">DMARC Policy</div>
+            <div id="kpiDmarc" class="kpi-value">None</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">DKIM Selectors</div>
+            <div id="kpiDkim" class="kpi-value">0 / 6</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">MTA-STS / TLS-RPT</div>
+            <div id="kpiTransport" class="kpi-value">0 / 2</div>
+          </div>
+        </div>
+
+        <div id="findingsList"></div>
+      </section>
+
+      <!-- SPF Card -->
+      <section class="card">
+        <div class="section-head">
+          <h2>SPF (Sender Policy Framework &mdash; RFC 7208)</h2>
+          <span id="spfBadge" class="pill pill-teal">Checking</span>
+        </div>
+        <div id="spfRawWrap"></div>
+        <div id="spfAlerts"></div>
+        <h3 style="margin-top:16px;">Recursive DNS Lookup Trace (Depth &le; 5)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Depth &amp; Host</th>
+                <th>Trigger Mechanism</th>
+                <th>Lookups Added</th>
+                <th>Status / Record Detail</th>
+              </tr>
+            </thead>
+            <tbody id="spfTreeBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DMARC Card -->
+      <section class="card">
+        <div class="section-head">
+          <h2>DMARC (<code>_dmarc</code> Policy &amp; Alignment)</h2>
+          <span id="dmarcBadge" class="pill pill-teal">Checking</span>
+        </div>
+        <div id="dmarcRawWrap"></div>
+        <div id="dmarcAlerts"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Value</th>
+                <th>Security &amp; Deliverability Assessment</th>
+              </tr>
+            </thead>
+            <tbody id="dmarcTagsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DKIM Card -->
+      <section class="card">
+        <div class="section-head">
+          <h2>DKIM Common Selector Probe</h2>
+          <span id="dkimBadge" class="pill pill-teal">Checking</span>
+        </div>
+        <p class="small muted" style="margin:0 0 8px;">DKIM selectors cannot be enumerated via DNS, so we probe the 6 most common enterprise selectors (<code>google</code>, <code>selector1</code>, <code>selector2</code>, <code>k1</code>, <code>s1</code>, <code>mailo</code>) plus any custom selector entered above.</p>
+        <div id="dkimGrid" class="dkim-grid"></div>
+      </section>
+
+      <!-- MX, MTA-STS & TLS-RPT Card -->
+      <section class="grid-2">
+        <section class="card" style="margin-bottom:0;">
+          <div class="section-head">
+            <h2>MX Mail Exchangers</h2>
+            <span id="mxProviderBadge" class="pill pill-blue">Unknown</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Priority</th>
+                  <th>Mail Server (Exchange)</th>
+                </tr>
+              </thead>
+              <tbody id="mxTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card" style="margin-bottom:0;">
+          <div class="section-head">
+            <h2>Transport Security (MTA-STS &amp; TLS-RPT)</h2>
+            <span id="transportBadge" class="pill pill-teal">Checking</span>
+          </div>
+          <div id="transportDetails"></div>
+        </section>
+      </section>
+
+      <!-- Export Panel -->
+      <section class="card" style="margin-top:20px;">
+        <div class="section-head">
+          <h2>Export Audit Summary</h2>
+          <div class="export-tabs">
+            <button type="button" id="tabMdBtn" class="btn btn-primary btn-sm" onclick="switchExportTab('md')">Markdown</button>
+            <button type="button" id="tabJsonBtn" class="btn btn-secondary btn-sm" onclick="switchExportTab('json')">JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyExport(this)">Copy Current</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadExport()">Download File</button>
+          </div>
+        </div>
+        <pre id="exportPreview" style="max-height:360px;overflow-y:auto;"></pre>
+      </section>
+    </div>
+
+    <!-- Apify Funnel CTA -->
+    <section class="apify-cta">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Bulk API &bull; n8n &bull; MCP Server</span>
+        <h3>Need to audit 1,000+ lead domains via API, n8n, or MCP?</h3>
+        <p>Run our <strong>Bulk Email Auth Auditor on Apify &mdash; $0.005/domain</strong>. Automates recursive SPF, DMARC, DKIM, MX, MTA-STS, and lead-scoring enrichment at scale with webhook &amp; MCP integration.</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/email-auth-dns-auditor" target="_blank" rel="noopener">Run Bulk Email Auth Auditor &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/domain-rdap-dns-ssl-intel" target="_blank" rel="noopener">Domain RDAP, DNS &amp; SSL Intel</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> &mdash; Free zero-backend browser tools &amp; production Apify APIs / MCP servers.</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <a href="../index.html">All Tools</a>
+        <a href="./dmarc-spf-generator.html">SPF &amp; DMARC Builder</a>
+        <a href="./cvss-security-headers-tool.html">CVSS &amp; Headers Tool</a>
+        <a href="../catalog.html">API Catalog</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Profile</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    const DEFAULT_DKIM_SELECTORS = ['google', 'selector1', 'selector2', 'k1', 's1', 'mailo'];
+    const DNS_TYPES = { A: 1, CNAME: 5, MX: 15, TXT: 16, AAAA: 28 };
+    const MAX_SPF_DEPTH = 5;
+
+    let lastAuditResult = null;
+    let activeExportMode = 'md';
+
+    function normalizeDomain(raw) {
+      let d = String(raw || '').trim().toLowerCase();
+      if (!d) return '';
+      if (d.includes('@')) d = d.split('@').pop();
+      d = d.replace(/^https?:\/\//, '');
+      d = d.split('/')[0].split('?')[0].split('#')[0];
+      d = d.replace(/:\d+$/, '');
+      d = d.replace(/\.+$/, '');
+      return d;
+    }
+
+    function isValidDomain(domain) {
+      return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(domain);
+    }
+
+    function parseTxtData(raw) {
+      if (typeof raw !== 'string') return '';
+      const segments = [];
+      const re = /"((?:\\.|[^"\\])*)"/g;
+      let match;
+      while ((match = re.exec(raw)) !== null) {
+        segments.push(match[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\'));
+      }
+      return segments.length ? segments.join('') : raw.trim();
+    }
+
+    async function dohQuery(name, typeName) {
+      const encodedName = encodeURIComponent(name);
+      const encodedType = encodeURIComponent(typeName);
+      const cfUrl = 'https://cloudflare-dns.com/dns-query?name=' + encodedName + '&type=' + encodedType;
+      try {
+        const res = await fetch(cfUrl, { headers: { Accept: 'application/dns-json' } });
+        if (!res.ok) throw new Error('Cloudflare DoH HTTP ' + res.status);
+        const data = await res.json();
+        return { resolver: 'cloudflare-dns.com', status: data.Status, answers: Array.isArray(data.Answer) ? data.Answer : [] };
+      } catch (cfErr) {
+        const googleUrl = 'https://dns.google/resolve?name=' + encodedName + '&type=' + encodedType;
+        const res2 = await fetch(googleUrl, { headers: { Accept: 'application/dns-json' } });
+        if (!res2.ok) throw cfErr;
+        const data2 = await res2.json();
+        return { resolver: 'dns.google (fallback)', status: data2.Status, answers: Array.isArray(data2.Answer) ? data2.Answer : [] };
+      }
+    }
+
+    function extractTxtRecords(answers) {
+      return answers
+        .filter(a => Number(a.type) === DNS_TYPES.TXT)
+        .map(a => parseTxtData(a.data));
+    }
+
+    function extractCnameTargets(answers) {
+      return answers
+        .filter(a => Number(a.type) === DNS_TYPES.CNAME)
+        .map(a => String(a.data || '').replace(/\.$/, ''));
+    }
+
+    async function auditSpfRecursive(domain) {
+      const rootRes = await dohQuery(domain, 'TXT');
+      const rootTxts = extractTxtRecords(rootRes.answers);
+      const spfRecords = rootTxts.filter(t => /^v=spf1(?:\s|$)/i.test(t.trim()));
+
+      const result = {
+        present: spfRecords.length > 0,
+        duplicateCount: spfRecords.length,
+        records: spfRecords,
+        primaryRecord: spfRecords[0] || null,
+        totalLookups: 0,
+        voidLookups: 0,
+        permError: false,
+        permErrorReasons: [],
+        warnings: [],
+        allQualifier: null,
+        hasDeprecatedPtr: false,
+        maxDepthReached: false,
+        trace: []
+      };
+
+      if (spfRecords.length === 0) {
+        return result;
+      }
+
+      if (spfRecords.length > 1) {
+        result.permError = true;
+        result.permErrorReasons.push('Multiple v=spf1 TXT records found (' + spfRecords.length + '). RFC 7208 requires exactly one SPF record.');
+      }
+
+      const visited = new Set([domain.toLowerCase()]);
+
+      async function walkRecord(host, recordText, depth, triggerMech) {
+        const tokens = recordText.trim().split(/\s+/).slice(1);
+        const hop = {
+          depth,
+          host,
+          trigger: triggerMech,
+          record: recordText,
+          lookupsAdded: 0,
+          note: 'OK'
+        };
+        result.trace.push(hop);
+
+        for (const rawToken of tokens) {
+          const token = rawToken.trim();
+          if (!token) continue;
+
+          const qualMatch = token.match(/^([+\-~?])?(.*)$/);
+          const qualifier = qualMatch[1] || '+';
+          const body = qualMatch[2];
+          const lower = body.toLowerCase();
+
+          if (lower === 'all') {
+            if (depth === 0) result.allQualifier = qualifier + 'all';
+            continue;
+          }
+
+          if (lower.startsWith('ip4:') || lower.startsWith('ip6:') || lower.startsWith('exp=')) {
+            continue;
+          }
+
+          if (lower === 'a' || lower.startsWith('a:') || lower.startsWith('a/')) {
+            result.totalLookups += 1;
+            hop.lookupsAdded += 1;
+            continue;
+          }
+
+          if (lower === 'mx' || lower.startsWith('mx:') || lower.startsWith('mx/')) {
+            result.totalLookups += 1;
+            hop.lookupsAdded += 1;
+            continue;
+          }
+
+          if (lower === 'ptr' || lower.startsWith('ptr:')) {
+            result.totalLookups += 1;
+            hop.lookupsAdded += 1;
+            result.hasDeprecatedPtr = true;
+            continue;
+          }
+
+          if (lower.startsWith('exists:')) {
+            result.totalLookups += 1;
+            hop.lookupsAdded += 1;
+            continue;
+          }
+
+          if (lower.startsWith('include:') || lower.startsWith('redirect=')) {
+            const isRedirect = lower.startsWith('redirect=');
+            const target = body.slice(isRedirect ? 9 : 8).trim().replace(/\.$/, '');
+            result.totalLookups += 1;
+            hop.lookupsAdded += 1;
+
+            if (!target) continue;
+
+            if (target.includes('%{')) {
+              result.trace.push({
+                depth: depth + 1,
+                host: target,
+                trigger: token,
+                record: '',
+                lookupsAdded: 0,
+                note: 'Contains SPF macro (runtime-expanded; +1 lookup counted)'
+              });
+              continue;
+            }
+
+            if (depth >= MAX_SPF_DEPTH) {
+              result.maxDepthReached = true;
+              result.trace.push({
+                depth: depth + 1,
+                host: target,
+                trigger: token,
+                record: '',
+                lookupsAdded: 0,
+                note: 'Max recursion depth (' + MAX_SPF_DEPTH + ') reached'
+              });
+              continue;
+            }
+
+            const key = target.toLowerCase();
+            if (visited.has(key)) {
+              result.trace.push({
+                depth: depth + 1,
+                host: target,
+                trigger: token,
+                record: '',
+                lookupsAdded: 0,
+                note: 'Already visited (cycle / duplicate include skipped)'
+              });
+              continue;
+            }
+            visited.add(key);
+
+            try {
+              const subRes = await dohQuery(target, 'TXT');
+              const subSpfs = extractTxtRecords(subRes.answers).filter(t => /^v=spf1(?:\s|$)/i.test(t.trim()));
+              if (subSpfs.length === 0) {
+                result.voidLookups += 1;
+                result.trace.push({
+                  depth: depth + 1,
+                  host: target,
+                  trigger: token,
+                  record: '',
+                  lookupsAdded: 0,
+                  note: subRes.status === 3 ? 'NXDOMAIN (void lookup)' : 'No v=spf1 record found (void lookup)'
+                });
+              } else {
+                if (subSpfs.length > 1) {
+                  result.warnings.push('Included host ' + target + ' publishes ' + subSpfs.length + ' SPF records.');
+                }
+                await walkRecord(target, subSpfs[0], depth + 1, token);
+              }
+            } catch (err) {
+              result.trace.push({
+                depth: depth + 1,
+                host: target,
+                trigger: token,
+                record: '',
+                lookupsAdded: 0,
+                note: 'Lookup error: ' + err.message
+              });
+            }
+          }
+        }
+      }
+
+      await walkRecord(domain, spfRecords[0], 0, 'root TXT');
+
+      if (result.totalLookups > 10) {
+        result.permError = true;
+        result.permErrorReasons.push('DNS lookup count is ' + result.totalLookups + '/10. RFC 7208 mandates PermError above 10 lookups.');
+      } else if (result.totalLookups >= 8) {
+        result.warnings.push('SPF uses ' + result.totalLookups + '/10 DNS lookups — very close to the RFC 7208 limit.');
+      }
+      if (result.voidLookups > 2) {
+        result.warnings.push('Detected ' + result.voidLookups + ' void DNS lookups (RFC 7208 recommends max 2).');
+      }
+      if (result.hasDeprecatedPtr) {
+        result.warnings.push('Deprecated "ptr" mechanism detected (discouraged by RFC 7208 Section 5.5).');
+      }
+      if (result.allQualifier === '+all') {
+        result.warnings.push('CRITICAL: "+all" authorizes the entire internet to send mail as your domain.');
+      }
+
+      return result;
+    }
+
+    async function auditDmarc(domain) {
+      const res = await dohQuery('_dmarc.' + domain, 'TXT');
+      const txts = extractTxtRecords(res.answers);
+      const dmarcRecords = txts.filter(t => /^v=DMARC1(?:\s*;|$)/i.test(t.trim()));
+
+      const parsed = {
+        present: dmarcRecords.length > 0,
+        duplicateCount: dmarcRecords.length,
+        records: dmarcRecords,
+        primaryRecord: dmarcRecords[0] || null,
+        tags: {},
+        policy: null,
+        subdomainPolicy: null,
+        pct: 100,
+        rua: null,
+        ruf: null,
+        adkim: 'r',
+        aspf: 'r',
+        fo: '0',
+        aspfStrictRisk: false,
+        errors: [],
+        warnings: []
+      };
+
+      if (dmarcRecords.length === 0) {
+        return parsed;
+      }
+
+      if (dmarcRecords.length > 1) {
+        parsed.errors.push('Duplicate DMARC records (' + dmarcRecords.length + ') found at _dmarc.' + domain + '. Receiving MTAs ignore DMARC when duplicates exist.');
+      }
+
+      const parts = dmarcRecords[0].split(';');
+      for (const part of parts) {
+        const idx = part.indexOf('=');
+        if (idx === -1) continue;
+        const k = part.slice(0, idx).trim().toLowerCase();
+        const v = part.slice(idx + 1).trim();
+        if (k) parsed.tags[k] = v;
+      }
+
+      parsed.policy = (parsed.tags.p || '').toLowerCase() || null;
+      parsed.subdomainPolicy = (parsed.tags.sp || parsed.policy || '').toLowerCase() || null;
+      parsed.pct = parsed.tags.pct !== undefined && !isNaN(Number(parsed.tags.pct)) ? Number(parsed.tags.pct) : 100;
+      parsed.rua = parsed.tags.rua || null;
+      parsed.ruf = parsed.tags.ruf || null;
+      parsed.adkim = (parsed.tags.adkim || 'r').toLowerCase();
+      parsed.aspf = (parsed.tags.aspf || 'r').toLowerCase();
+      parsed.fo = parsed.tags.fo || '0';
+
+      if (!parsed.policy || !['none', 'quarantine', 'reject'].includes(parsed.policy)) {
+        parsed.errors.push('Missing or invalid DMARC policy tag (p=none|quarantine|reject).');
+      }
+      if (parsed.policy === 'none') {
+        parsed.warnings.push('DMARC is in monitoring-only mode (p=none) — spoofed emails are not quarantined or rejected.');
+      }
+      if (parsed.pct < 100 && parsed.policy !== 'none') {
+        parsed.warnings.push('DMARC enforcement is only applied to ' + parsed.pct + '% of messages (pct=' + parsed.pct + ').');
+      }
+      if (!parsed.rua) {
+        parsed.warnings.push('No rua= aggregate reporting address configured — you have no visibility into authentication failures.');
+      }
+      if (parsed.aspf === 's') {
+        parsed.aspfStrictRisk = true;
+        parsed.warnings.push('Strict SPF alignment (aspf=s) detected: Risk of breaking third-party billing, invoicing, CRM, and forwarded emails whose Return-Path subdomain differs from the Header From domain.');
+      }
+      if (parsed.tags.sp && parsed.tags.sp.toLowerCase() === 'none' && parsed.policy !== 'none') {
+        parsed.warnings.push('Subdomain policy sp=none weakens protection for lookalike subdomains.');
+      }
+
+      return parsed;
+    }
+
+    async function auditDkimSelectors(domain, customSelector) {
+      const selectors = [...DEFAULT_DKIM_SELECTORS];
+      const cleanedCustom = String(customSelector || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+      if (cleanedCustom && !selectors.includes(cleanedCustom)) {
+        selectors.push(cleanedCustom);
+      }
+
+      const probes = await Promise.all(selectors.map(async (sel) => {
+        const fqdn = sel + '._domainkey.' + domain;
+        try {
+          const res = await dohQuery(fqdn, 'TXT');
+          const txts = extractTxtRecords(res.answers);
+          const cnames = extractCnameTargets(res.answers);
+          const dkimTxt = txts.find(t => /v=DKIM1/i.test(t) || /(?:^|;\s*)p=/i.test(t)) || txts[0] || null;
+
+          let status = 'not_found';
+          let keyType = null;
+          let keyBitsEst = null;
+
+          if (dkimTxt) {
+            const pMatch = dkimTxt.match(/(?:^|;\s*)p=([^;\s]*)/i);
+            const kMatch = dkimTxt.match(/(?:^|;\s*)k=([^;\s]*)/i);
+            keyType = kMatch ? kMatch[1] : 'rsa';
+            if (pMatch && pMatch[1] === '') {
+              status = 'revoked';
+            } else if (pMatch && pMatch[1].length > 10) {
+              status = 'found';
+              const rawBytes = Math.floor((pMatch[1].replace(/=+$/, '').length * 3) / 4);
+              if (keyType.toLowerCase() === 'ed25519') {
+                keyBitsEst = 256;
+              } else if (rawBytes >= 260) {
+                keyBitsEst = 2048;
+              } else if (rawBytes >= 130) {
+                keyBitsEst = 1024;
+              } else {
+                keyBitsEst = rawBytes * 8;
+              }
+            } else {
+              status = 'found';
+            }
+          } else if (cnames.length > 0) {
+            status = 'cname_only';
+          }
+
+          return {
+            selector: sel,
+            fqdn,
+            status,
+            record: dkimTxt,
+            cname: cnames[0] || null,
+            keyType,
+            keyBitsEst
+          };
+        } catch (err) {
+          return { selector: sel, fqdn, status: 'error', error: err.message, record: null, cname: null };
+        }
+      }));
+
+      return probes;
+    }
+
+    function detectMailProvider(mxList) {
+      if (!mxList.length) return 'No MX Records';
+      if (mxList.length === 1 && (mxList[0].exchange === '' || mxList[0].exchange === '.')) return 'Null MX (RFC 7505 — No Inbound Mail)';
+      const joined = mxList.map(m => m.exchange.toLowerCase()).join(' ');
+      if (/google\.com|googlemail\.com/.test(joined)) return 'Google Workspace';
+      if (/mail\.protection\.outlook\.com|outlook\.com/.test(joined)) return 'Microsoft 365';
+      if (/pphosted\.com/.test(joined)) return 'Proofpoint';
+      if (/mimecast\.com/.test(joined)) return 'Mimecast';
+      if (/mx\.cloudflare\.net/.test(joined)) return 'Cloudflare Email Routing';
+      if (/protonmail\.ch/.test(joined)) return 'Proton Mail';
+      if (/messagingengine\.com/.test(joined)) return 'Fastmail';
+      if (/zoho\.com/.test(joined)) return 'Zoho Mail';
+      if (/inbound-smtp\..*\.amazonaws\.com/.test(joined)) return 'Amazon SES';
+      if (/improvmx\.com/.test(joined)) return 'ImprovMX';
+      if (/mailgun\.org/.test(joined)) return 'Mailgun';
+      return 'Custom / Self-Hosted MX';
+    }
+
+    async function auditMxAndTransport(domain) {
+      const [mxRes, stsRes, tlsRes] = await Promise.all([
+        dohQuery(domain, 'MX'),
+        dohQuery('_mta-sts.' + domain, 'TXT'),
+        dohQuery('_smtp._tls.' + domain, 'TXT')
+      ]);
+
+      const mxRecords = mxRes.answers
+        .filter(a => Number(a.type) === DNS_TYPES.MX)
+        .map(a => {
+          const parts = String(a.data || '').trim().split(/\s+/);
+          const priority = Number(parts[0]);
+          const exchange = (parts[1] || '').replace(/\.$/, '');
+          return { priority: isNaN(priority) ? 0 : priority, exchange };
+        })
+        .sort((a, b) => a.priority - b.priority);
+
+      const stsTxts = extractTxtRecords(stsRes.answers);
+      const stsRecord = stsTxts.find(t => /^v=STSv1/i.test(t.trim())) || null;
+
+      const tlsTxts = extractTxtRecords(tlsRes.answers);
+      const tlsRecord = tlsTxts.find(t => /^v=TLSRPTv1/i.test(t.trim())) || null;
+
+      return {
+        mx: mxRecords,
+        provider: detectMailProvider(mxRecords),
+        mtaSts: { present: Boolean(stsRecord), record: stsRecord },
+        tlsRpt: { present: Boolean(tlsRecord), record: tlsRecord }
+      };
+    }
+
+    function computeScore(audit) {
+      let score = 0;
+      const findings = [];
+
+      // 1. SPF (30 pts)
+      if (!audit.spf.present) {
+        findings.push({ level: 'red', title: 'Missing SPF Record', detail: 'No v=spf1 TXT record found. Add an SPF record to authorize legitimate mail servers.' });
+      } else {
+        if (audit.spf.duplicateCount > 1) {
+          findings.push({ level: 'red', title: 'Duplicate SPF Records (' + audit.spf.duplicateCount + ')', detail: 'RFC 7208 PermError: Merge all v=spf1 records into a single TXT entry.' });
+          score += 5;
+        } else {
+          score += 15;
+        }
+
+        if (audit.spf.totalLookups > 10) {
+          findings.push({ level: 'red', title: 'SPF Exceeds 10 DNS Lookup Limit (' + audit.spf.totalLookups + '/10)', detail: 'RFC 7208 PermError triggered! Receiving mail servers will fail SPF validation.' });
+        } else if (audit.spf.totalLookups >= 8) {
+          score += 8;
+          findings.push({ level: 'amber', title: 'SPF Near Lookup Limit (' + audit.spf.totalLookups + '/10)', detail: 'Only ' + (10 - audit.spf.totalLookups) + ' lookup(s) remaining before RFC 7208 PermError.' });
+        } else {
+          score += 10;
+          findings.push({ level: 'green', title: 'SPF Lookup Budget Healthy (' + audit.spf.totalLookups + '/10)', detail: 'Single valid SPF record within the RFC 7208 10-lookup threshold.' });
+        }
+
+        if (audit.spf.allQualifier === '-all') {
+          score += 5;
+        } else if (audit.spf.allQualifier === '~all') {
+          score += 4;
+        } else if (audit.spf.allQualifier === '+all') {
+          score -= 15;
+          findings.push({ level: 'red', title: 'Dangerous SPF "+all" Mechanism', detail: 'Allows any server worldwide to send email as this domain. Change to ~all or -all immediately.' });
+        } else if (audit.spf.allQualifier === '?all') {
+          score += 1;
+          findings.push({ level: 'amber', title: 'Neutral SPF Qualifier (?all)', detail: 'Upgrade ?all to ~all (SoftFail) or -all (HardFail) for actual spoofing protection.' });
+        } else if (audit.spf.primaryRecord && /redirect=/i.test(audit.spf.primaryRecord)) {
+          score += 4;
+        }
+
+        if (audit.spf.hasDeprecatedPtr) {
+          score -= 2;
+          findings.push({ level: 'amber', title: 'Deprecated SPF "ptr" Mechanism', detail: 'Remove ptr from SPF; it is slow, unreliable, and deprecated by RFC 7208.' });
+        }
+      }
+
+      // 2. DMARC (35 pts)
+      if (!audit.dmarc.present) {
+        findings.push({ level: 'red', title: 'Missing DMARC Record', detail: 'No v=DMARC1 record found at _dmarc.' + audit.domain + '. Required by Google & Yahoo bulk sender rules.' });
+      } else {
+        if (audit.dmarc.duplicateCount > 1) {
+          findings.push({ level: 'red', title: 'Duplicate DMARC Records (' + audit.dmarc.duplicateCount + ')', detail: 'Keep strictly one _dmarc TXT record or receiving MTAs will ignore DMARC.' });
+        } else {
+          score += 10;
+        }
+
+        if (audit.dmarc.policy === 'reject') {
+          score += audit.dmarc.pct === 100 ? 18 : Math.round(10 + (audit.dmarc.pct / 100) * 8);
+          findings.push({ level: 'green', title: 'DMARC Enforced (p=reject, pct=' + audit.dmarc.pct + '%)', detail: 'Strongest anti-spoofing posture active for unauthorized mail.' });
+        } else if (audit.dmarc.policy === 'quarantine') {
+          score += audit.dmarc.pct === 100 ? 13 : Math.round(7 + (audit.dmarc.pct / 100) * 6);
+          findings.push({ level: 'amber', title: 'DMARC Quarantine Active (p=quarantine, pct=' + audit.dmarc.pct + '%)', detail: 'Good protection; consider advancing to p=reject once reports confirm 100% alignment.' });
+        } else if (audit.dmarc.policy === 'none') {
+          score += 5;
+          findings.push({ level: 'amber', title: 'DMARC Monitoring Only (p=none)', detail: 'DMARC is present but does not block spoofed email yet. Progress to p=quarantine then p=reject.' });
+        }
+
+        if (audit.dmarc.rua) {
+          score += 5;
+        } else {
+          findings.push({ level: 'amber', title: 'DMARC Missing rua= Reporting', detail: 'Add rua=mailto:dmarc@' + audit.domain + ' to receive aggregate authentication telemetry.' });
+        }
+
+        if (audit.dmarc.subdomainPolicy === 'reject' || audit.dmarc.subdomainPolicy === 'quarantine') {
+          score += 2;
+        }
+
+        if (audit.dmarc.aspfStrictRisk) {
+          findings.push({ level: 'amber', title: 'Strict SPF Alignment Risk (aspf=s)', detail: 'aspf=s requires exact domain match on Return-Path and can break third-party billing/CRM/SaaS mailers and forwarding. Prefer aspf=r unless tightly controlled.' });
+        }
+      }
+
+      // 3. DKIM (15 pts)
+      const activeDkim = audit.dkim.filter(d => d.status === 'found');
+      if (activeDkim.length > 0) {
+        score += 15;
+        findings.push({ level: 'green', title: 'DKIM Key(s) Discovered (' + activeDkim.map(d => d.selector).join(', ') + ')', detail: 'Active cryptographic DKIM public key(s) verified in DNS.' });
+      } else {
+        findings.push({ level: 'blue', title: 'No Common DKIM Selectors Found', detail: 'None of the default selectors matched. Custom provider selectors may still be active — test a custom selector above.' });
+      }
+
+      // 4. MX & Transport (20 pts)
+      if (audit.transport.mx.length > 0) {
+        score += 8;
+      } else {
+        findings.push({ level: 'amber', title: 'No MX Records Published', detail: 'Domain has no MX records (cannot receive replies or bounce reports unless fallback A record is intended).' });
+      }
+
+      if (audit.transport.mtaSts.present) {
+        score += 6;
+        findings.push({ level: 'green', title: 'MTA-STS Configured (_mta-sts)', detail: 'Domain advertises MTA-STS policy to enforce TLS encryption in transit.' });
+      } else {
+        findings.push({ level: 'blue', title: 'MTA-STS Not Detected', detail: 'Consider publishing _mta-sts.' + audit.domain + ' to prevent SMTP downgrade attacks.' });
+      }
+
+      if (audit.transport.tlsRpt.present) {
+        score += 6;
+      } else {
+        findings.push({ level: 'blue', title: 'SMTP TLS-RPT Not Detected', detail: 'Consider adding _smtp._tls.' + audit.domain + ' to receive TLS delivery failure reports.' });
+      }
+
+      score = Math.max(0, Math.min(100, Math.round(score)));
+      let grade = 'F';
+      if (score >= 90) grade = 'A';
+      else if (score >= 80) grade = 'B';
+      else if (score >= 70) grade = 'C';
+      else if (score >= 60) grade = 'D';
+
+      return { score, grade, findings };
+    }
+
+    function buildMarkdownSummary(audit) {
+      const lines = [];
+      lines.push('# Email Authentication Audit: ' + audit.domain);
+      lines.push('');
+      lines.push('- **Score:** ' + audit.score + '/100 (Grade **' + audit.grade + '**)');
+      lines.push('- **Audited At:** ' + audit.auditedAt);
+      lines.push('- **Mail Provider:** ' + audit.transport.provider);
+      lines.push('- **SPF Lookups:** ' + audit.spf.totalLookups + '/10' + (audit.spf.permError ? ' (PERMERROR)' : ''));
+      lines.push('- **DMARC Policy:** ' + (audit.dmarc.policy ? 'p=' + audit.dmarc.policy + ' (pct=' + audit.dmarc.pct + '%, aspf=' + audit.dmarc.aspf + ', adkim=' + audit.dmarc.adkim + ')' : 'Missing'));
+      lines.push('- **DKIM Selectors Found:** ' + (audit.dkim.filter(d => d.status === 'found').map(d => d.selector).join(', ') || 'None among probed selectors'));
+      lines.push('- **MTA-STS:** ' + (audit.transport.mtaSts.present ? 'Present' : 'Missing') + ' | **TLS-RPT:** ' + (audit.transport.tlsRpt.present ? 'Present' : 'Missing'));
+      lines.push('');
+      lines.push('## Key Findings');
+      for (const f of audit.findings) {
+        const tag = f.level === 'red' ? '[CRITICAL]' : f.level === 'amber' ? '[WARN]' : f.level === 'green' ? '[PASS]' : '[INFO]';
+        lines.push('- ' + tag + ' **' + f.title + '**: ' + f.detail);
+      }
+      lines.push('');
+      lines.push('## Raw DNS Records');
+      lines.push('- **SPF:** `' + (audit.spf.primaryRecord || 'Not found') + '`');
+      lines.push('- **DMARC:** `' + (audit.dmarc.primaryRecord || 'Not found') + '`');
+      lines.push('- **MTA-STS:** `' + (audit.transport.mtaSts.record || 'Not found') + '`');
+      lines.push('- **TLS-RPT:** `' + (audit.transport.tlsRpt.record || 'Not found') + '`');
+      lines.push('- **MX:** ' + (audit.transport.mx.length ? audit.transport.mx.map(m => m.priority + ' ' + (m.exchange || '.')).join(', ') : 'None'));
+      return lines.join('\n');
+    }
+
+    function renderAudit(audit) {
+      document.getElementById('resultsContainer').classList.remove('hidden');
+
+      // Score Header
+      const gradeBadge = document.getElementById('gradeBadge');
+      gradeBadge.textContent = audit.grade;
+      gradeBadge.className = 'grade-badge grade-' + audit.grade;
+      document.getElementById('resultDomainTitle').textContent = audit.domain;
+      document.getElementById('resultMeta').textContent = 'Audited live via Cloudflare DoH • ' + new Date(audit.auditedAt).toLocaleString();
+      document.getElementById('scoreBig').textContent = audit.score + ' / 100';
+
+      const fill = document.getElementById('scoreBarFill');
+      fill.style.width = audit.score + '%';
+      fill.style.background = audit.score >= 80 ? 'var(--green)' : audit.score >= 60 ? 'var(--amber)' : 'var(--red)';
+
+      // KPIs
+      document.getElementById('kpiSpf').textContent = audit.spf.present ? (audit.spf.totalLookups + ' / 10') : 'Missing';
+      document.getElementById('kpiDmarc').textContent = audit.dmarc.policy ? ('p=' + audit.dmarc.policy) : 'Missing';
+      const foundDkimCount = audit.dkim.filter(d => d.status === 'found').length;
+      document.getElementById('kpiDkim').textContent = foundDkimCount + ' / ' + audit.dkim.length;
+      const transportCount = (audit.transport.mtaSts.present ? 1 : 0) + (audit.transport.tlsRpt.present ? 1 : 0);
+      document.getElementById('kpiTransport').textContent = transportCount + ' / 2';
+
+      // Findings
+      document.getElementById('findingsList').innerHTML = audit.findings.map(f =>
+        '<div class="alert alert-' + f.level + '"><strong>' + escapeHtml(f.title) + ':</strong> ' + escapeHtml(f.detail) + '</div>'
+      ).join('');
+
+      // SPF Section
+      const spfBadge = document.getElementById('spfBadge');
+      if (!audit.spf.present) {
+        spfBadge.className = 'pill pill-red';
+        spfBadge.textContent = 'Missing';
+      } else if (audit.spf.permError) {
+        spfBadge.className = 'pill pill-red';
+        spfBadge.textContent = 'PermError (' + audit.spf.totalLookups + '/10)';
+      } else if (audit.spf.totalLookups >= 8 || audit.spf.warnings.length) {
+        spfBadge.className = 'pill pill-amber';
+        spfBadge.textContent = 'Warning (' + audit.spf.totalLookups + '/10)';
+      } else {
+        spfBadge.className = 'pill pill-green';
+        spfBadge.textContent = 'Valid (' + audit.spf.totalLookups + '/10)';
+      }
+
+      document.getElementById('spfRawWrap').innerHTML = audit.spf.records.length
+        ? audit.spf.records.map((rec, i) => '<pre>' + escapeHtml((audit.spf.records.length > 1 ? '[Record #' + (i + 1) + '] ' : '') + rec) + '</pre>').join('')
+        : '<div class="alert alert-red">No <code>v=spf1</code> record found on <code>' + escapeHtml(audit.domain) + '</code>.</div>';
+
+      const spfAlertHtml = []
+        .concat(audit.spf.permErrorReasons.map(r => '<div class="alert alert-red"><strong>RFC 7208 PermError:</strong> ' + escapeHtml(r) + '</div>'))
+        .concat(audit.spf.warnings.map(w => '<div class="alert alert-amber"><strong>Warning:</strong> ' + escapeHtml(w) + '</div>'))
+        .join('');
+      document.getElementById('spfAlerts').innerHTML = spfAlertHtml;
+
+      document.getElementById('spfTreeBody').innerHTML = audit.spf.trace.length
+        ? audit.spf.trace.map(hop => {
+            const indent = hop.depth > 0 ? '<span class="tree-indent">' + '&nbsp;&nbsp;'.repeat(hop.depth) + '&#x2514;&#x2500; </span>' : '';
+            return '<tr>' +
+              '<td>' + indent + '<code>' + escapeHtml(hop.host) + '</code> <span class="small muted">(L' + hop.depth + ')</span></td>' +
+              '<td><code>' + escapeHtml(hop.trigger) + '</code></td>' +
+              '<td><strong>+' + hop.lookupsAdded + '</strong></td>' +
+              '<td class="mono">' + escapeHtml(hop.record || hop.note) + '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td colspan="4" class="muted">No SPF lookup chain to trace.</td></tr>';
+
+      // DMARC Section
+      const dmarcBadge = document.getElementById('dmarcBadge');
+      if (!audit.dmarc.present || audit.dmarc.errors.length) {
+        dmarcBadge.className = 'pill pill-red';
+        dmarcBadge.textContent = audit.dmarc.present ? 'Invalid / Duplicate' : 'Missing';
+      } else if (audit.dmarc.policy === 'reject') {
+        dmarcBadge.className = 'pill pill-green';
+        dmarcBadge.textContent = 'Enforced (p=reject)';
+      } else if (audit.dmarc.policy === 'quarantine') {
+        dmarcBadge.className = 'pill pill-amber';
+        dmarcBadge.textContent = 'Quarantine (p=quarantine)';
+      } else {
+        dmarcBadge.className = 'pill pill-amber';
+        dmarcBadge.textContent = 'Monitor Only (p=none)';
+      }
+
+      document.getElementById('dmarcRawWrap').innerHTML = audit.dmarc.records.length
+        ? audit.dmarc.records.map((rec, i) => '<pre>' + escapeHtml((audit.dmarc.records.length > 1 ? '[Record #' + (i + 1) + '] ' : '') + rec) + '</pre>').join('')
+        : '<div class="alert alert-red">No <code>v=DMARC1</code> record found at <code>_dmarc.' + escapeHtml(audit.domain) + '</code>.</div>';
+
+      document.getElementById('dmarcAlerts').innerHTML = []
+        .concat(audit.dmarc.errors.map(e => '<div class="alert alert-red"><strong>Error:</strong> ' + escapeHtml(e) + '</div>'))
+        .concat(audit.dmarc.warnings.map(w => '<div class="alert alert-amber"><strong>Warning:</strong> ' + escapeHtml(w) + '</div>'))
+        .join('');
+
+      const tagRows = [];
+      if (audit.dmarc.present) {
+        tagRows.push(['p (Policy)', audit.dmarc.policy || 'missing', audit.dmarc.policy === 'reject' ? 'Strongest enforcement' : audit.dmarc.policy === 'quarantine' ? 'Failing mail routed to spam' : 'Monitoring only — does not stop spoofing']);
+        tagRows.push(['sp (Subdomain Policy)', audit.dmarc.tags.sp || ('inherits p=' + (audit.dmarc.policy || 'none')), audit.dmarc.subdomainPolicy === 'reject' ? 'Subdomains protected' : 'Consider setting sp=reject']);
+        tagRows.push(['pct (Percentage)', audit.dmarc.pct + '%', audit.dmarc.pct === 100 ? 'Applies to 100% of mail' : 'Partial rollout active']);
+        tagRows.push(['rua (Aggregate Reports)', audit.dmarc.rua || 'Not configured', audit.dmarc.rua ? 'Receiving daily XML reports' : 'Add rua=mailto:... for visibility']);
+        tagRows.push(['aspf (SPF Alignment)', audit.dmarc.aspf, audit.dmarc.aspf === 's' ? 'STRICT — Watch for third-party billing/CRM/forwarding failures!' : 'Relaxed (recommended for SaaS/billing compatibility)']);
+        tagRows.push(['adkim (DKIM Alignment)', audit.dmarc.adkim, audit.dmarc.adkim === 's' ? 'Strict exact-domain DKIM match required' : 'Relaxed organizational domain match']);
+        if (audit.dmarc.ruf) tagRows.push(['ruf (Forensic Reports)', audit.dmarc.ruf, 'Failure report destination configured']);
+      }
+      document.getElementById('dmarcTagsBody').innerHTML = tagRows.length
+        ? tagRows.map(r => '<tr><td><code>' + escapeHtml(r[0]) + '</code></td><td class="mono">' + escapeHtml(r[1]) + '</td><td>' + escapeHtml(r[2]) + '</td></tr>').join('')
+        : '<tr><td colspan="3" class="muted">No DMARC tags parsed.</td></tr>';
+
+      // DKIM Section
+      const dkimBadge = document.getElementById('dkimBadge');
+      dkimBadge.className = foundDkimCount > 0 ? 'pill pill-green' : 'pill pill-blue';
+      dkimBadge.textContent = foundDkimCount + ' Active Selector' + (foundDkimCount === 1 ? '' : 's');
+
+      document.getElementById('dkimGrid').innerHTML = audit.dkim.map(d => {
+        const cls = d.status === 'found' ? 'found' : d.status === 'revoked' ? 'revoked' : '';
+        const pill = d.status === 'found'
+          ? '<span class="pill pill-green">Found' + (d.keyBitsEst ? ' (~' + d.keyBitsEst + '-bit ' + escapeHtml((d.keyType || 'rsa').toUpperCase()) + ')' : '') + '</span>'
+          : d.status === 'revoked'
+            ? '<span class="pill pill-amber">Revoked (empty p=)</span>'
+            : d.status === 'cname_only'
+              ? '<span class="pill pill-blue">CNAME Delegated</span>'
+              : '<span class="pill pill-amber" style="opacity:0.65;">Not Found</span>';
+        return '<div class="dkim-tile ' + cls + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;">' +
+            '<strong><code>' + escapeHtml(d.selector) + '</code></strong>' + pill +
+          '</div>' +
+          '<div class="small muted mono">' + escapeHtml(d.fqdn) + '</div>' +
+          (d.cname ? '<div class="small" style="margin-top:4px;">CNAME &rarr; <code>' + escapeHtml(d.cname) + '</code></div>' : '') +
+          (d.record ? '<div class="mono small" style="margin-top:6px;max-height:54px;overflow:hidden;opacity:0.85;">' + escapeHtml(d.record.slice(0, 110)) + (d.record.length > 110 ? '...' : '') + '</div>' : '') +
+        '</div>';
+      }).join('');
+
+      // MX & Transport
+      document.getElementById('mxProviderBadge').textContent = audit.transport.provider;
+      document.getElementById('mxTableBody').innerHTML = audit.transport.mx.length
+        ? audit.transport.mx.map(m => '<tr><td><strong>' + escapeHtml(m.priority) + '</strong></td><td class="mono">' + escapeHtml(m.exchange || '. (Null MX)') + '</td></tr>').join('')
+        : '<tr><td colspan="2" class="muted">No MX records found.</td></tr>';
+
+      const transportBadge = document.getElementById('transportBadge');
+      transportBadge.className = transportCount === 2 ? 'pill pill-green' : transportCount === 1 ? 'pill pill-amber' : 'pill pill-blue';
+      transportBadge.textContent = transportCount + ' / 2 Active';
+
+      document.getElementById('transportDetails').innerHTML =
+        '<div style="margin-bottom:14px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>MTA-STS (<code>_mta-sts.' + escapeHtml(audit.domain) + '</code>)</strong>' +
+            (audit.transport.mtaSts.present ? '<span class="pill pill-green">Configured</span>' : '<span class="pill pill-amber">Missing</span>') +
+          '</div>' +
+          (audit.transport.mtaSts.record ? '<pre>' + escapeHtml(audit.transport.mtaSts.record) + '</pre>' : '<p class="small muted" style="margin:6px 0 0;">No v=STSv1 TXT record published.</p>') +
+        '</div>' +
+        '<div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>SMTP TLS-RPT (<code>_smtp._tls.' + escapeHtml(audit.domain) + '</code>)</strong>' +
+            (audit.transport.tlsRpt.present ? '<span class="pill pill-green">Configured</span>' : '<span class="pill pill-amber">Missing</span>') +
+          '</div>' +
+          (audit.transport.tlsRpt.record ? '<pre>' + escapeHtml(audit.transport.tlsRpt.record) + '</pre>' : '<p class="small muted" style="margin:6px 0 0;">No v=TLSRPTv1 TXT record published.</p>') +
+        '</div>';
+
+      updateExportPreview();
+    }
+
+    function updateExportPreview() {
+      if (!lastAuditResult) return;
+      const preview = document.getElementById('exportPreview');
+      if (activeExportMode === 'json') {
+        preview.textContent = JSON.stringify(lastAuditResult, null, 2);
+      } else {
+        preview.textContent = buildMarkdownSummary(lastAuditResult);
+      }
+    }
+
+    function switchExportTab(mode) {
+      activeExportMode = mode;
+      document.getElementById('tabMdBtn').className = mode === 'md' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      document.getElementById('tabJsonBtn').className = mode === 'json' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      updateExportPreview();
+    }
+
+    function copyExport(btn) {
+      if (!lastAuditResult) return;
+      const content = document.getElementById('exportPreview').textContent;
+      copyText(content, btn);
+    }
+
+    function downloadExport() {
+      if (!lastAuditResult) return;
+      const ext = activeExportMode === 'json' ? 'json' : 'md';
+      const mime = activeExportMode === 'json' ? 'application/json;charset=utf-8' : 'text/markdown;charset=utf-8';
+      const content = document.getElementById('exportPreview').textContent;
+      downloadFile('email-auth-audit-' + lastAuditResult.domain + '.' + ext, content, mime);
+    }
+
+    function runPreset(domain) {
+      document.getElementById('domainInput').value = domain;
+      runAudit();
+    }
+
+    async function runAudit(evt) {
+      if (evt) evt.preventDefault();
+      const inputEl = document.getElementById('domainInput');
+      const customDkim = document.getElementById('customDkimInput').value;
+      const errorBox = document.getElementById('errorBox');
+      const statusBar = document.getElementById('statusBar');
+      const statusText = document.getElementById('statusText');
+      const runBtn = document.getElementById('runBtn');
+
+      errorBox.classList.add('hidden');
+      const domain = normalizeDomain(inputEl.value || inputEl.placeholder);
+      if (!isValidDomain(domain)) {
+        errorBox.textContent = 'Please enter a valid domain name such as cloudflare.com, github.com, or stripe.com.';
+        errorBox.classList.remove('hidden');
+        return;
+      }
+      inputEl.value = domain;
+
+      runBtn.disabled = true;
+      runBtn.textContent = 'Auditing...';
+      statusBar.classList.remove('hidden');
+      statusText.textContent = 'Querying SPF, DMARC, DKIM selectors, MX, MTA-STS, and TLS-RPT for ' + domain + ' via Cloudflare DoH...';
+
+      try {
+        const [spf, dmarc, dkim, transport] = await Promise.all([
+          auditSpfRecursive(domain),
+          auditDmarc(domain),
+          auditDkimSelectors(domain, customDkim),
+          auditMxAndTransport(domain)
+        ]);
+
+        const audit = {
+          domain,
+          auditedAt: new Date().toISOString(),
+          spf,
+          dmarc,
+          dkim,
+          transport
+        };
+        const scored = computeScore(audit);
+        audit.score = scored.score;
+        audit.grade = scored.grade;
+        audit.findings = scored.findings;
+
+        lastAuditResult = audit;
+        renderAudit(audit);
+      } catch (err) {
+        errorBox.textContent = 'DNS-over-HTTPS query failed: ' + err.message + '. Check your network connection or try again.';
+        errorBox.classList.remove('hidden');
+      } finally {
+        statusBar.classList.add('hidden');
+        runBtn.disabled = false;
+        runBtn.textContent = 'Audit Live DNS';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      const qDomain = params.get('domain');
+      if (qDomain) {
+        document.getElementById('domainInput').value = qDomain;
+        runAudit();
+      }
+    });
+  </script>
+</body>
+</html>

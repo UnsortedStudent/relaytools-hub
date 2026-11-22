@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Hacker News Trends &amp; GitHub Repo Health Explorer — RelayTools Hub</title>
+  <meta name="description" content="Live browser explorer querying Hacker News Algolia API (velocity pts/hr, Show HN, Ask HN, CSV/JSON export) and GitHub REST API (0–100 Repo Health Score, stars, forks, releases)." />
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Live Hacker News Trends & GitHub Repo Health Explorer",
+    "description": "Interactive browser tool querying live CORS-open Hacker News Algolia API and GitHub REST API directly from the browser for story velocity (pts/hr), CSV/JSON exports, and 0–100 repository health scores.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "All (Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Live Hacker News Front Page, Show HN, Ask HN, and keyword search via Algolia HN API",
+      "Real-time velocity calculation (points per hour) with sortable story cards",
+      "Export filtered Hacker News datasets as CSV or JSON",
+      "Live GitHub repository health audit with stars, forks, open issues, license, primary language, and latest release",
+      "Transparent 0–100 GitHub Repo Health Score and side-by-side comparison table"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .main-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .main-tab-btn {
+      flex: 1;
+      min-width: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 15.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: border-color .15s, background .15s;
+    }
+    .main-tab-btn:hover {
+      border-color: var(--accent);
+    }
+    .main-tab-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--ink);
+    }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 10px 0 4px;
+    }
+    .chip-btn {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .chip-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .hn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+    @media (max-width: 820px) {
+      .hn-grid { grid-template-columns: 1fr; }
+    }
+    .hn-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .hn-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: var(--ink);
+      margin: 0;
+    }
+    .hn-title a {
+      color: var(--ink);
+    }
+    .hn-title a:hover {
+      color: var(--accent);
+    }
+    .hn-meta-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hn-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .score-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .score-ring {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      border: 6px solid var(--accent);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .score-ring.score-high { border-color: var(--green); color: var(--green); }
+    .score-ring.score-mid { border-color: var(--accent); color: var(--accent); }
+    .score-ring.score-warn { border-color: var(--amber); color: var(--amber); }
+    .score-ring.score-low { border-color: var(--red); color: var(--red); }
+    .score-num { font-size: 30px; line-height: 1; }
+    .score-cap { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 3px; }
+    .breakdown-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .breakdown-item {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .bar-track {
+      height: 7px;
+      border-radius: 999px;
+      background: var(--border);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">RT</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="../index.html">Tools Hub</a>
+        <a class="nav-link" href="../catalog.html">Apify Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Free Deploy</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">Live Public APIs · Direct Browser Fetch · Zero API Keys</span>
+      <h1>Hacker News Trends &amp; GitHub Repo Health Explorer</h1>
+      <p>Query live CORS-open developer intelligence APIs straight from your browser. Spot high-velocity Hacker News stories (<code>pts/hr</code>) with instant CSV/JSON export, or audit any GitHub repository's stars, release cadence, push recency, and 0–100 Health Score.</p>
+    </section>
+
+    <div class="main-tabs" role="tablist" aria-label="Explorer views">
+      <button type="button" class="main-tab-btn active" role="tab" aria-selected="true" id="tabBtnHn" data-target="hnSection">
+        <span>Hacker News Live Trends</span>
+        <span class="pill pill-teal">Algolia HN API</span>
+      </button>
+      <button type="button" class="main-tab-btn" role="tab" aria-selected="false" id="tabBtnGh" data-target="ghSection">
+        <span>GitHub Repo Health Live</span>
+        <span class="pill pill-blue">GitHub REST API</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: HACKER NEWS LIVE -->
+    <section id="hnSection" class="tab-section active" role="tabpanel" aria-labelledby="tabBtnHn">
+      <div class="card">
+        <div class="toolbar">
+          <div>
+            <h2 style="margin:0;">Hacker News Live Feed &amp; Velocity Scanner</h2>
+            <p class="muted small" style="margin:4px 0 0;">Queries <code>hn.algolia.com/api/v1/search</code> &amp; <code>search_by_date</code> live in real time.</p>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" id="hnExportCsvBtn">Export CSV</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="hnExportJsonBtn">Export JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="hnCopyJsonBtn">Copy JSON</button>
+          </div>
+        </div>
+
+        <form id="hnSearchForm" class="form-row">
+          <div class="field">
+            <label for="hnFeedSelect">Feed / Tag</label>
+            <select id="hnFeedSelect">
+              <option value="front_page" selected>Front Page</option>
+              <option value="show_hn">Show HN</option>
+              <option value="ask_hn">Ask HN</option>
+              <option value="story">All Stories</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="hnEndpointSelect">Algolia Endpoint</label>
+            <select id="hnEndpointSelect">
+              <option value="search" selected>Top / Relevant (search)</option>
+              <option value="search_by_date">Newest (search_by_date)</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1.4;">
+            <label for="hnQueryInput">Keyword Search (optional)</label>
+            <input type="search" id="hnQueryInput" placeholder="e.g. LLM, MCP, Rust, SQLite..." />
+          </div>
+          <div class="field" style="max-width:130px; min-width:110px;">
+            <label for="hnMinPointsInput">Min Points</label>
+            <input type="number" id="hnMinPointsInput" value="0" min="0" step="10" />
+          </div>
+          <div class="field" style="max-width:190px;">
+            <label for="hnSortSelect">Sort Cards By</label>
+            <select id="hnSortSelect">
+              <option value="velocity" selected>Velocity (pts/hr ↓)</option>
+              <option value="points">Points (↓)</option>
+              <option value="comments">Comments (↓)</option>
+              <option value="newest">Newest First</option>
+            </select>
+          </div>
+          <div class="field" style="flex:0 0 auto; min-width:auto;">
+            <button type="submit" class="btn btn-primary" id="hnFetchBtn">Fetch Live HN</button>
+          </div>
+        </form>
+
+        <div class="chip-row">
+          <span class="muted small">Quick topics:</span>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="front_page" data-query="">Front Page</button>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="show_hn" data-query="">Show HN</button>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="ask_hn" data-query="">Ask HN</button>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="story" data-query="MCP">MCP</button>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="story" data-query="LLM">LLM / AI</button>
+          <button type="button" class="chip-btn hn-topic-chip" data-feed="story" data-query="Rust">Rust</button>
+        </div>
+
+        <div id="hnStatusAlert" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:20px;" aria-label="Hacker News metrics">
+        <div class="kpi">
+          <div class="kpi-label">Stories Shown</div>
+          <div class="kpi-value" id="hnKpiCount">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg Points</div>
+          <div class="kpi-value" id="hnKpiAvgPts">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Peak Velocity</div>
+          <div class="kpi-value" id="hnKpiPeakVel">—</div>
+          <div class="kpi-sub">pts / hour</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total Comments</div>
+          <div class="kpi-value" id="hnKpiComments">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <h3 style="margin:0;">Live Stories</h3>
+          <span class="muted small" id="hnUpdatedNote">Loading live stories...</span>
+        </div>
+        <div id="hnCardsGrid" class="hn-grid"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: GITHUB REPO HEALTH LIVE -->
+    <section id="ghSection" class="tab-section" role="tabpanel" aria-labelledby="tabBtnGh">
+      <div class="card">
+        <div class="toolbar">
+          <div>
+            <h2 style="margin:0;">GitHub Repository Health Analyzer</h2>
+            <p class="muted small" style="margin:4px 0 0;">Queries <code>api.github.com/repos/{owner}/{repo}</code> and <code>/releases/latest</code> directly from your browser.</p>
+          </div>
+          <span class="pill pill-blue" id="ghRateLimitPill">GitHub Public API</span>
+        </div>
+
+        <form id="ghSearchForm" class="form-row">
+          <div class="field" style="flex:2;">
+            <label for="ghRepoInput">GitHub Repository (<code>owner/repo</code> or full URL)</label>
+            <input type="text" id="ghRepoInput" value="fastapi/fastapi" placeholder="e.g. fastapi/fastapi or https://github.com/n8n-io/n8n" />
+          </div>
+          <div class="field" style="flex:0 0 auto; min-width:auto;">
+            <button type="submit" class="btn btn-primary" id="ghFetchBtn">Analyze Repo</button>
+          </div>
+        </form>
+
+        <div class="chip-row">
+          <span class="muted small">Preset repos:</span>
+          <button type="button" class="chip-btn gh-preset-chip" data-repo="fastapi/fastapi">fastapi/fastapi</button>
+          <button type="button" class="chip-btn gh-preset-chip" data-repo="apify/crawlee-python">apify/crawlee-python</button>
+          <button type="button" class="chip-btn gh-preset-chip" data-repo="n8n-io/n8n">n8n-io/n8n</button>
+        </div>
+
+        <div id="ghStatusAlert" role="status" aria-live="polite"></div>
+      </div>
+
+      <div id="ghResultArea" class="card" style="display:none;">
+        <div class="toolbar">
+          <h3 style="margin:0;">Repository Health Scorecard</h3>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" id="ghCopyReportBtn">Copy Report JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="ghDownloadReportBtn">Download JSON</button>
+          </div>
+        </div>
+        <div id="ghScorecardMount"></div>
+      </div>
+
+      <div id="ghHistoryCard" class="card" style="display:none;">
+        <div class="toolbar">
+          <div>
+            <h3 style="margin:0;">Session Comparison Table</h3>
+            <p class="muted small" style="margin:2px 0 0;">Click multiple presets or repos above to compare health scores side by side.</p>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" id="ghExportHistoryCsvBtn">Export Comparison CSV</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="ghClearHistoryBtn">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrap" id="ghHistoryTableWrap"></div>
+      </div>
+    </section>
+
+    <section class="apify-cta" aria-label="Cloud developer intelligence actors">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Scheduled Monitoring · Bulk Enrichments · MCP</span>
+        <h3>Track hundreds of repos, HN Who's Hiring threads, and PyPI/npm packages automatically</h3>
+        <p>Skip unauthenticated GitHub rate limits and run scheduled daily intelligence digests, dependency audits, and trend alerts via our cloud Apify Actors.</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/hackernews-trends-jobs-extractor" target="_blank" rel="noopener noreferrer">HN Trends &amp; Jobs Extractor ↗</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/github-repo-signals-analyzer" target="_blank" rel="noopener noreferrer">GitHub Signals Analyzer ↗</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/pypi-npm-package-intel" target="_blank" rel="noopener noreferrer">PyPI &amp; npm Package Intel ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> — Privacy-first browser tools &amp; cloud Apify Actors. Zero tracking, zero uploads.</div>
+      <div class="btn-group">
+        <a href="../index.html">Tools Hub</a>
+        <span>·</span>
+        <a href="../catalog.html">Apify Catalog</a>
+        <span>·</span>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <span>·</span>
+        <a href="../deploy-free.html">Free Deploy</a>
+        <span>·</span>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      const state = {
+        hnItems: [],
+        ghCurrent: null,
+        ghHistory: [],
+        ghInitialized: false
+      };
+
+      function switchMainTab(targetId) {
+        document.querySelectorAll('.main-tab-btn').forEach((btn) => {
+          const active = btn.dataset.target === targetId;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        document.querySelectorAll('.tab-section').forEach((sec) => {
+          sec.classList.toggle('active', sec.id === targetId);
+        });
+        if (targetId === 'ghSection' && !state.ghInitialized) {
+          state.ghInitialized = true;
+          fetchGitHubRepo(document.getElementById('ghRepoInput').value);
+        }
+      }
+
+      document.querySelectorAll('.main-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => switchMainTab(btn.dataset.target));
+      });
+
+      function extractDomain(url) {
+        if (!url) return 'news.ycombinator.com';
+        try {
+          return new URL(url).hostname.replace(/^www\./, '');
+        } catch (_) {
+          return 'news.ycombinator.com';
+        }
+      }
+
+      function formatAge(createdAtSec) {
+        const hrs = Math.max(0, (Date.now() - createdAtSec * 1000) / 3600000);
+        if (hrs < 1) return Math.max(1, Math.round(hrs * 60)) + 'm ago';
+        if (hrs < 48) return hrs.toFixed(1) + 'h ago';
+        return Math.round(hrs / 24) + 'd ago';
+      }
+
+      function csvEscape(v) {
+        const s = v === null || v === undefined ? '' : String(v);
+        return /[",\r\n]/.test(s) ? ('"' + s.replace(/"/g, '""') + '"') : s;
+      }
+
+      function objectsToCsv(rows, headers) {
+        const lines = [headers.map(csvEscape).join(',')];
+        rows.forEach((r) => {
+          lines.push(headers.map((h) => csvEscape(r[h])).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      /* ==================== TAB 1: HACKER NEWS ==================== */
+      const hnEls = {
+        feed: document.getElementById('hnFeedSelect'),
+        endpoint: document.getElementById('hnEndpointSelect'),
+        query: document.getElementById('hnQueryInput'),
+        minPoints: document.getElementById('hnMinPointsInput'),
+        sort: document.getElementById('hnSortSelect'),
+        fetchBtn: document.getElementById('hnFetchBtn'),
+        alert: document.getElementById('hnStatusAlert'),
+        kpiCount: document.getElementById('hnKpiCount'),
+        kpiAvgPts: document.getElementById('hnKpiAvgPts'),
+        kpiPeakVel: document.getElementById('hnKpiPeakVel'),
+        kpiComments: document.getElementById('hnKpiComments'),
+        updatedNote: document.getElementById('hnUpdatedNote'),
+        grid: document.getElementById('hnCardsGrid')
+      };
+
+      function getSortedHnItems() {
+        const sortBy = hnEls.sort.value;
+        const copy = state.hnItems.slice();
+        if (sortBy === 'velocity') copy.sort((a, b) => b.velocityPtsPerHr - a.velocityPtsPerHr);
+        else if (sortBy === 'points') copy.sort((a, b) => b.points - a.points);
+        else if (sortBy === 'comments') copy.sort((a, b) => b.numComments - a.numComments);
+        else if (sortBy === 'newest') copy.sort((a, b) => b.createdAtSec - a.createdAtSec);
+        return copy;
+      }
+
+      function renderHnCards() {
+        const items = getSortedHnItems();
+        if (items.length === 0) {
+          hnEls.kpiCount.textContent = '0';
+          hnEls.kpiAvgPts.textContent = '0';
+          hnEls.kpiPeakVel.textContent = '0';
+          hnEls.kpiComments.textContent = '0';
+          hnEls.grid.innerHTML = '<div class="muted small">No Hacker News stories matched your filters. Try lowering Min Points or clearing the keyword.</div>';
+          return;
+        }
+
+        const totalPts = items.reduce((sum, x) => sum + x.points, 0);
+        const totalComments = items.reduce((sum, x) => sum + x.numComments, 0);
+        const peakVel = Math.max.apply(null, items.map((x) => x.velocityPtsPerHr));
+
+        hnEls.kpiCount.textContent = String(items.length);
+        hnEls.kpiAvgPts.textContent = String(Math.round(totalPts / items.length));
+        hnEls.kpiPeakVel.textContent = peakVel.toFixed(1);
+        hnEls.kpiComments.textContent = totalComments.toLocaleString();
+
+        hnEls.grid.innerHTML = items.map((item, idx) => {
+          const velClass = item.velocityPtsPerHr >= 40 ? 'pill-green' : (item.velocityPtsPerHr >= 15 ? 'pill-teal' : 'pill-amber');
+          return (
+            '<article class="hn-card">' +
+              '<div>' +
+                '<div class="hn-meta-row" style="margin-bottom:8px;">' +
+                  '<span class="pill pill-blue">#' + (idx + 1) + '</span>' +
+                  '<span class="pill ' + velClass + '">' + item.velocityPtsPerHr.toFixed(1) + ' pts/hr</span>' +
+                  '<span class="pill pill-teal">' + item.points + ' pts</span>' +
+                  '<span class="pill pill-amber">' + item.numComments + ' comments</span>' +
+                '</div>' +
+                '<h4 class="hn-title"><a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(item.title) + '</a></h4>' +
+                '<div class="small muted" style="margin-top:4px;">' + escapeHtml(item.domain) + '</div>' +
+              '</div>' +
+              '<div class="hn-footer">' +
+                '<span>by <strong>' + escapeHtml(item.author) + '</strong> · ' + escapeHtml(formatAge(item.createdAtSec)) + '</span>' +
+                '<div class="btn-group">' +
+                  '<a href="' + escapeHtml(item.hnUrl) + '" target="_blank" rel="noopener noreferrer">HN Thread ↗</a>' +
+                  '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">Source ↗</a>' +
+                '</div>' +
+              '</div>' +
+            '</article>'
+          );
+        }).join('');
+      }
+
+      async function fetchHackerNews() {
+        const tag = hnEls.feed.value;
+        const endpoint = hnEls.endpoint.value === 'search_by_date' ? 'search_by_date' : 'search';
+        const query = hnEls.query.value.trim();
+        const minPts = Math.max(0, Number(hnEls.minPoints.value) || 0);
+
+        const params = new URLSearchParams();
+        params.set('tags', tag);
+        params.set('hitsPerPage', '30');
+        if (query) params.set('query', query);
+        if (minPts > 0) params.set('numericFilters', 'points>=' + minPts);
+
+        const url = 'https://hn.algolia.com/api/v1/' + endpoint + '?' + params.toString();
+
+        hnEls.fetchBtn.disabled = true;
+        hnEls.fetchBtn.textContent = 'Fetching...';
+        hnEls.alert.innerHTML = '<div class="alert alert-blue">Fetching live Hacker News data from Algolia...</div>';
+
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status + ' from Algolia HN API');
+          const data = await resp.json();
+          const hits = Array.isArray(data.hits) ? data.hits : [];
+          const nowMs = Date.now();
+
+          state.hnItems = hits
+            .filter((h) => (h.title || h.story_title))
+            .map((h) => {
+              const createdSec = Number(h.created_at_i) || Math.floor(nowMs / 1000);
+              const hoursAgo = Math.max(0.25, (nowMs - createdSec * 1000) / 3600000);
+              const points = Number(h.points) || 0;
+              const numComments = Number(h.num_comments) || 0;
+              const hnUrl = 'https://news.ycombinator.com/item?id=' + encodeURIComponent(h.objectID);
+              const storyUrl = h.url || hnUrl;
+              return {
+                objectID: String(h.objectID || ''),
+                title: h.title || h.story_title || '(Untitled)',
+                url: storyUrl,
+                hnUrl: hnUrl,
+                domain: extractDomain(storyUrl),
+                author: h.author || 'unknown',
+                points: points,
+                numComments: numComments,
+                createdAtSec: createdSec,
+                createdAtIso: new Date(createdSec * 1000).toISOString(),
+                velocityPtsPerHr: Number((points / hoursAgo).toFixed(2))
+              };
+            })
+            .filter((item) => item.points >= minPts);
+
+          hnEls.updatedNote.textContent = 'Updated ' + new Date().toLocaleTimeString() + ' · Endpoint: /' + endpoint + ' · Tag: ' + tag;
+          hnEls.alert.innerHTML = '<div class="alert alert-green">Loaded ' + state.hnItems.length + ' live Hacker News stories from <code>' + escapeHtml(endpoint) + '</code>.</div>';
+          renderHnCards();
+        } catch (err) {
+          hnEls.alert.innerHTML = '<div class="alert alert-red">Could not fetch Hacker News API: ' + escapeHtml(err && err.message ? err.message : String(err)) + '. Check your internet connection and retry.</div>';
+          hnEls.grid.innerHTML = '';
+        } finally {
+          hnEls.fetchBtn.disabled = false;
+          hnEls.fetchBtn.textContent = 'Fetch Live HN';
+        }
+      }
+
+      document.getElementById('hnSearchForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        fetchHackerNews();
+      });
+      hnEls.sort.addEventListener('change', renderHnCards);
+      hnEls.feed.addEventListener('change', fetchHackerNews);
+      hnEls.endpoint.addEventListener('change', fetchHackerNews);
+
+      document.querySelectorAll('.hn-topic-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          hnEls.feed.value = chip.dataset.feed;
+          hnEls.query.value = chip.dataset.query;
+          fetchHackerNews();
+        });
+      });
+
+      document.getElementById('hnExportJsonBtn').addEventListener('click', () => {
+        const sorted = getSortedHnItems();
+        downloadFile('hackernews-live.json', JSON.stringify(sorted, null, 2), 'application/json;charset=utf-8');
+      });
+      document.getElementById('hnCopyJsonBtn').addEventListener('click', function () {
+        copyText(JSON.stringify(getSortedHnItems(), null, 2), this);
+      });
+      document.getElementById('hnExportCsvBtn').addEventListener('click', () => {
+        const sorted = getSortedHnItems();
+        const csv = objectsToCsv(sorted, ['title', 'points', 'numComments', 'velocityPtsPerHr', 'author', 'domain', 'url', 'hnUrl', 'createdAtIso']);
+        downloadFile('hackernews-live.csv', csv, 'text/csv;charset=utf-8');
+      });
+
+      /* ==================== TAB 2: GITHUB REPO HEALTH ==================== */
+      const ghEls = {
+        input: document.getElementById('ghRepoInput'),
+        fetchBtn: document.getElementById('ghFetchBtn'),
+        ratePill: document.getElementById('ghRateLimitPill'),
+        alert: document.getElementById('ghStatusAlert'),
+        resultArea: document.getElementById('ghResultArea'),
+        scorecardMount: document.getElementById('ghScorecardMount'),
+        historyCard: document.getElementById('ghHistoryCard'),
+        historyTableWrap: document.getElementById('ghHistoryTableWrap')
+      };
+
+      function normalizeRepoSlug(raw) {
+        const trimmed = raw.trim().replace(/\/+$/, '').replace(/\.git$/i, '');
+        const urlMatch = trimmed.match(/github\.com\/([^/\s]+)\/([^/\s?#]+)/i);
+        if (urlMatch) return urlMatch[1] + '/' + urlMatch[2];
+        const slugMatch = trimmed.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
+        if (slugMatch) return slugMatch[1] + '/' + slugMatch[2];
+        return null;
+      }
+
+      function computeHealthScore(repo, release) {
+        const nowMs = Date.now();
+        const pushedMs = repo.pushed_at ? Date.parse(repo.pushed_at) : 0;
+        const daysSincePush = pushedMs ? Math.max(0, Math.floor((nowMs - pushedMs) / 86400000)) : 9999;
+
+        let activityScore = 0;
+        if (daysSincePush <= 7) activityScore = 30;
+        else if (daysSincePush <= 30) activityScore = 25;
+        else if (daysSincePush <= 90) activityScore = 18;
+        else if (daysSincePush <= 180) activityScore = 10;
+        else if (daysSincePush <= 365) activityScore = 5;
+
+        const stars = Number(repo.stargazers_count) || 0;
+        const forks = Number(repo.forks_count) || 0;
+        const adoptionScore = Math.min(25, Math.round(Math.log10(stars + forks + 1) * 5.2));
+
+        let releaseScore = 0;
+        let releaseDaysAgo = null;
+        if (release && release.tag_name) {
+          releaseScore += 10;
+          const relMs = Date.parse(release.published_at || release.created_at || '');
+          if (relMs) {
+            releaseDaysAgo = Math.max(0, Math.floor((nowMs - relMs) / 86400000));
+            if (releaseDaysAgo <= 180) releaseScore += 5;
+          }
+        }
+
+        let docsScore = 0;
+        if (repo.license && repo.license.spdx_id && repo.license.spdx_id !== 'NOASSERTION') docsScore += 6;
+        if (repo.description && repo.description.trim().length > 10) docsScore += 3;
+        if (repo.homepage || repo.has_wiki) docsScore += 3;
+        if (Array.isArray(repo.topics) && repo.topics.length > 0) docsScore += 3;
+
+        let maintenanceScore = 0;
+        if (!repo.archived && !repo.disabled) maintenanceScore += 8;
+        const issueRatio = (Number(repo.open_issues_count) || 0) / Math.max(stars, 10);
+        if (issueRatio <= 0.05) maintenanceScore += 7;
+        else if (issueRatio <= 0.15) maintenanceScore += 5;
+        else if (issueRatio <= 0.35) maintenanceScore += 3;
+        else maintenanceScore += 1;
+
+        const total = Math.max(0, Math.min(100, activityScore + adoptionScore + releaseScore + docsScore + maintenanceScore));
+        const grade = total >= 80 ? 'Excellent' : (total >= 60 ? 'Healthy' : (total >= 40 ? 'Moderate' : 'Stale / Risk'));
+
+        return {
+          total,
+          grade,
+          daysSincePush,
+          releaseDaysAgo,
+          breakdown: [
+            { label: 'Push Recency', pts: activityScore, max: 30, note: daysSincePush + 'd since last push' },
+            { label: 'Community Adoption', pts: adoptionScore, max: 25, note: stars.toLocaleString() + ' stars · ' + forks.toLocaleString() + ' forks' },
+            { label: 'Release Cadence', pts: releaseScore, max: 15, note: release && release.tag_name ? (release.tag_name + (releaseDaysAgo !== null ? ' (' + releaseDaysAgo + 'd ago)' : '')) : 'No GitHub Releases' },
+            { label: 'License & Metadata', pts: docsScore, max: 15, note: (repo.license && repo.license.spdx_id) || 'No License' },
+            { label: 'Maintenance Hygiene', pts: maintenanceScore, max: 15, note: repo.archived ? 'Archived' : ('Active · ' + (repo.open_issues_count || 0) + ' open issues') }
+          ]
+        };
+      }
+
+      function renderGitHubScorecard(report) {
+        const ringClass = report.healthScore >= 80 ? 'score-high' : (report.healthScore >= 60 ? 'score-mid' : (report.healthScore >= 40 ? 'score-warn' : 'score-low'));
+        const gradePill = report.healthScore >= 80 ? 'pill-green' : (report.healthScore >= 60 ? 'pill-teal' : (report.healthScore >= 40 ? 'pill-amber' : 'pill-red'));
+        const topicsHtml = report.topics.slice(0, 8).map((t) => '<span class="pill pill-blue">' + escapeHtml(t) + '</span>').join(' ');
+
+        const breakdownHtml = report.breakdown.map((b) => {
+          const pct = Math.round((b.pts / b.max) * 100);
+          return (
+            '<div class="breakdown-item">' +
+              '<div style="display:flex; justify-content:space-between; font-weight:700;">' +
+                '<span>' + escapeHtml(b.label) + '</span>' +
+                '<span>' + b.pts + ' / ' + b.max + '</span>' +
+              '</div>' +
+              '<div class="small muted">' + escapeHtml(b.note) + '</div>' +
+              '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;"></div></div>' +
+            '</div>'
+          );
+        }).join('');
+
+        ghEls.scorecardMount.innerHTML =
+          '<div class="score-banner">' +
+            '<div style="flex:1; min-width:240px;">' +
+              '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">' +
+                '<h3 style="margin:0; font-size:21px;"><a href="' + escapeHtml(report.htmlUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(report.fullName) + ' ↗</a></h3>' +
+                '<span class="pill ' + gradePill + '">' + escapeHtml(report.healthGrade) + '</span>' +
+                (report.archived ? '<span class="pill pill-red">Archived</span>' : '') +
+              '</div>' +
+              '<p class="muted" style="margin:0 0 10px;">' + escapeHtml(report.description || 'No description provided.') + '</p>' +
+              '<div class="btn-group">' + topicsHtml + '</div>' +
+            '</div>' +
+            '<div class="score-ring ' + ringClass + '" aria-label="Health Score ' + report.healthScore + ' out of 100">' +
+              '<span class="score-num">' + report.healthScore + '</span>' +
+              '<span class="score-cap">/ 100 Health</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid-4" style="margin-bottom:14px;">' +
+            '<div class="kpi"><div class="kpi-label">Stars</div><div class="kpi-value">' + report.stars.toLocaleString() + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">Forks</div><div class="kpi-value">' + report.forks.toLocaleString() + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">Open Issues</div><div class="kpi-value">' + report.openIssues.toLocaleString() + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">Days Since Push</div><div class="kpi-value">' + report.daysSincePush + 'd</div><div class="kpi-sub">' + escapeHtml(report.pushedAtDate) + '</div></div>' +
+          '</div>' +
+          '<div class="grid-4" style="margin-bottom:16px;">' +
+            '<div class="kpi"><div class="kpi-label">Primary Language</div><div class="kpi-value" style="font-size:19px;">' + escapeHtml(report.language) + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">License</div><div class="kpi-value" style="font-size:19px;">' + escapeHtml(report.license) + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">Latest Release</div><div class="kpi-value" style="font-size:19px;">' + (report.latestReleaseUrl ? ('<a href="' + escapeHtml(report.latestReleaseUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(report.latestReleaseTag) + '</a>') : escapeHtml(report.latestReleaseTag)) + '</div><div class="kpi-sub">' + escapeHtml(report.latestReleaseDate) + '</div></div>' +
+            '<div class="kpi"><div class="kpi-label">Default Branch</div><div class="kpi-value" style="font-size:19px;">' + escapeHtml(report.defaultBranch) + '</div><div class="kpi-sub">Watchers: ' + report.watchers.toLocaleString() + '</div></div>' +
+          '</div>' +
+          '<h4 style="margin:0 0 4px;">0–100 Health Score Breakdown</h4>' +
+          '<div class="breakdown-list">' + breakdownHtml + '</div>';
+
+        ghEls.resultArea.style.display = 'block';
+      }
+
+      function renderGitHubHistory() {
+        if (state.ghHistory.length === 0) {
+          ghEls.historyCard.style.display = 'none';
+          return;
+        }
+        ghEls.historyCard.style.display = 'block';
+        const rowsHtml = state.ghHistory.map((r) => {
+          const badge = r.healthScore >= 80 ? 'pill-green' : (r.healthScore >= 60 ? 'pill-teal' : (r.healthScore >= 40 ? 'pill-amber' : 'pill-red'));
+          return (
+            '<tr>' +
+              '<td><a href="' + escapeHtml(r.htmlUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(r.fullName) + '</a></td>' +
+              '<td><span class="pill ' + badge + '">' + r.healthScore + ' / 100</span></td>' +
+              '<td>' + r.stars.toLocaleString() + '</td>' +
+              '<td>' + r.forks.toLocaleString() + '</td>' +
+              '<td>' + r.openIssues.toLocaleString() + '</td>' +
+              '<td>' + escapeHtml(r.language) + '</td>' +
+              '<td>' + escapeHtml(r.license) + '</td>' +
+              '<td>' + escapeHtml(r.latestReleaseTag) + '</td>' +
+              '<td>' + r.daysSincePush + 'd</td>' +
+            '</tr>'
+          );
+        }).join('');
+
+        ghEls.historyTableWrap.innerHTML =
+          '<table>' +
+            '<thead><tr><th>Repository</th><th>Health Score</th><th>Stars</th><th>Forks</th><th>Open Issues</th><th>Language</th><th>License</th><th>Latest Release</th><th>Last Push</th></tr></thead>' +
+            '<tbody>' + rowsHtml + '</tbody>' +
+          '</table>';
+      }
+
+      async function fetchGitHubRepo(rawInput) {
+        const slug = normalizeRepoSlug(rawInput);
+        if (!slug) {
+          ghEls.alert.innerHTML = '<div class="alert alert-amber">Enter a valid repository like <code>fastapi/fastapi</code> or a GitHub URL.</div>';
+          return;
+        }
+        ghEls.input.value = slug;
+        ghEls.fetchBtn.disabled = true;
+        ghEls.fetchBtn.textContent = 'Analyzing...';
+        ghEls.alert.innerHTML = '<div class="alert alert-blue">Querying GitHub API for <code>' + escapeHtml(slug) + '</code>...</div>';
+
+        const headers = { Accept: 'application/vnd.github+json' };
+
+        try {
+          const [repoRes, relRes] = await Promise.all([
+            fetch('https://api.github.com/repos/' + slug, { headers }),
+            fetch('https://api.github.com/repos/' + slug + '/releases/latest', { headers }).catch(() => null)
+          ]);
+
+          const remaining = repoRes.headers.get('X-RateLimit-Remaining');
+          const limit = repoRes.headers.get('X-RateLimit-Limit');
+          if (remaining !== null && limit !== null) {
+            ghEls.ratePill.textContent = 'GitHub API Quota: ' + remaining + '/' + limit;
+          }
+
+          if (repoRes.status === 404) {
+            throw new Error('Repository "' + slug + '" not found (or private).');
+          }
+          if (repoRes.status === 403) {
+            throw new Error('GitHub public API rate limit reached (60 req/hr per IP). Try again later or run our hosted Apify GitHub Signals Analyzer.');
+          }
+          if (!repoRes.ok) {
+            throw new Error('GitHub API returned HTTP ' + repoRes.status);
+          }
+
+          const repo = await repoRes.json();
+          let release = null;
+          if (relRes && relRes.ok) {
+            release = await relRes.json();
+          }
+
+          const scored = computeHealthScore(repo, release);
+          const report = {
+            fullName: repo.full_name,
+            htmlUrl: repo.html_url,
+            description: repo.description || '',
+            stars: Number(repo.stargazers_count) || 0,
+            forks: Number(repo.forks_count) || 0,
+            openIssues: Number(repo.open_issues_count) || 0,
+            watchers: Number(repo.subscribers_count || repo.watchers_count) || 0,
+            language: repo.language || 'N/A',
+            license: (repo.license && (repo.license.spdx_id || repo.license.name)) || 'None',
+            defaultBranch: repo.default_branch || 'main',
+            archived: Boolean(repo.archived),
+            topics: Array.isArray(repo.topics) ? repo.topics : [],
+            pushedAtDate: repo.pushed_at ? repo.pushed_at.slice(0, 10) : 'Unknown',
+            daysSincePush: scored.daysSincePush,
+            latestReleaseTag: (release && release.tag_name) || 'No releases',
+            latestReleaseUrl: (release && release.html_url) || '',
+            latestReleaseDate: release && (release.published_at || release.created_at)
+              ? (release.published_at || release.created_at).slice(0, 10)
+              : '—',
+            healthScore: scored.total,
+            healthGrade: scored.grade,
+            breakdown: scored.breakdown,
+            analyzedAt: new Date().toISOString()
+          };
+
+          state.ghCurrent = report;
+          state.ghHistory = [report].concat(state.ghHistory.filter((item) => item.fullName.toLowerCase() !== report.fullName.toLowerCase()));
+
+          renderGitHubScorecard(report);
+          renderGitHubHistory();
+          ghEls.alert.innerHTML = '<div class="alert alert-green">Analyzed <strong>' + escapeHtml(report.fullName) + '</strong> — Health Score: <strong>' + report.healthScore + '/100 (' + escapeHtml(report.healthGrade) + ')</strong>.</div>';
+        } catch (err) {
+          ghEls.alert.innerHTML = '<div class="alert alert-red">' + escapeHtml(err && err.message ? err.message : String(err)) + '</div>';
+        } finally {
+          ghEls.fetchBtn.disabled = false;
+          ghEls.fetchBtn.textContent = 'Analyze Repo';
+        }
+      }
+
+      document.getElementById('ghSearchForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.ghInitialized = true;
+        fetchGitHubRepo(ghEls.input.value);
+      });
+
+      document.querySelectorAll('.gh-preset-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          state.ghInitialized = true;
+          ghEls.input.value = chip.dataset.repo;
+          fetchGitHubRepo(chip.dataset.repo);
+        });
+      });
+
+      document.getElementById('ghCopyReportBtn').addEventListener('click', function () {
+        if (!state.ghCurrent) return;
+        copyText(JSON.stringify(state.ghCurrent, null, 2), this);
+      });
+      document.getElementById('ghDownloadReportBtn').addEventListener('click', () => {
+        if (!state.ghCurrent) return;
+        const safeName = state.ghCurrent.fullName.replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+        downloadFile('github-health-' + safeName + '.json', JSON.stringify(state.ghCurrent, null, 2), 'application/json;charset=utf-8');
+      });
+      document.getElementById('ghExportHistoryCsvBtn').addEventListener('click', () => {
+        if (state.ghHistory.length === 0) return;
+        const csv = objectsToCsv(state.ghHistory, ['fullName', 'healthScore', 'healthGrade', 'stars', 'forks', 'openIssues', 'language', 'license', 'latestReleaseTag', 'daysSincePush', 'htmlUrl']);
+        downloadFile('github-repo-comparison.csv', csv, 'text/csv;charset=utf-8');
+      });
+      document.getElementById('ghClearHistoryBtn').addEventListener('click', () => {
+        state.ghHistory = [];
+        renderGitHubHistory();
+      });
+
+      fetchHackerNews();
+    })();
+  </script>
+</body>
+</html>

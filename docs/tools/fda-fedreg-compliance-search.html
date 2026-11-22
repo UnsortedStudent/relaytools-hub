@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live U.S. FDA Recall &amp; Federal Register Regulatory Search — RelayTools</title>
+  <meta name="description" content="Query live U.S. FDA Food, Drug, and Medical Device recalls from openFDA and live U.S. Federal Register rules, notices, and Executive Orders directly in your browser with CSV/JSON export.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Live U.S. FDA Recall & Federal Register Regulatory Search",
+    "description": "Free live browser search tool powered by CORS-open official U.S. openFDA enforcement APIs and the U.S. Federal Register API v1 with severity badges and CSV/JSON export.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .tab-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .endpoint-bar {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      margin: 12px 0;
+    }
+    .result-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+    }
+    .result-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .result-title {
+      margin: 0 0 6px;
+      font-size: 16.5px;
+      line-height: 1.35;
+    }
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0 10px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12.5px;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">R</span>
+        <span>RelayTools</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">40 APIs Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP &amp; n8n Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button id="themeToggleBtn" class="nav-btn" type="button" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <span class="eyebrow">Live Official U.S. Government APIs · CORS-Open</span>
+      <h1>Live U.S. FDA Recalls &amp; Federal Register Search</h1>
+      <p>Search real-time FDA Food, Drug, and Medical Device safety recalls directly from <code>api.fda.gov</code> and browse daily Federal Register Rules, Proposed Rules, Notices, and Executive Orders directly from <code>federalregister.gov</code> &mdash; zero signup, instant CSV/JSON export.</p>
+    </header>
+
+    <div class="tab-strip" role="tablist" aria-label="Regulatory data sources">
+      <button id="tabBtnFda" type="button" class="btn btn-primary" role="tab" aria-selected="true" onclick="switchComplianceTab('fda')">Tab 1: openFDA Recalls Live</button>
+      <button id="tabBtnFedreg" type="button" class="btn btn-secondary" role="tab" aria-selected="false" onclick="switchComplianceTab('fedreg')">Tab 2: Federal Register Live</button>
+    </div>
+
+    <!-- TAB 1: OPENFDA RECALLS LIVE -->
+    <section id="panelFda" class="card tab-panel active" aria-labelledby="fdaHeading">
+      <h2 id="fdaHeading">openFDA Enforcement &amp; Recall Live Search</h2>
+      <p class="muted small" style="margin-top:0;">Queries official <code>https://api.fda.gov/{category}/enforcement.json</code> sorted by newest report date.</p>
+
+      <div class="preset-row">
+        <span class="small muted"><strong>Quick Searches:</strong></span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFdaPreset('food', 'ALL', '')">Latest Food Recalls</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFdaPreset('food', 'Class I', '')">Class I Food (High Risk)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFdaPreset('drug', 'ALL', '')">Latest Drug Recalls</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFdaPreset('device', 'ALL', '')">Medical Device Recalls</button>
+      </div>
+
+      <form class="form-row" onsubmit="event.preventDefault(); searchFda();">
+        <div class="field" style="max-width:190px;">
+          <label for="fdaCategory">Recall Category</label>
+          <select id="fdaCategory">
+            <option value="food" selected>Food Recalls</option>
+            <option value="drug">Drug Recalls</option>
+            <option value="device">Medical Device Recalls</option>
+          </select>
+        </div>
+        <div class="field" style="max-width:190px;">
+          <label for="fdaClass">Severity Class</label>
+          <select id="fdaClass">
+            <option value="ALL" selected>All Classes</option>
+            <option value="Class I">Class I (Severe)</option>
+            <option value="Class II">Class II (Moderate)</option>
+            <option value="Class III">Class III (Low Risk)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fdaKeyword">Optional Keyword (product, firm, or reason)</label>
+          <input id="fdaKeyword" type="search" placeholder="e.g., listeria, undeclared, sterility, battery...">
+        </div>
+        <div class="field" style="max-width:110px;min-width:95px;">
+          <label for="fdaLimit">Limit</label>
+          <select id="fdaLimit">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        <div>
+          <button id="fdaSearchBtn" class="btn btn-primary" type="submit">Search openFDA</button>
+        </div>
+      </form>
+
+      <div id="fdaEndpointBar" class="endpoint-bar">Ready &mdash; click Search openFDA to query live enforcement reports.</div>
+
+      <div class="grid-4" style="margin-bottom:14px;">
+        <div class="kpi"><div class="kpi-label">Records Shown</div><div id="fdaKpiShown" class="kpi-value">0</div></div>
+        <div class="kpi"><div class="kpi-label">Total Matches</div><div id="fdaKpiTotal" class="kpi-value">&mdash;</div></div>
+        <div class="kpi"><div class="kpi-label">Class I (Red)</div><div id="fdaKpiC1" class="kpi-value">0</div></div>
+        <div class="kpi"><div class="kpi-label">Class II (Amber)</div><div id="fdaKpiC2" class="kpi-value">0</div></div>
+      </div>
+
+      <div class="action-bar">
+        <div id="fdaStatusText" class="small muted">Loading latest FDA recalls...</div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportFdaCsv()">Export CSV</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportFdaJson()">Export JSON</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyFdaJson(this)">Copy JSON</button>
+        </div>
+      </div>
+
+      <div id="fdaErrorBox"></div>
+      <div class="table-wrap">
+        <table aria-label="FDA enforcement recall results">
+          <thead>
+            <tr>
+              <th>Severity &amp; Date</th>
+              <th>Recalling Firm &amp; State</th>
+              <th>Product</th>
+              <th>Reason for Recall</th>
+            </tr>
+          </thead>
+          <tbody id="fdaTableBody">
+            <tr><td colspan="4" class="muted">Querying official openFDA endpoint...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: FEDERAL REGISTER LIVE -->
+    <section id="panelFedreg" class="card tab-panel" aria-labelledby="fedregHeading">
+      <h2 id="fedregHeading">Federal Register Live Regulatory Search</h2>
+      <p class="muted small" style="margin-top:0;">Queries official <code>https://www.federalregister.gov/api/v1/documents.json</code> for Final Rules, Proposed Rules, Agency Notices, and Executive Orders.</p>
+
+      <div class="preset-row">
+        <span class="small muted"><strong>Quick Filters:</strong></span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFedregPreset('RULE', '')">Latest Final Rules</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFedregPreset('PRORULE', '')">Proposed Rules</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFedregPreset('PRESDOCU', '')">Executive Orders (PRESDOCU)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="runFedregPreset('NOTICE', 'artificial intelligence')">AI Notices</button>
+      </div>
+
+      <form class="form-row" onsubmit="event.preventDefault(); searchFedreg();">
+        <div class="field" style="max-width:240px;">
+          <label for="frDocType">Document Type</label>
+          <select id="frDocType">
+            <option value="ALL">All Document Types</option>
+            <option value="RULE" selected>RULE &mdash; Final Rules</option>
+            <option value="PRORULE">PRORULE &mdash; Proposed Rules</option>
+            <option value="NOTICE">NOTICE &mdash; Agency Notices</option>
+            <option value="PRESDOCU">PRESDOCU &mdash; Presidential / Executive Orders</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="frKeyword">Optional Keyword (topic, statute, or agency)</label>
+          <input id="frKeyword" type="search" placeholder="e.g., cybersecurity, healthcare, tariff, emissions...">
+        </div>
+        <div class="field" style="max-width:110px;min-width:95px;">
+          <label for="frLimit">Per Page</label>
+          <select id="frLimit">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+          </select>
+        </div>
+        <div>
+          <button id="frSearchBtn" class="btn btn-primary" type="submit">Search Federal Register</button>
+        </div>
+      </form>
+
+      <div id="frEndpointBar" class="endpoint-bar">Ready &mdash; click Search Federal Register to fetch live federal documents.</div>
+
+      <div class="grid-4" style="margin-bottom:14px;">
+        <div class="kpi"><div class="kpi-label">Documents Shown</div><div id="frKpiShown" class="kpi-value">0</div></div>
+        <div class="kpi"><div class="kpi-label">Total Available</div><div id="frKpiTotal" class="kpi-value">&mdash;</div></div>
+        <div class="kpi"><div class="kpi-label">Agencies Cited</div><div id="frKpiAgencies" class="kpi-value">0</div></div>
+        <div class="kpi"><div class="kpi-label">Active Type</div><div id="frKpiType" class="kpi-value">RULE</div></div>
+      </div>
+
+      <div class="action-bar">
+        <div id="frStatusText" class="small muted">Switch to this tab or press Search to load live filings.</div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportFedregCsv()">Export CSV</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportFedregJson()">Export JSON</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyFedregJson(this)">Copy JSON</button>
+        </div>
+      </div>
+
+      <div id="frErrorBox"></div>
+      <div id="frResultsList"></div>
+    </section>
+
+    <!-- APIFY COMPLIANCE AUTOMATION CTA -->
+    <aside class="apify-cta" aria-label="Automate regulatory compliance monitoring on Apify">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Automate Daily Compliance Alerts</span>
+        <h3>Schedule FDA Recalls, Federal Register Rules &amp; ClinicalTrials.gov Pipelines</h3>
+        <p>Turn one-off searches into scheduled Slack, email, n8n, or Claude MCP compliance feeds with full pagination, 510(k) device clearances, agency slug filtering, and normalized JSON datasets.</p>
+      </div>
+      <div class="btn-group">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/fda-recalls-compliance-monitor" target="_blank" rel="noopener">FDA Recalls Monitor &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/federal-register-rules-monitor" target="_blank" rel="noopener">Federal Register Monitor &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/clinicaltrials-gov-extractor" target="_blank" rel="noopener">ClinicalTrials.gov API &rarr;</a>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> &mdash; Free browser utilities &amp; 40 cloud data APIs.</div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">40 APIs</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      let lastFdaRecords = [];
+      let lastFedregRecords = [];
+      let fedregLoadedOnce = false;
+
+      function formatFdaDate(raw) {
+        const s = String(raw || '').trim();
+        if (/^\d{8}$/.test(s)) {
+          return s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6, 8);
+        }
+        return s || '\u2014';
+      }
+
+      function sanitizeLucene(term) {
+        return String(term || '').trim().replace(/\s+/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      }
+
+      function severityPill(cls) {
+        const c = String(cls || 'Unknown').trim();
+        if (c === 'Class I') return '<span class="pill pill-red">Class I</span>';
+        if (c === 'Class II') return '<span class="pill pill-amber">Class II</span>';
+        if (c === 'Class III') return '<span class="pill pill-blue">Class III</span>';
+        return '<span class="pill pill-teal">' + escapeHtml(c) + '</span>';
+      }
+
+      function docTypePill(typeLabel) {
+        const t = String(typeLabel || '').toLowerCase();
+        if (t === 'rule') return '<span class="pill pill-red">Final Rule</span>';
+        if (t === 'proposed rule') return '<span class="pill pill-amber">Proposed Rule</span>';
+        if (t === 'presidential document') return '<span class="pill pill-teal">Presidential Doc</span>';
+        return '<span class="pill pill-blue">' + escapeHtml(typeLabel || 'Notice') + '</span>';
+      }
+
+      function toCsv(rows, columns) {
+        const esc = function (val) {
+          const str = String(val == null ? '' : val);
+          return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+        };
+        const header = columns.map(function (c) { return esc(c.label); }).join(',');
+        const body = rows.map(function (r) {
+          return columns.map(function (c) { return esc(c.get(r)); }).join(',');
+        });
+        return [header].concat(body).join('\r\n') + '\r\n';
+      }
+
+      window.switchComplianceTab = function (tab) {
+        const isFda = tab === 'fda';
+        document.getElementById('panelFda').classList.toggle('active', isFda);
+        document.getElementById('panelFedreg').classList.toggle('active', !isFda);
+
+        const btnFda = document.getElementById('tabBtnFda');
+        const btnFr = document.getElementById('tabBtnFedreg');
+        btnFda.className = 'btn ' + (isFda ? 'btn-primary' : 'btn-secondary');
+        btnFr.className = 'btn ' + (!isFda ? 'btn-primary' : 'btn-secondary');
+        btnFda.setAttribute('aria-selected', isFda ? 'true' : 'false');
+        btnFr.setAttribute('aria-selected', !isFda ? 'true' : 'false');
+
+        if (!isFda && !fedregLoadedOnce) {
+          window.searchFedreg();
+        }
+      };
+
+      window.runFdaPreset = function (cat, cls, kw) {
+        document.getElementById('fdaCategory').value = cat;
+        document.getElementById('fdaClass').value = cls;
+        document.getElementById('fdaKeyword').value = kw;
+        window.searchFda();
+      };
+
+      window.searchFda = async function () {
+        const cat = document.getElementById('fdaCategory').value;
+        const cls = document.getElementById('fdaClass').value;
+        const kw = document.getElementById('fdaKeyword').value.trim();
+        const limit = document.getElementById('fdaLimit').value || '10';
+        const btn = document.getElementById('fdaSearchBtn');
+        const statusEl = document.getElementById('fdaStatusText');
+        const errBox = document.getElementById('fdaErrorBox');
+        const tbody = document.getElementById('fdaTableBody');
+        const endpointBar = document.getElementById('fdaEndpointBar');
+
+        const clauses = [];
+        if (kw) {
+          const safe = sanitizeLucene(kw);
+          clauses.push('(reason_for_recall:"' + safe + '" OR product_description:"' + safe + '" OR recalling_firm:"' + safe + '")');
+        }
+        if (cls && cls !== 'ALL') {
+          clauses.push('classification.exact:"' + cls + '"');
+        }
+
+        const params = new URLSearchParams();
+        params.set('sort', 'report_date:desc');
+        params.set('limit', limit);
+        if (clauses.length) {
+          params.set('search', clauses.join(' AND '));
+        }
+
+        const url = 'https://api.fda.gov/' + encodeURIComponent(cat) + '/enforcement.json?' + params.toString();
+        endpointBar.textContent = 'GET ' + url;
+        errBox.innerHTML = '';
+        btn.disabled = true;
+        btn.textContent = 'Fetching...';
+        statusEl.textContent = 'Querying openFDA live API...';
+        tbody.innerHTML = '<tr><td colspan="4" class="muted">Loading live FDA records...</td></tr>';
+
+        try {
+          const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (resp.status === 404) {
+            lastFdaRecords = [];
+            document.getElementById('fdaKpiShown').textContent = '0';
+            document.getElementById('fdaKpiTotal').textContent = '0';
+            document.getElementById('fdaKpiC1').textContent = '0';
+            document.getElementById('fdaKpiC2').textContent = '0';
+            statusEl.textContent = '0 matching recalls found.';
+            tbody.innerHTML = '<tr><td colspan="4" class="muted">No FDA recall records matched your filter criteria. Try broadening the keyword or switching severity class.</td></tr>';
+            return;
+          }
+          if (!resp.ok) {
+            throw new Error('openFDA returned HTTP ' + resp.status);
+          }
+          const data = await resp.json();
+          const results = Array.isArray(data.results) ? data.results : [];
+          lastFdaRecords = results.map(function (r) {
+            return {
+              recallNumber: r.recall_number || '',
+              classification: r.classification || '',
+              status: r.status || '',
+              reportDate: formatFdaDate(r.report_date),
+              recallingFirm: r.recalling_firm || '',
+              city: r.city || '',
+              state: r.state || '',
+              country: r.country || '',
+              productDescription: r.product_description || '',
+              reasonForRecall: r.reason_for_recall || '',
+              distributionPattern: r.distribution_pattern || '',
+              voluntaryMandated: r.voluntary_mandated || '',
+              category: cat
+            };
+          });
+
+          const total = data.meta && data.meta.results && typeof data.meta.results.total === 'number'
+            ? data.meta.results.total.toLocaleString()
+            : String(lastFdaRecords.length);
+          const c1 = lastFdaRecords.filter(function (r) { return r.classification === 'Class I'; }).length;
+          const c2 = lastFdaRecords.filter(function (r) { return r.classification === 'Class II'; }).length;
+
+          document.getElementById('fdaKpiShown').textContent = String(lastFdaRecords.length);
+          document.getElementById('fdaKpiTotal').textContent = total;
+          document.getElementById('fdaKpiC1').textContent = String(c1);
+          document.getElementById('fdaKpiC2').textContent = String(c2);
+          statusEl.textContent = 'Showing ' + lastFdaRecords.length + ' most recent ' + cat + ' recalls (live from api.fda.gov).';
+
+          if (!lastFdaRecords.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="muted">No records returned.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = lastFdaRecords.map(function (rec) {
+            const loc = [rec.city, rec.state].filter(Boolean).join(', ') || rec.country || '\u2014';
+            const shortProd = rec.productDescription.length > 170
+              ? escapeHtml(rec.productDescription.slice(0, 170)) + '&hellip;' +
+                '<details><summary>Full product details</summary><div class="small muted" style="margin-top:4px;">' + escapeHtml(rec.productDescription) + '</div></details>'
+              : escapeHtml(rec.productDescription || '\u2014');
+
+            return '<tr>' +
+              '<td style="white-space:nowrap;">' +
+                severityPill(rec.classification) +
+                '<div class="small" style="margin-top:6px;font-weight:700;">' + escapeHtml(rec.reportDate) + '</div>' +
+                '<div class="small muted">' + escapeHtml(rec.recallNumber || rec.status) + '</div>' +
+              '</td>' +
+              '<td>' +
+                '<strong>' + escapeHtml(rec.recallingFirm || 'Unknown Firm') + '</strong>' +
+                '<div class="small muted">' + escapeHtml(loc) + '</div>' +
+                (rec.status ? '<div class="small muted">Status: ' + escapeHtml(rec.status) + '</div>' : '') +
+              '</td>' +
+              '<td>' + shortProd + '</td>' +
+              '<td>' +
+                '<div>' + escapeHtml(rec.reasonForRecall || '\u2014') + '</div>' +
+                (rec.distributionPattern ? '<div class="small muted" style="margin-top:6px;"><strong>Distribution:</strong> ' + escapeHtml(rec.distributionPattern.slice(0, 140)) + (rec.distributionPattern.length > 140 ? '&hellip;' : '') + '</div>' : '') +
+              '</td>' +
+            '</tr>';
+          }).join('');
+        } catch (err) {
+          errBox.innerHTML = '<div class="alert alert-red"><strong>Live query failed:</strong> ' + escapeHtml(err.message) + '. openFDA may be temporarily unavailable or rate-limited.</div>';
+          statusEl.textContent = 'Query error.';
+          tbody.innerHTML = '<tr><td colspan="4" class="muted">Unable to load live openFDA records right now.</td></tr>';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Search openFDA';
+        }
+      };
+
+      window.exportFdaCsv = function () {
+        if (!lastFdaRecords.length) return;
+        const csv = toCsv(lastFdaRecords, [
+          { label: 'report_date', get: function (r) { return r.reportDate; } },
+          { label: 'recall_number', get: function (r) { return r.recallNumber; } },
+          { label: 'classification', get: function (r) { return r.classification; } },
+          { label: 'status', get: function (r) { return r.status; } },
+          { label: 'recalling_firm', get: function (r) { return r.recallingFirm; } },
+          { label: 'city', get: function (r) { return r.city; } },
+          { label: 'state', get: function (r) { return r.state; } },
+          { label: 'product_description', get: function (r) { return r.productDescription; } },
+          { label: 'reason_for_recall', get: function (r) { return r.reasonForRecall; } },
+          { label: 'distribution_pattern', get: function (r) { return r.distributionPattern; } }
+        ]);
+        downloadFile('openfda-recalls.csv', csv, 'text/csv;charset=utf-8');
+      };
+
+      window.exportFdaJson = function () {
+        if (!lastFdaRecords.length) return;
+        downloadFile('openfda-recalls.json', JSON.stringify(lastFdaRecords, null, 2) + '\n', 'application/json;charset=utf-8');
+      };
+
+      window.copyFdaJson = function (btn) {
+        if (!lastFdaRecords.length) return;
+        copyText(JSON.stringify(lastFdaRecords, null, 2), btn);
+      };
+
+      // --- TAB 2: FEDERAL REGISTER LIVE ---
+      window.runFedregPreset = function (docType, kw) {
+        document.getElementById('frDocType').value = docType;
+        document.getElementById('frKeyword').value = kw;
+        window.searchFedreg();
+      };
+
+      window.searchFedreg = async function () {
+        fedregLoadedOnce = true;
+        const docType = document.getElementById('frDocType').value;
+        const kw = document.getElementById('frKeyword').value.trim();
+        const perPage = document.getElementById('frLimit').value || '10';
+        const btn = document.getElementById('frSearchBtn');
+        const statusEl = document.getElementById('frStatusText');
+        const errBox = document.getElementById('frErrorBox');
+        const listEl = document.getElementById('frResultsList');
+        const endpointBar = document.getElementById('frEndpointBar');
+
+        const params = new URLSearchParams();
+        params.set('per_page', perPage);
+        params.set('order', 'newest');
+        if (docType && docType !== 'ALL') {
+          params.append('conditions[type][]', docType);
+        }
+        if (kw) {
+          params.set('conditions[term]', kw);
+        }
+
+        const url = 'https://www.federalregister.gov/api/v1/documents.json?' + params.toString();
+        endpointBar.textContent = 'GET ' + url;
+        errBox.innerHTML = '';
+        btn.disabled = true;
+        btn.textContent = 'Fetching...';
+        statusEl.textContent = 'Querying Federal Register API v1...';
+        listEl.innerHTML = '<div class="muted small">Loading live Federal Register documents...</div>';
+
+        try {
+          const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!resp.ok) {
+            throw new Error('Federal Register API returned HTTP ' + resp.status);
+          }
+          const data = await resp.json();
+          const results = Array.isArray(data.results) ? data.results : [];
+          lastFedregRecords = results.map(function (doc) {
+            const agencies = Array.isArray(doc.agencies)
+              ? doc.agencies.map(function (a) { return a.name || a.raw_name || ''; }).filter(Boolean)
+              : [];
+            return {
+              documentNumber: doc.document_number || '',
+              title: doc.title || 'Untitled Document',
+              type: doc.type || '',
+              subtype: doc.subtype || '',
+              publicationDate: doc.publication_date || '',
+              agencies: agencies,
+              abstract: doc.abstract || '',
+              htmlUrl: doc.html_url || '',
+              pdfUrl: doc.pdf_url || '',
+              citation: doc.citation || ''
+            };
+          });
+
+          const agencySet = new Set();
+          lastFedregRecords.forEach(function (d) {
+            d.agencies.forEach(function (a) { agencySet.add(a); });
+          });
+
+          document.getElementById('frKpiShown').textContent = String(lastFedregRecords.length);
+          document.getElementById('frKpiTotal').textContent = typeof data.count === 'number' ? data.count.toLocaleString() : String(lastFedregRecords.length);
+          document.getElementById('frKpiAgencies').textContent = String(agencySet.size);
+          document.getElementById('frKpiType').textContent = docType;
+          statusEl.textContent = 'Showing ' + lastFedregRecords.length + ' newest Federal Register documents (live from federalregister.gov).';
+
+          if (!lastFedregRecords.length) {
+            listEl.innerHTML = '<div class="alert alert-blue">No Federal Register documents matched this filter. Try removing the keyword or selecting All Document Types.</div>';
+            return;
+          }
+
+          listEl.innerHTML = lastFedregRecords.map(function (doc) {
+            const agencyPills = doc.agencies.slice(0, 4).map(function (a) {
+              return '<span class="pill pill-teal">' + escapeHtml(a) + '</span>';
+            }).join(' ');
+            const htmlLink = doc.htmlUrl
+              ? '<a class="btn btn-primary btn-sm" href="' + escapeHtml(doc.htmlUrl) + '" target="_blank" rel="noopener">Official HTML &rarr;</a>'
+              : '';
+            const pdfLink = doc.pdfUrl
+              ? '<a class="btn btn-secondary btn-sm" href="' + escapeHtml(doc.pdfUrl) + '" target="_blank" rel="noopener">Official PDF</a>'
+              : '';
+
+            return '<article class="result-card">' +
+              '<div class="result-meta">' +
+                docTypePill(doc.type) +
+                (doc.subtype ? '<span class="pill pill-blue">' + escapeHtml(doc.subtype) + '</span>' : '') +
+                '<span class="small muted"><strong>Published:</strong> ' + escapeHtml(doc.publicationDate || '\u2014') + '</span>' +
+                (doc.documentNumber ? '<span class="small muted">Doc #' + escapeHtml(doc.documentNumber) + '</span>' : '') +
+              '</div>' +
+              '<h3 class="result-title">' +
+                (doc.htmlUrl
+                  ? '<a href="' + escapeHtml(doc.htmlUrl) + '" target="_blank" rel="noopener">' + escapeHtml(doc.title) + '</a>'
+                  : escapeHtml(doc.title)) +
+              '</h3>' +
+              (agencyPills ? '<div class="result-meta">' + agencyPills + '</div>' : '') +
+              '<p class="small muted" style="margin:6px 0 12px;">' + escapeHtml(doc.abstract || 'No abstract provided by publishing agency.') + '</p>' +
+              '<div class="btn-group">' + htmlLink + pdfLink + '</div>' +
+            '</article>';
+          }).join('');
+        } catch (err) {
+          errBox.innerHTML = '<div class="alert alert-red"><strong>Live query failed:</strong> ' + escapeHtml(err.message) + '. Federal Register API may be temporarily unreachable.</div>';
+          statusEl.textContent = 'Query error.';
+          listEl.innerHTML = '';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Search Federal Register';
+        }
+      };
+
+      window.exportFedregCsv = function () {
+        if (!lastFedregRecords.length) return;
+        const csv = toCsv(lastFedregRecords, [
+          { label: 'publication_date', get: function (r) { return r.publicationDate; } },
+          { label: 'document_number', get: function (r) { return r.documentNumber; } },
+          { label: 'type', get: function (r) { return r.type; } },
+          { label: 'agencies', get: function (r) { return r.agencies.join('; '); } },
+          { label: 'title', get: function (r) { return r.title; } },
+          { label: 'abstract', get: function (r) { return r.abstract; } },
+          { label: 'html_url', get: function (r) { return r.htmlUrl; } },
+          { label: 'pdf_url', get: function (r) { return r.pdfUrl; } }
+        ]);
+        downloadFile('federal-register-documents.csv', csv, 'text/csv;charset=utf-8');
+      };
+
+      window.exportFedregJson = function () {
+        if (!lastFedregRecords.length) return;
+        downloadFile('federal-register-documents.json', JSON.stringify(lastFedregRecords, null, 2) + '\n', 'application/json;charset=utf-8');
+      };
+
+      window.copyFedregJson = function (btn) {
+        if (!lastFedregRecords.length) return;
+        copyText(JSON.stringify(lastFedregRecords, null, 2), btn);
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        window.searchFda();
+      });
+    })();
+  </script>
+</body>
+</html>

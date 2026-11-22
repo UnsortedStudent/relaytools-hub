@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live US ZIP Weather, Air Quality (AQI) &amp; Global GLEIF LEI KYB Lookup — RelayTools Hub</title>
+  <meta name="description" content="Free 3-in-1 live US ZIP code geo enricher with real-time Open-Meteo 5-day weather forecast and US AQI, plus official GLEIF Legal Entity Identifier (LEI) global company KYB lookup with JSON export.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <style>
+    .tab-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: var(--surface-alt);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .tab-btn:hover { border-color: var(--accent); }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    body.dark .tab-btn.active { color: #042f2e; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .chip {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .kpi-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      white-space: nowrap;
+    }
+    th.num { text-align: right; }
+    .entity-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .entity-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .entity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 12px 0;
+      font-size: 13.5px;
+    }
+    .entity-field-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .entity-field-val {
+      color: var(--ink);
+      margin-top: 2px;
+      word-break: break-word;
+    }
+    details.json-drawer {
+      margin-top: 10px;
+    }
+    details.json-drawer summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .status-line { min-height: 20px; margin-bottom: 10px; }
+    @media (max-width: 820px) {
+      .entity-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "3-in-1 US ZIP Weather, Air Quality (AQI) & Global GLEIF LEI KYB Lookup",
+    "description": "Free interactive browser tool chaining US ZIP geocoding (Zippopotam) into live Open-Meteo 5-day weather forecasts and US Air Quality Index (AQI), plus global legal entity verification via the official GLEIF LEI Registry API.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (Web Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "US 5-digit ZIP code lookup returning city, state, latitude, and longitude via Zippopotam",
+      "Live current temperature, humidity, wind speed, and 5-day forecast via Open-Meteo",
+      "Live US Air Quality Index (US AQI), PM2.5, PM10, Ozone, and NO2 via Open-Meteo Air Quality API",
+      "Global Legal Entity Identifier (LEI) KYB verification via official GLEIF API",
+      "1-click JSON and CSV export for enriched geo and corporate entity data"
+    ],
+    "provider": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot" aria-hidden="true">R</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">API Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">3-in-1 Geo, Climate &amp; Global KYB Suite</span>
+      <h1>US ZIP Weather &amp; AQI + Global GLEIF LEI Company Lookup</h1>
+      <p>Chain any 5-digit US ZIP code straight into live weather, 5-day forecast, and US Air Quality Index via Zippopotam + Open-Meteo, or run instant global Know-Your-Business (KYB) entity verification against the official GLEIF LEI Registry.</p>
+    </section>
+
+    <div class="card">
+      <div class="tab-bar" role="tablist" aria-label="Geo and KYB Lookup Tools">
+        <button type="button" class="tab-btn active" role="tab" id="tabBtnZip" aria-selected="true" aria-controls="panelZip" data-tab="zip">
+          1. US ZIP + Live Weather &amp; US AQI
+        </button>
+        <button type="button" class="tab-btn" role="tab" id="tabBtnGleif" aria-selected="false" aria-controls="panelGleif" data-tab="gleif">
+          2. GLEIF Global Legal Entity KYB Lookup
+        </button>
+      </div>
+
+      <!-- TAB 1: US ZIP + WEATHER + AQI -->
+      <section id="panelZip" class="tab-panel active" role="tabpanel" aria-labelledby="tabBtnZip">
+        <form id="zipForm" class="form-row">
+          <div class="field" style="max-width:260px;">
+            <label for="zipInput">5-Digit US ZIP Code</label>
+            <input type="text" id="zipInput" value="78701" maxlength="10" placeholder="e.g. 78701 or 10001" inputmode="numeric" autocomplete="postal-code">
+          </div>
+          <div class="field" style="max-width:190px;">
+            <label for="unitSelect">Temperature Units</label>
+            <select id="unitSelect">
+              <option value="fahrenheit" selected>Fahrenheit (&deg;F / mph)</option>
+              <option value="celsius">Celsius (&deg;C / km/h)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" id="zipLookupBtn">Lookup ZIP &amp; Weather</button>
+        </form>
+
+        <div class="chip-row" aria-label="Preset US ZIP codes">
+          <span class="small muted" style="font-weight:700;">Quick US ZIPs:</span>
+          <button type="button" class="chip" data-zip="78701">78701 Austin, TX</button>
+          <button type="button" class="chip" data-zip="10001">10001 New York, NY</button>
+          <button type="button" class="chip" data-zip="94107">94107 San Francisco, CA</button>
+          <button type="button" class="chip" data-zip="60601">60601 Chicago, IL</button>
+          <button type="button" class="chip" data-zip="33131">33131 Miami, FL</button>
+          <button type="button" class="chip" data-zip="98101">98101 Seattle, WA</button>
+        </div>
+
+        <div id="zipStatus" class="status-line" aria-live="polite"></div>
+
+        <div id="zipResults" style="display:none;">
+          <div class="section-header" style="margin-top:8px;">
+            <div>
+              <h2 id="geoCityHeading" style="margin:0 0 4px;">&mdash;</h2>
+              <p class="small muted" id="geoCoordsLine" style="margin:0;"></p>
+            </div>
+            <div class="btn-group">
+              <a id="osmLink" class="btn btn-secondary btn-sm" href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">Open Map &nearr;</a>
+              <button type="button" class="btn btn-primary btn-sm" id="zipCopyJsonBtn">Copy Enriched JSON</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="zipDownloadJsonBtn">Download JSON</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="zipCopyCsvBtn">Copy Forecast CSV</button>
+            </div>
+          </div>
+
+          <div class="grid-4" style="margin:16px 0 18px;">
+            <div class="kpi">
+              <div class="kpi-label">Live Temperature</div>
+              <div class="kpi-value" id="kpiTemp">&mdash;</div>
+              <div class="kpi-sub" id="kpiCondition">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">US Air Quality (AQI)</div>
+              <div class="kpi-value" id="kpiAqi">&mdash;</div>
+              <div class="kpi-sub" id="kpiAqiBadge">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Humidity &amp; Wind</div>
+              <div class="kpi-value" id="kpiHumidity" style="font-size:21px;">&mdash;</div>
+              <div class="kpi-sub" id="kpiWind">&mdash;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Timezone &amp; Elevation</div>
+              <div class="kpi-value" id="kpiTz" style="font-size:18px;line-height:1.3;">&mdash;</div>
+              <div class="kpi-sub" id="kpiElev">&mdash;</div>
+            </div>
+          </div>
+
+          <h3>5-Day Weather Forecast</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Condition</th>
+                  <th class="num">High</th>
+                  <th class="num">Low</th>
+                  <th class="num">Precip Prob</th>
+                  <th>Sunrise / Sunset</th>
+                </tr>
+              </thead>
+              <tbody id="forecastTableBody"></tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:20px;">Air Quality Pollutants Breakdown (Open-Meteo AQI)</h3>
+          <div class="grid-4" style="margin-top:10px;">
+            <div class="kpi">
+              <div class="kpi-label">US EPA AQI</div>
+              <div class="kpi-value" id="aqUsAqi" style="font-size:21px;">&mdash;</div>
+              <div class="kpi-sub">Scale: 0 (Good) to 500</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Fine Particulate (PM2.5)</div>
+              <div class="kpi-value" id="aqPm25" style="font-size:21px;">&mdash;</div>
+              <div class="kpi-sub">&mu;g/m&sup3;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Coarse Particulate (PM10)</div>
+              <div class="kpi-value" id="aqPm10" style="font-size:21px;">&mdash;</div>
+              <div class="kpi-sub">&mu;g/m&sup3;</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Ozone (O<sub>3</sub>) &amp; NO<sub>2</sub></div>
+              <div class="kpi-value" id="aqOzone" style="font-size:21px;">&mdash;</div>
+              <div class="kpi-sub" id="aqNo2">NO<sub>2</sub>: &mdash;</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: GLEIF LEI KYB LOOKUP -->
+      <section id="panelGleif" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnGleif">
+        <form id="gleifForm" class="form-row">
+          <div class="field">
+            <label for="gleifInput">Company Legal Name or 20-Character LEI Code</label>
+            <input type="search" id="gleifInput" value="Cloudflare" placeholder="e.g. Cloudflare, Apple Inc, Stripe" autocomplete="organization">
+          </div>
+          <button type="submit" class="btn btn-primary" id="gleifSearchBtn">Search GLEIF Registry</button>
+        </form>
+
+        <div class="chip-row" aria-label="Preset company KYB examples">
+          <span class="small muted" style="font-weight:700;">Try Global Entities:</span>
+          <button type="button" class="chip" data-company="Cloudflare">Cloudflare</button>
+          <button type="button" class="chip" data-company="Apple Inc">Apple Inc</button>
+          <button type="button" class="chip" data-company="NVIDIA Corporation">NVIDIA Corporation</button>
+          <button type="button" class="chip" data-company="Stripe">Stripe</button>
+          <button type="button" class="chip" data-company="Microsoft Corporation">Microsoft Corporation</button>
+          <button type="button" class="chip" data-company="JPMorgan Chase">JPMorgan Chase</button>
+        </div>
+
+        <div id="gleifStatus" class="status-line" aria-live="polite"></div>
+
+        <div id="gleifToolbar" class="section-header" style="display:none;">
+          <p class="small muted" id="gleifSummary" style="margin:0;"></p>
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary btn-sm" id="gleifCopyAllJsonBtn">Copy All JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="gleifDownloadJsonBtn">Download JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="gleifCopyCsvBtn">Copy KYB CSV</button>
+          </div>
+        </div>
+
+        <div id="gleifResultsList"></div>
+      </section>
+    </div>
+
+    <!-- APIFY BULK / MCP FUNNEL CTA -->
+    <section class="apify-cta" aria-label="Scale Geo, Climate & KYB Enrichment on Apify">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Enrich CRM Lists, Logistics Fleets &amp; Enterprise KYB Compliance</span>
+        <h3>Run Bulk US ZIP Census, Climate Weather &amp; GLEIF LEI Pipelines on Apify</h3>
+        <p>Process thousands of ZIP codes, historical weather records, or corporate vendor KYB checks automatically via Apify datasets, REST API, or AI Agent MCP servers.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/us-zip-census-geo-enricher" target="_blank" rel="noopener noreferrer">US ZIP Census Geo Enricher &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/open-meteo-climate-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Climate Weather API &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/gleif-lei-company-registry" target="_blank" rel="noopener noreferrer">GLEIF LEI Company Registry &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <strong>RelayTools Hub</strong> &mdash; Free browser-native finance, research &amp; geo tools powered by live open public APIs.
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">API Catalog</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const WMO_CODES = {
+        0: 'Clear sky',
+        1: 'Mainly clear',
+        2: 'Partly cloudy',
+        3: 'Overcast',
+        45: 'Fog',
+        48: 'Depositing rime fog',
+        51: 'Light drizzle',
+        53: 'Moderate drizzle',
+        55: 'Dense drizzle',
+        56: 'Light freezing drizzle',
+        57: 'Dense freezing drizzle',
+        61: 'Slight rain',
+        63: 'Moderate rain',
+        65: 'Heavy rain',
+        66: 'Light freezing rain',
+        67: 'Heavy freezing rain',
+        71: 'Slight snowfall',
+        73: 'Moderate snowfall',
+        75: 'Heavy snowfall',
+        77: 'Snow grains',
+        80: 'Slight rain showers',
+        81: 'Moderate rain showers',
+        82: 'Violent rain showers',
+        85: 'Slight snow showers',
+        86: 'Heavy snow showers',
+        95: 'Thunderstorm',
+        96: 'Thunderstorm with slight hail',
+        99: 'Thunderstorm with heavy hail'
+      };
+
+      const state = {
+        geoPayload: null,
+        gleifRecords: [],
+        gleifLoadedOnce: false
+      };
+
+      const els = {
+        tabButtons: document.querySelectorAll('.tab-btn'),
+        panelZip: document.getElementById('panelZip'),
+        panelGleif: document.getElementById('panelGleif'),
+        zipForm: document.getElementById('zipForm'),
+        zipInput: document.getElementById('zipInput'),
+        unitSelect: document.getElementById('unitSelect'),
+        zipLookupBtn: document.getElementById('zipLookupBtn'),
+        zipStatus: document.getElementById('zipStatus'),
+        zipResults: document.getElementById('zipResults'),
+        geoCityHeading: document.getElementById('geoCityHeading'),
+        geoCoordsLine: document.getElementById('geoCoordsLine'),
+        osmLink: document.getElementById('osmLink'),
+        zipCopyJsonBtn: document.getElementById('zipCopyJsonBtn'),
+        zipDownloadJsonBtn: document.getElementById('zipDownloadJsonBtn'),
+        zipCopyCsvBtn: document.getElementById('zipCopyCsvBtn'),
+        kpiTemp: document.getElementById('kpiTemp'),
+        kpiCondition: document.getElementById('kpiCondition'),
+        kpiAqi: document.getElementById('kpiAqi'),
+        kpiAqiBadge: document.getElementById('kpiAqiBadge'),
+        kpiHumidity: document.getElementById('kpiHumidity'),
+        kpiWind: document.getElementById('kpiWind'),
+        kpiTz: document.getElementById('kpiTz'),
+        kpiElev: document.getElementById('kpiElev'),
+        forecastTableBody: document.getElementById('forecastTableBody'),
+        aqUsAqi: document.getElementById('aqUsAqi'),
+        aqPm25: document.getElementById('aqPm25'),
+        aqPm10: document.getElementById('aqPm10'),
+        aqOzone: document.getElementById('aqOzone'),
+        aqNo2: document.getElementById('aqNo2'),
+        gleifForm: document.getElementById('gleifForm'),
+        gleifInput: document.getElementById('gleifInput'),
+        gleifSearchBtn: document.getElementById('gleifSearchBtn'),
+        gleifStatus: document.getElementById('gleifStatus'),
+        gleifToolbar: document.getElementById('gleifToolbar'),
+        gleifSummary: document.getElementById('gleifSummary'),
+        gleifCopyAllJsonBtn: document.getElementById('gleifCopyAllJsonBtn'),
+        gleifDownloadJsonBtn: document.getElementById('gleifDownloadJsonBtn'),
+        gleifCopyCsvBtn: document.getElementById('gleifCopyCsvBtn'),
+        gleifResultsList: document.getElementById('gleifResultsList')
+      };
+
+      function csvEscape(v) {
+        const s = String(v == null ? '' : v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+
+      function describeWmo(code) {
+        return Object.prototype.hasOwnProperty.call(WMO_CODES, code)
+          ? WMO_CODES[code]
+          : 'Weather code ' + code;
+      }
+
+      function aqiCategory(aqi) {
+        if (aqi == null || !Number.isFinite(Number(aqi))) {
+          return { label: 'Unavailable', cls: 'pill-blue' };
+        }
+        const n = Number(aqi);
+        if (n <= 50) return { label: 'Good', cls: 'pill-green' };
+        if (n <= 100) return { label: 'Moderate', cls: 'pill-amber' };
+        if (n <= 150) return { label: 'Unhealthy (Sensitive)', cls: 'pill-amber' };
+        if (n <= 200) return { label: 'Unhealthy', cls: 'pill-red' };
+        if (n <= 300) return { label: 'Very Unhealthy', cls: 'pill-red' };
+        return { label: 'Hazardous', cls: 'pill-red' };
+      }
+
+      function formatShortTime(isoStr) {
+        if (!isoStr || typeof isoStr !== 'string') return 'N/A';
+        const parts = isoStr.split('T');
+        return parts[1] ? parts[1].slice(0, 5) : isoStr;
+      }
+
+      function formatDayLabel(isoDate) {
+        if (!isoDate) return '';
+        const dt = new Date(isoDate + 'T12:00:00');
+        if (isNaN(dt.getTime())) return isoDate;
+        return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      }
+
+      function switchTab(tabName) {
+        els.tabButtons.forEach(function (btn) {
+          const isActive = btn.getAttribute('data-tab') === tabName;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        els.panelZip.classList.toggle('active', tabName === 'zip');
+        els.panelGleif.classList.toggle('active', tabName === 'gleif');
+        if (tabName === 'gleif' && !state.gleifLoadedOnce) {
+          lookupGleif(els.gleifInput.value);
+        }
+      }
+
+      async function lookupZipWeather(rawZip) {
+        const zip = String(rawZip || '').replace(/[^0-9]/g, '').slice(0, 5);
+        if (!/^\d{5}$/.test(zip)) {
+          els.zipStatus.innerHTML = '<div class="alert alert-amber">Please enter a valid 5-digit US ZIP code (e.g., <code>78701</code> or <code>10001</code>).</div>';
+          return;
+        }
+
+        const tempUnit = els.unitSelect.value === 'celsius' ? 'celsius' : 'fahrenheit';
+        const windUnit = tempUnit === 'celsius' ? 'kmh' : 'mph';
+        const degSym = tempUnit === 'celsius' ? '\u00B0C' : '\u00B0F';
+        const speedSym = tempUnit === 'celsius' ? 'km/h' : 'mph';
+
+        els.zipInput.value = zip;
+        els.zipLookupBtn.disabled = true;
+        els.zipStatus.innerHTML = '<div class="alert alert-blue">Step 1/2: Geocoding US ZIP <code>' + escapeHtml(zip) + '</code> via Zippopotam, then chaining into Open-Meteo Weather &amp; US AQI&hellip;</div>';
+
+        try {
+          const zipRes = await fetch('https://api.zippopotam.us/us/' + encodeURIComponent(zip), {
+            headers: { Accept: 'application/json' }
+          });
+          if (zipRes.status === 404) {
+            throw new Error('US ZIP code ' + zip + ' was not found in Zippopotam.');
+          }
+          if (!zipRes.ok) throw new Error('Zippopotam HTTP ' + zipRes.status);
+          const zipData = await zipRes.json();
+          const place = Array.isArray(zipData.places) && zipData.places[0];
+          if (!place) throw new Error('No geographic place coordinates returned for ZIP ' + zip);
+
+          const lat = parseFloat(place.latitude);
+          const lon = parseFloat(place.longitude);
+
+          const weatherUrl = 'https://api.open-meteo.com/v1/forecast' +
+            '?latitude=' + encodeURIComponent(lat) +
+            '&longitude=' + encodeURIComponent(lon) +
+            '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m' +
+            '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
+            '&temperature_unit=' + encodeURIComponent(tempUnit) +
+            '&wind_speed_unit=' + encodeURIComponent(windUnit) +
+            '&timezone=auto&forecast_days=5';
+
+          const aqiUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
+            '?latitude=' + encodeURIComponent(lat) +
+            '&longitude=' + encodeURIComponent(lon) +
+            '&current=us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide';
+
+          const [wRes, aRes] = await Promise.all([
+            fetch(weatherUrl, { headers: { Accept: 'application/json' } }),
+            fetch(aqiUrl, { headers: { Accept: 'application/json' } })
+          ]);
+
+          if (!wRes.ok) throw new Error('Open-Meteo Weather HTTP ' + wRes.status);
+          if (!aRes.ok) throw new Error('Open-Meteo Air Quality HTTP ' + aRes.status);
+
+          const [weatherData, aqiData] = await Promise.all([wRes.json(), aRes.json()]);
+
+          state.geoPayload = {
+            zip: zip,
+            city: place['place name'],
+            state: place.state,
+            state_abbreviation: place['state abbreviation'],
+            country: zipData.country,
+            latitude: lat,
+            longitude: lon,
+            units: { temperature: degSym, wind: speedSym },
+            weather: weatherData,
+            air_quality: aqiData
+          };
+
+          renderZipWeather(state.geoPayload);
+          els.zipStatus.innerHTML = '';
+        } catch (err) {
+          els.zipResults.style.display = 'none';
+          els.zipStatus.innerHTML = '<div class="alert alert-red">Lookup failed: ' + escapeHtml(err.message) + '</div>';
+        } finally {
+          els.zipLookupBtn.disabled = false;
+        }
+      }
+
+      function renderZipWeather(payload) {
+        const wCur = (payload.weather && payload.weather.current) || {};
+        const wDaily = (payload.weather && payload.weather.daily) || {};
+        const aCur = (payload.air_quality && payload.air_quality.current) || {};
+        const deg = payload.units.temperature;
+        const spd = payload.units.wind;
+
+        els.geoCityHeading.textContent = payload.city + ', ' + payload.state_abbreviation + ' ' + payload.zip + ' (' + payload.state + ')';
+        els.geoCoordsLine.textContent = 'Lat ' + payload.latitude.toFixed(4) + ', Lon ' + payload.longitude.toFixed(4) +
+          (wCur.time ? '  |  Observed: ' + wCur.time.replace('T', ' ') : '');
+        els.osmLink.href = 'https://www.openstreetmap.org/?mlat=' + encodeURIComponent(payload.latitude) +
+          '&mlon=' + encodeURIComponent(payload.longitude) + '#map=12/' +
+          encodeURIComponent(payload.latitude) + '/' + encodeURIComponent(payload.longitude);
+
+        els.kpiTemp.textContent = wCur.temperature_2m != null ? Number(wCur.temperature_2m).toFixed(1) + deg : 'N/A';
+        els.kpiCondition.textContent = describeWmo(wCur.weather_code) +
+          (wCur.apparent_temperature != null ? ' (Feels like ' + Number(wCur.apparent_temperature).toFixed(1) + deg + ')' : '');
+
+        const aqiVal = aCur.us_aqi;
+        const aqiInfo = aqiCategory(aqiVal);
+        els.kpiAqi.textContent = aqiVal != null ? String(Math.round(aqiVal)) : 'N/A';
+        els.kpiAqiBadge.innerHTML = '<span class="pill ' + aqiInfo.cls + '">' + escapeHtml(aqiInfo.label) + '</span>';
+
+        els.kpiHumidity.textContent = wCur.relative_humidity_2m != null ? wCur.relative_humidity_2m + '% RH' : 'N/A';
+        els.kpiWind.textContent = wCur.wind_speed_10m != null ? 'Wind: ' + Number(wCur.wind_speed_10m).toFixed(1) + ' ' + spd : 'Wind N/A';
+
+        els.kpiTz.textContent = (payload.weather && payload.weather.timezone) || 'Auto';
+        els.kpiElev.textContent = (payload.weather && payload.weather.elevation != null)
+          ? 'Elevation: ' + Math.round(payload.weather.elevation) + ' m (' + Math.round(payload.weather.elevation * 3.28084) + ' ft)'
+          : 'Elevation N/A';
+
+        els.aqUsAqi.textContent = aqiVal != null ? String(Math.round(aqiVal)) + ' (' + aqiInfo.label + ')' : 'N/A';
+        els.aqPm25.textContent = aCur.pm2_5 != null ? Number(aCur.pm2_5).toFixed(1) : 'N/A';
+        els.aqPm10.textContent = aCur.pm10 != null ? Number(aCur.pm10).toFixed(1) : 'N/A';
+        els.aqOzone.textContent = aCur.ozone != null ? Number(aCur.ozone).toFixed(1) + ' \u00B5g/m\u00B3' : 'N/A';
+        els.aqNo2.textContent = 'NO2: ' + (aCur.nitrogen_dioxide != null ? Number(aCur.nitrogen_dioxide).toFixed(1) + ' \u00B5g/m\u00B3' : 'N/A');
+
+        const days = Array.isArray(wDaily.time) ? wDaily.time : [];
+        els.forecastTableBody.innerHTML = days.map(function (day, i) {
+          const cond = describeWmo(wDaily.weather_code ? wDaily.weather_code[i] : null);
+          const hi = wDaily.temperature_2m_max && wDaily.temperature_2m_max[i] != null
+            ? Number(wDaily.temperature_2m_max[i]).toFixed(1) + deg : 'N/A';
+          const lo = wDaily.temperature_2m_min && wDaily.temperature_2m_min[i] != null
+            ? Number(wDaily.temperature_2m_min[i]).toFixed(1) + deg : 'N/A';
+          const rain = wDaily.precipitation_probability_max && wDaily.precipitation_probability_max[i] != null
+            ? wDaily.precipitation_probability_max[i] + '%' : 'N/A';
+          const sun = formatShortTime(wDaily.sunrise && wDaily.sunrise[i]) + ' / ' + formatShortTime(wDaily.sunset && wDaily.sunset[i]);
+          return '<tr>' +
+            '<td><strong>' + escapeHtml(formatDayLabel(day)) + '</strong> <span class="small muted">(' + escapeHtml(day) + ')</span></td>' +
+            '<td>' + escapeHtml(cond) + '</td>' +
+            '<td class="num"><strong>' + escapeHtml(hi) + '</strong></td>' +
+            '<td class="num">' + escapeHtml(lo) + '</td>' +
+            '<td class="num">' + escapeHtml(rain) + '</td>' +
+            '<td class="small">' + escapeHtml(sun) + '</td>' +
+          '</tr>';
+        }).join('');
+
+        els.zipResults.style.display = 'block';
+      }
+
+      function buildForecastCsv() {
+        if (!state.geoPayload || !state.geoPayload.weather || !state.geoPayload.weather.daily) return '';
+        const p = state.geoPayload;
+        const d = p.weather.daily;
+        const lines = [['zip', 'city', 'state', 'date', 'condition', 'temp_max', 'temp_min', 'precip_prob_pct', 'sunrise', 'sunset'].join(',')];
+        (d.time || []).forEach(function (dateStr, i) {
+          lines.push([
+            p.zip,
+            p.city,
+            p.state_abbreviation,
+            dateStr,
+            describeWmo(d.weather_code ? d.weather_code[i] : null),
+            d.temperature_2m_max ? d.temperature_2m_max[i] : '',
+            d.temperature_2m_min ? d.temperature_2m_min[i] : '',
+            d.precipitation_probability_max ? d.precipitation_probability_max[i] : '',
+            d.sunrise ? d.sunrise[i] : '',
+            d.sunset ? d.sunset[i] : ''
+          ].map(csvEscape).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      function formatAddress(addr) {
+        if (!addr) return 'Not listed';
+        const parts = [];
+        if (Array.isArray(addr.addressLines) && addr.addressLines.length) {
+          parts.push(addr.addressLines.filter(Boolean).join(', '));
+        }
+        const cityRegion = [addr.city, addr.region, addr.postalCode].filter(Boolean).join(', ');
+        if (cityRegion) parts.push(cityRegion);
+        if (addr.country) parts.push(addr.country);
+        return parts.join(' — ') || 'Not listed';
+      }
+
+      function formatIsoDateOnly(iso) {
+        if (!iso || typeof iso !== 'string') return 'N/A';
+        return iso.slice(0, 10);
+      }
+
+      function statusPillClass(status) {
+        const s = String(status || '').toUpperCase();
+        if (s === 'ACTIVE' || s === 'ISSUED') return 'pill-green';
+        if (s === 'LAPSED' || s === 'PENDING_VALIDATION') return 'pill-amber';
+        if (s === 'INACTIVE' || s === 'RETIRED' || s === 'MERGED') return 'pill-red';
+        return 'pill-blue';
+      }
+
+      async function lookupGleif(rawQuery) {
+        const q = String(rawQuery || '').trim();
+        if (!q) {
+          els.gleifStatus.innerHTML = '<div class="alert alert-amber">Enter a company name (e.g. <code>Cloudflare</code>) or 20-character LEI code.</div>';
+          return;
+        }
+        state.gleifLoadedOnce = true;
+        els.gleifInput.value = q;
+        els.gleifSearchBtn.disabled = true;
+        els.gleifStatus.innerHTML = '<div class="alert alert-blue">Querying official GLEIF Global LEI Registry for <strong>' + escapeHtml(q) + '</strong>&hellip;</div>';
+
+        try {
+          const isExactLei = /^[A-Z0-9]{20}$/i.test(q);
+          const url = isExactLei
+            ? 'https://api.gleif.org/api/v1/lei-records?filter[lei]=' + encodeURIComponent(q.toUpperCase())
+            : 'https://api.gleif.org/api/v1/lei-records?filter[fulltext]=' + encodeURIComponent(q) + '&page[size]=5';
+
+          const res = await fetch(url, { headers: { Accept: 'application/vnd.api+json, application/json' } });
+          if (!res.ok) throw new Error('GLEIF API returned HTTP ' + res.status);
+          const json = await res.json();
+          const records = Array.isArray(json.data) ? json.data : [];
+          state.gleifRecords = records;
+
+          els.gleifStatus.innerHTML = '';
+          const total = json.meta && json.meta.pagination && typeof json.meta.pagination.total === 'number'
+            ? json.meta.pagination.total.toLocaleString('en-US')
+            : String(records.length);
+
+          els.gleifSummary.textContent = 'Showing ' + records.length + ' LEI record(s) out of ' + total + ' total matches in the official GLEIF Registry.';
+          els.gleifToolbar.style.display = records.length ? 'flex' : 'none';
+
+          if (!records.length) {
+            els.gleifResultsList.innerHTML = '<div class="alert alert-amber">No legal entities matched <strong>' + escapeHtml(q) + '</strong>. Try the official legal name or remove punctuation.</div>';
+            return;
+          }
+
+          els.gleifResultsList.innerHTML = records.map(function (rec, idx) {
+            const attr = rec.attributes || {};
+            const ent = attr.entity || {};
+            const reg = attr.registration || {};
+            const lei = attr.lei || rec.id || 'N/A';
+            const legalName = (ent.legalName && ent.legalName.name) || 'Unknown Legal Entity';
+            const entStatus = ent.status || 'UNKNOWN';
+            const regStatus = reg.status || 'UNKNOWN';
+            const hq = ent.headquartersAddress || {};
+            const legalAddr = ent.legalAddress || {};
+            const hqShort = [hq.city, hq.region, hq.country].filter(Boolean).join(', ') || 'Not listed';
+            const jurisdiction = ent.jurisdiction || 'N/A';
+            const regAuthority = (ent.registeredAt && ent.registeredAt.id ? ent.registeredAt.id : 'N/A') +
+              (ent.registeredAs ? ' (' + ent.registeredAs + ')' : '');
+            const gleifHref = 'https://search.gleif.org/#/record/' + encodeURIComponent(lei);
+
+            return '<article class="entity-card">' +
+              '<div class="entity-head">' +
+                '<div>' +
+                  '<h3 style="margin:0 0 6px;">' + escapeHtml(legalName) + '</h3>' +
+                  '<div class="btn-group">' +
+                    '<code>LEI: ' + escapeHtml(lei) + '</code>' +
+                    '<span class="pill ' + statusPillClass(entStatus) + '">Entity: ' + escapeHtml(entStatus) + '</span>' +
+                    '<span class="pill ' + statusPillClass(regStatus) + '">Registration: ' + escapeHtml(regStatus) + '</span>' +
+                    (ent.category ? '<span class="pill pill-blue">' + escapeHtml(ent.category) + '</span>' : '') +
+                  '</div>' +
+                '</div>' +
+                '<div class="btn-group">' +
+                  '<button type="button" class="btn btn-secondary btn-sm" data-copy-lei="' + escapeHtml(lei) + '">Copy LEI</button>' +
+                  '<button type="button" class="btn btn-secondary btn-sm" data-copy-entity-idx="' + idx + '">Copy JSON</button>' +
+                  '<a class="btn btn-secondary btn-sm" href="' + escapeHtml(gleifHref) + '" target="_blank" rel="noopener noreferrer">GLEIF Record &nearr;</a>' +
+                '</div>' +
+              '</div>' +
+              '<div class="entity-grid">' +
+                '<div>' +
+                  '<div class="entity-field-label">Headquarters</div>' +
+                  '<div class="entity-field-val"><strong>' + escapeHtml(hqShort) + '</strong><br><span class="small muted">' + escapeHtml(formatAddress(hq)) + '</span></div>' +
+                '</div>' +
+                '<div>' +
+                  '<div class="entity-field-label">Legal Jurisdiction &amp; Address</div>' +
+                  '<div class="entity-field-val"><strong>' + escapeHtml(jurisdiction) + '</strong><br><span class="small muted">' + escapeHtml(formatAddress(legalAddr)) + '</span></div>' +
+                '</div>' +
+                '<div>' +
+                  '<div class="entity-field-label">Registration &amp; Renewal</div>' +
+                  '<div class="entity-field-val">' +
+                    'Authority: ' + escapeHtml(regAuthority) + '<br>' +
+                    '<span class="small muted">Initial: ' + escapeHtml(formatIsoDateOnly(reg.initialRegistrationDate)) +
+                    ' | Renew: ' + escapeHtml(formatIsoDateOnly(reg.nextRenewalDate)) + '</span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<details class="json-drawer">' +
+                '<summary>Inspect Official GLEIF JSON Record</summary>' +
+                '<pre class="code-block">' + escapeHtml(JSON.stringify(rec, null, 2)) + '</pre>' +
+              '</details>' +
+            '</article>';
+          }).join('');
+        } catch (err) {
+          els.gleifToolbar.style.display = 'none';
+          els.gleifResultsList.innerHTML = '';
+          els.gleifStatus.innerHTML = '<div class="alert alert-red">GLEIF Registry lookup failed: ' + escapeHtml(err.message) + '</div>';
+        } finally {
+          els.gleifSearchBtn.disabled = false;
+        }
+      }
+
+      function buildGleifCsv() {
+        const lines = [['lei', 'legal_name', 'entity_status', 'registration_status', 'jurisdiction', 'hq_city', 'hq_region', 'hq_country', 'registered_as', 'next_renewal_date'].join(',')];
+        state.gleifRecords.forEach(function (rec) {
+          const attr = rec.attributes || {};
+          const ent = attr.entity || {};
+          const reg = attr.registration || {};
+          const hq = ent.headquartersAddress || {};
+          lines.push([
+            attr.lei || rec.id || '',
+            (ent.legalName && ent.legalName.name) || '',
+            ent.status || '',
+            reg.status || '',
+            ent.jurisdiction || '',
+            hq.city || '',
+            hq.region || '',
+            hq.country || '',
+            ent.registeredAs || '',
+            formatIsoDateOnly(reg.nextRenewalDate)
+          ].map(csvEscape).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      // Wire events
+      els.tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+
+      els.zipForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        lookupZipWeather(els.zipInput.value);
+      });
+
+      els.unitSelect.addEventListener('change', function () {
+        if (els.zipInput.value.trim()) lookupZipWeather(els.zipInput.value);
+      });
+
+      document.querySelectorAll('.chip[data-zip]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          lookupZipWeather(chip.getAttribute('data-zip'));
+        });
+      });
+
+      els.zipCopyJsonBtn.addEventListener('click', function () {
+        if (!state.geoPayload) return;
+        copyText(JSON.stringify(state.geoPayload, null, 2), els.zipCopyJsonBtn);
+      });
+
+      els.zipDownloadJsonBtn.addEventListener('click', function () {
+        if (!state.geoPayload) return;
+        downloadFile('zip-' + state.geoPayload.zip + '-weather-aqi.json', JSON.stringify(state.geoPayload, null, 2), 'application/json;charset=utf-8');
+      });
+
+      els.zipCopyCsvBtn.addEventListener('click', function () {
+        copyText(buildForecastCsv(), els.zipCopyCsvBtn);
+      });
+
+      els.gleifForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        lookupGleif(els.gleifInput.value);
+      });
+
+      document.querySelectorAll('.chip[data-company]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          lookupGleif(chip.getAttribute('data-company'));
+        });
+      });
+
+      els.gleifCopyAllJsonBtn.addEventListener('click', function () {
+        copyText(JSON.stringify(state.gleifRecords, null, 2), els.gleifCopyAllJsonBtn);
+      });
+
+      els.gleifDownloadJsonBtn.addEventListener('click', function () {
+        const slug = String(els.gleifInput.value || 'gleif').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'gleif';
+        downloadFile('gleif-lei-' + slug + '.json', JSON.stringify(state.gleifRecords, null, 2), 'application/json;charset=utf-8');
+      });
+
+      els.gleifCopyCsvBtn.addEventListener('click', function () {
+        copyText(buildGleifCsv(), els.gleifCopyCsvBtn);
+      });
+
+      els.gleifResultsList.addEventListener('click', function (ev) {
+        const leiBtn = ev.target.closest('button[data-copy-lei]');
+        if (leiBtn) {
+          copyText(leiBtn.getAttribute('data-copy-lei'), leiBtn);
+          return;
+        }
+        const jsonBtn = ev.target.closest('button[data-copy-entity-idx]');
+        if (jsonBtn) {
+          const idx = parseInt(jsonBtn.getAttribute('data-copy-entity-idx'), 10);
+          const rec = state.gleifRecords[idx];
+          if (rec) copyText(JSON.stringify(rec, null, 2), jsonBtn);
+        }
+      });
+
+      // Auto-load Austin, TX (78701) live on initial page load
+      lookupZipWeather('78701');
+    })();
+  </script>
+</body>
+</html>

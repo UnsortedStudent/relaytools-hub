@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON &amp; CSV Cleaner, Flattener, Deduplicator &amp; Schema Generator — RelayTools Hub</title>
+  <meta name="description" content="100% client-side JSON, NDJSON &amp; CSV flattener (a.b.c), deduplicator, email/whitespace normalizer, and Draft-07 JSON Schema generator. Zero data leaves your browser." />
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "JSON & CSV Flattener, Deduplicator & Schema Generator",
+    "description": "100% client-side browser utility to flatten nested JSON/NDJSON, parse messy CSV, deduplicate rows by field or full row, normalize emails and whitespace, and infer Draft-07 JSON Schema with zero server uploads.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "All (Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Flatten nested JSON objects using dot notation (a.b.c)",
+      "Auto-detect and parse JSON arrays, NDJSON, and CSV/TSV",
+      "Deduplicate records by selected column or full row",
+      "Normalize email casing and trim/collapse messy whitespace",
+      "Infer Draft-07 JSON Schema with type, nullable, format, and required detection",
+      "Export clean CSV, JSON, and Draft-07 JSON Schema locally"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .toggle-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .toggle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color .15s, background .15s;
+    }
+    .toggle-chip:hover {
+      border-color: var(--accent);
+    }
+    .toggle-chip input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      background: var(--surface-alt);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 15px;
+      border-radius: 9px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .tab-btn:hover {
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    body.dark .tab-btn.active {
+      color: #042f2e;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .cell-null {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 12.5px;
+    }
+    .cell-bool {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: var(--blue);
+    }
+    .cell-num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--green);
+    }
+    .output-pre {
+      max-height: 440px;
+      overflow-y: auto;
+    }
+    .table-scroll {
+      max-height: 440px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .table-scroll table {
+      margin: 0;
+    }
+    .table-scroll th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">RT</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="../index.html">Tools Hub</a>
+        <a class="nav-link" href="../catalog.html">Apify Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Free Deploy</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">100% Client-Side · Zero Data Leaves Your Browser</span>
+      <h1>JSON &amp; CSV Cleaner, Flattener &amp; Schema Generator</h1>
+      <p>Paste messy JSON arrays, NDJSON logs, or CSV exports. Instantly flatten nested objects (<code>a.b.c</code>), deduplicate records, normalize emails &amp; whitespace, preview clean tables, export CSV/JSON, and infer a Draft-07 JSON Schema — completely offline in your browser.</p>
+    </section>
+
+    <section class="card" aria-labelledby="input-heading">
+      <div class="toolbar">
+        <div>
+          <h2 id="input-heading">1. Paste Raw Data</h2>
+          <p class="muted small" style="margin:0;">Supports JSON arrays, single JSON objects, NDJSON (newline-delimited JSON), and RFC-4180 CSV/TSV.</p>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" id="loadJsonSampleBtn">Load Messy JSON Sample</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="loadNdjsonSampleBtn">Load NDJSON Sample</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="loadCsvSampleBtn">Load Messy CSV Sample</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="clearInputBtn">Clear</button>
+        </div>
+      </div>
+
+      <textarea id="rawInput" rows="10" spellcheck="false" aria-label="Raw JSON, NDJSON, or CSV input" placeholder="Paste a JSON array, NDJSON lines, or CSV text here..."></textarea>
+
+      <div class="toggle-grid" role="group" aria-label="Cleaning options">
+        <label class="toggle-chip">
+          <input type="checkbox" id="optFlatten" checked />
+          <span>Flatten nested JSON (<code>a.b.c</code>)</span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optDedupe" checked />
+          <span>Deduplicate rows</span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optNormalize" checked />
+          <span>Normalize emails &amp; trim whitespace</span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optSchema" checked />
+          <span>Infer Draft-07 JSON Schema</span>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="formatSelect">Input Format</label>
+          <select id="formatSelect">
+            <option value="auto" selected>Auto-Detect (JSON / NDJSON / CSV)</option>
+            <option value="json">JSON Array / Object</option>
+            <option value="ndjson">NDJSON (JSON Lines)</option>
+            <option value="csv">CSV / TSV</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="dedupeFieldSelect">Deduplicate By Field</label>
+          <select id="dedupeFieldSelect">
+            <option value="__full_row__">Full Row (all columns)</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 auto; min-width:auto;">
+          <button type="button" class="btn btn-primary" id="runCleanBtn">Clean &amp; Analyze</button>
+        </div>
+      </div>
+
+      <div id="statusAlert" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="grid-4" style="margin-bottom:20px;" aria-label="Cleaning KPIs">
+      <div class="kpi">
+        <div class="kpi-label">Rows In</div>
+        <div class="kpi-value" id="kpiRowsIn">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clean Rows Out</div>
+        <div class="kpi-value" id="kpiRowsOut">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Duplicates Removed</div>
+        <div class="kpi-value" id="kpiDupes">0</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Columns</div>
+        <div class="kpi-value" id="kpiCols">0</div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="output-heading">
+      <div class="toolbar">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h2 id="output-heading" style="margin:0;">2. Cleaned Output &amp; Schema</h2>
+          <span class="pill pill-teal" id="detectedFormatPill">Ready</span>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-primary btn-sm" id="downloadCsvBtn">Download .csv</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="downloadJsonBtn">Download .json</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="copyCleanJsonTopBtn">Copy Clean JSON</button>
+        </div>
+      </div>
+
+      <div class="tab-bar" role="tablist" aria-label="Output views">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="tablePanel">Preview Table</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="jsonPanel">Clean JSON</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="csvPanel">Clean CSV</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="schemaPanel" id="schemaTabBtn">Draft-07 JSON Schema</button>
+      </div>
+
+      <div id="tablePanel" class="tab-panel active" role="tabpanel">
+        <div class="form-row" style="margin-bottom:10px;">
+          <div class="field" style="max-width:360px;">
+            <label for="tableFilterInput">Filter Preview Rows</label>
+            <input type="search" id="tableFilterInput" placeholder="Search any cell value..." />
+          </div>
+          <div class="muted small" id="tableSummaryNote" style="padding-bottom:10px;"></div>
+        </div>
+        <div class="table-scroll" id="previewTableWrap"></div>
+      </div>
+
+      <div id="jsonPanel" class="tab-panel" role="tabpanel">
+        <div class="toolbar">
+          <span class="muted small">Formatted UTF-8 JSON array ready for APIs, databases, or vector pipelines.</span>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('cleanJsonOut', this)">Copy Clean JSON</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="downloadJsonBtn2">Download clean-data.json</button>
+          </div>
+        </div>
+        <pre id="cleanJsonOut" class="output-pre"></pre>
+      </div>
+
+      <div id="csvPanel" class="tab-panel" role="tabpanel">
+        <div class="toolbar">
+          <span class="muted small">RFC-4180 compliant CSV with escaped quotes and flattened dot-notation headers.</span>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('cleanCsvOut', this)">Copy CSV</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="downloadCsvBtn2">Download clean-data.csv</button>
+          </div>
+        </div>
+        <pre id="cleanCsvOut" class="output-pre"></pre>
+      </div>
+
+      <div id="schemaPanel" class="tab-panel" role="tabpanel">
+        <div class="toolbar">
+          <span class="muted small">Inferred Draft-07 JSON Schema with types, nullability, <code>format</code> hints (<code>email</code>, <code>uri</code>, <code>date-time</code>, <code>uuid</code>), and <code>required</code> fields.</span>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('schemaOut', this)">Copy JSON Schema</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="downloadSchemaBtn">Download schema.json</button>
+          </div>
+        </div>
+        <pre id="schemaOut" class="output-pre"></pre>
+      </div>
+    </section>
+
+    <section class="apify-cta" aria-label="Cloud automation upgrade">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Automate at Scale · Cloud API &amp; MCP</span>
+        <h3>Need to clean 100,000+ rows in scheduled pipelines, n8n, Make, or AI Agents?</h3>
+        <p>This browser tool is perfect for quick local inspection. For automated cloud ETL, webhook ingestion, huge NDJSON/CSV datasets, and schema validation via REST API or MCP, run our hosted Apify Actor.</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/json-csv-schema-cleaner-utility" target="_blank" rel="noopener noreferrer">Open JSON/CSV Schema Cleaner Actor ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> — Privacy-first browser tools &amp; cloud Apify Actors. Zero tracking, zero uploads.</div>
+      <div class="btn-group">
+        <a href="../index.html">Tools Hub</a>
+        <span>·</span>
+        <a href="../catalog.html">Apify Catalog</a>
+        <span>·</span>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <span>·</span>
+        <a href="../deploy-free.html">Free Deploy</a>
+        <span>·</span>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      const SAMPLE_MESSY_JSON = [
+        {
+          id: "usr_001",
+          contact: {
+            fullName: "  Alice   Chen  ",
+            email: "  Alice.Chen@ACME.IO ",
+            website: "https://acme.io/alice"
+          },
+          company: {
+            name: "  Acme   Cloud  Inc. ",
+            hq: { city: "  San Francisco ", country: "US" }
+          },
+          billing: { plan: "Enterprise", mrrUsd: 1200, active: true },
+          createdAt: "2026-10-12T14:22:00Z",
+          tags: ["ai", "rag", "enterprise"]
+        },
+        {
+          id: "usr_002",
+          contact: {
+            fullName: "Marcus   Vance",
+            email: "marcus@vectorlabs.dev",
+            website: "https://vectorlabs.dev"
+          },
+          company: {
+            name: "VectorLabs",
+            hq: { city: "Austin", country: "US" }
+          },
+          billing: { plan: "Pro", mrrUsd: 299.5, active: true },
+          createdAt: "2026-10-14T09:10:00Z",
+          tags: ["developer", "mcp"]
+        },
+        {
+          id: "usr_001_dup_case",
+          contact: {
+            fullName: "Alice Chen",
+            email: "ALICE.CHEN@acme.io  ",
+            website: "https://acme.io/alice"
+          },
+          company: {
+            name: "Acme Cloud Inc.",
+            hq: { city: "San Francisco", country: "US" }
+          },
+          billing: { plan: "Enterprise", mrrUsd: 1200, active: true },
+          createdAt: "2026-10-12T14:22:00Z",
+          tags: ["ai", "rag", "enterprise"]
+        },
+        {
+          id: "usr_003",
+          contact: {
+            fullName: "  Priya   Nair ",
+            email: "  PRIYA.NAIR@FinOps.co.uk  ",
+            website: "https://finops.co.uk"
+          },
+          company: {
+            name: "FinOps  Analytics",
+            hq: { city: "London", country: "UK" }
+          },
+          billing: { plan: "Growth", mrrUsd: 499, active: false },
+          createdAt: "2026-10-18T18:45:00Z",
+          tags: ["fintech", "etl"]
+        },
+        {
+          id: "usr_002",
+          contact: {
+            fullName: "Marcus   Vance",
+            email: "marcus@vectorlabs.dev",
+            website: "https://vectorlabs.dev"
+          },
+          company: {
+            name: "VectorLabs",
+            hq: { city: "Austin", country: "US" }
+          },
+          billing: { plan: "Pro", mrrUsd: 299.5, active: true },
+          createdAt: "2026-10-14T09:10:00Z",
+          tags: ["developer", "mcp"]
+        },
+        {
+          id: "usr_004",
+          contact: {
+            fullName: "  Diego  Morales ",
+            email: "diego.morales@DataForge.ai ",
+            website: null
+          },
+          company: {
+            name: "DataForge   AI",
+            hq: { city: "Madrid", country: "ES" }
+          },
+          billing: { plan: "Starter", mrrUsd: 49, active: true },
+          createdAt: "2026-11-01T11:05:30Z",
+          tags: ["startup"]
+        }
+      ];
+
+      const SAMPLE_NDJSON = [
+        '{"event_id":"evt_901","user":{"email":"  Elena@Relay.DEV ","role":"admin"},"meta":{"region":"us-east-1","latency_ms":42}}',
+        '{"event_id":"evt_902","user":{"email":"sam@ops.io","role":"editor"},"meta":{"region":"eu-west-1","latency_ms":68}}',
+        '{"event_id":"evt_903","user":{"email":"ELENA@relay.dev","role":"admin"},"meta":{"region":"us-east-1","latency_ms":45}}',
+        '{"event_id":"evt_904","user":{"email":"  kai.tanaka@CloudKit.jp  ","role":"viewer"},"meta":{"region":"ap-northeast-1","latency_ms":91}}'
+      ].join('\n');
+
+      const SAMPLE_CSV = [
+        'lead_id,full_name,email,company,mrr_usd,active,notes',
+        '101,"  Jordan   Blake ","  JORDAN.BLAKE@Acme.io ","Acme, Inc.",950,true,"Requested  SOC2  docs"',
+        '102,"Sofia  Reyes","sofia@northstar.dev","Northstar AI",420.5,true,"Interested in MCP"',
+        '103,"Jordan Blake","jordan.blake@acme.io","Acme, Inc.",950,true,"Duplicate CRM import"',
+        '104,"  Liam   O\'Connor ","  Liam@EdgeScale.co ","EdgeScale",180,false,"Paused trial"',
+        '102,"Sofia  Reyes","sofia@northstar.dev","Northstar AI",420.5,true,"Interested in MCP"'
+      ].join('\n');
+
+      const els = {
+        rawInput: document.getElementById('rawInput'),
+        formatSelect: document.getElementById('formatSelect'),
+        dedupeFieldSelect: document.getElementById('dedupeFieldSelect'),
+        optFlatten: document.getElementById('optFlatten'),
+        optDedupe: document.getElementById('optDedupe'),
+        optNormalize: document.getElementById('optNormalize'),
+        optSchema: document.getElementById('optSchema'),
+        statusAlert: document.getElementById('statusAlert'),
+        kpiRowsIn: document.getElementById('kpiRowsIn'),
+        kpiRowsOut: document.getElementById('kpiRowsOut'),
+        kpiDupes: document.getElementById('kpiDupes'),
+        kpiCols: document.getElementById('kpiCols'),
+        detectedFormatPill: document.getElementById('detectedFormatPill'),
+        tableFilterInput: document.getElementById('tableFilterInput'),
+        tableSummaryNote: document.getElementById('tableSummaryNote'),
+        previewTableWrap: document.getElementById('previewTableWrap'),
+        cleanJsonOut: document.getElementById('cleanJsonOut'),
+        cleanCsvOut: document.getElementById('cleanCsvOut'),
+        schemaOut: document.getElementById('schemaOut'),
+        schemaTabBtn: document.getElementById('schemaTabBtn')
+      };
+
+      const state = {
+        cleanRows: [],
+        columns: [],
+        cleanJsonText: '[]',
+        cleanCsvText: '',
+        schemaText: '{}',
+        userPickedDedupe: false
+      };
+
+      const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const URI_RE = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+      const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+      const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      function isPlainObject(v) {
+        return v !== null && typeof v === 'object' && !Array.isArray(v);
+      }
+
+      function detectDelimiter(text) {
+        const firstLine = text.split(/\r?\n/).find((l) => l.trim().length > 0) || '';
+        const candidates = [',', '\t', ';', '|'];
+        let best = ',';
+        let bestCount = -1;
+        for (const delim of candidates) {
+          let inQuotes = false;
+          let count = 0;
+          for (let i = 0; i < firstLine.length; i++) {
+            const ch = firstLine[i];
+            if (ch === '"') inQuotes = !inQuotes;
+            else if (ch === delim && !inQuotes) count++;
+          }
+          if (count > bestCount) {
+            bestCount = count;
+            best = delim;
+          }
+        }
+        return bestCount > 0 ? best : ',';
+      }
+
+      function coerceCsvScalar(raw) {
+        const trimmed = raw.trim();
+        if (trimmed === '') return '';
+        if (trimmed === 'null' || trimmed === 'NULL') return null;
+        if (trimmed === 'true' || trimmed === 'TRUE') return true;
+        if (trimmed === 'false' || trimmed === 'FALSE') return false;
+        if (/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(trimmed)) {
+          const num = Number(trimmed);
+          if (Number.isFinite(num)) return num;
+        }
+        return raw;
+      }
+
+      function parseCsv(text) {
+        const delim = detectDelimiter(text);
+        const rows = [];
+        let row = [];
+        let field = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const next = text[i + 1];
+          if (inQuotes) {
+            if (ch === '"' && next === '"') {
+              field += '"';
+              i++;
+            } else if (ch === '"') {
+              inQuotes = false;
+            } else {
+              field += ch;
+            }
+          } else {
+            if (ch === '"' && field.length === 0) {
+              inQuotes = true;
+            } else if (ch === delim) {
+              row.push(field);
+              field = '';
+            } else if (ch === '\r' && next === '\n') {
+              row.push(field);
+              rows.push(row);
+              row = [];
+              field = '';
+              i++;
+            } else if (ch === '\n' || ch === '\r') {
+              row.push(field);
+              rows.push(row);
+              row = [];
+              field = '';
+            } else {
+              field += ch;
+            }
+          }
+        }
+        if (field.length > 0 || row.length > 0) {
+          row.push(field);
+          rows.push(row);
+        }
+
+        const nonEmpty = rows.filter((r) => r.some((cell) => cell.trim() !== ''));
+        if (nonEmpty.length === 0) return [];
+
+        const rawHeaders = nonEmpty[0].map((h, idx) => {
+          const clean = h.replace(/^\uFEFF/, '').trim();
+          return clean || ('column_' + (idx + 1));
+        });
+
+        const seenHeaders = {};
+        const headers = rawHeaders.map((h) => {
+          if (!seenHeaders[h]) {
+            seenHeaders[h] = 1;
+            return h;
+          }
+          seenHeaders[h] += 1;
+          return h + '_' + seenHeaders[h];
+        });
+
+        const records = [];
+        for (let r = 1; r < nonEmpty.length; r++) {
+          const values = nonEmpty[r];
+          const obj = {};
+          for (let c = 0; c < headers.length; c++) {
+            const val = c < values.length ? values[c] : '';
+            obj[headers[c]] = coerceCsvScalar(val);
+          }
+          records.push(obj);
+        }
+        return records;
+      }
+
+      function parseInput(rawText, mode) {
+        const trimmed = rawText.trim();
+        if (!trimmed) {
+          return { records: [], format: 'Empty' };
+        }
+
+        const tryJson = () => {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return {
+              records: parsed.map((item) => (isPlainObject(item) ? item : { value: item })),
+              format: 'JSON Array'
+            };
+          }
+          if (isPlainObject(parsed)) {
+            const arrayKeys = Object.keys(parsed).filter((k) => Array.isArray(parsed[k]));
+            if (arrayKeys.length === 1 && parsed[arrayKeys[0]].every((x) => isPlainObject(x))) {
+              return { records: parsed[arrayKeys[0]], format: 'JSON Object (' + arrayKeys[0] + ')' };
+            }
+            return { records: [parsed], format: 'JSON Object' };
+          }
+          return { records: [{ value: parsed }], format: 'JSON Primitive' };
+        };
+
+        const tryNdjson = () => {
+          const lines = trimmed.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          if (lines.length === 0) return null;
+          const out = [];
+          for (const line of lines) {
+            const parsed = JSON.parse(line);
+            out.push(isPlainObject(parsed) ? parsed : { value: parsed });
+          }
+          return { records: out, format: 'NDJSON' };
+        };
+
+        if (mode === 'json') return tryJson();
+        if (mode === 'ndjson') return tryNdjson() || { records: [], format: 'NDJSON' };
+        if (mode === 'csv') return { records: parseCsv(trimmed), format: 'CSV / TSV' };
+
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+          try {
+            return tryJson();
+          } catch (_) {
+            try {
+              const nd = tryNdjson();
+              if (nd) return nd;
+            } catch (__) {
+              throw new Error('Input starts with JSON brackets/braces but is not valid JSON or NDJSON. Check quotes and trailing commas.');
+            }
+          }
+        }
+
+        return { records: parseCsv(trimmed), format: 'CSV / TSV' };
+      }
+
+      function flattenObject(obj, prefix, out) {
+        const target = out || {};
+        const keys = Object.keys(obj);
+        if (keys.length === 0 && prefix) {
+          target[prefix] = null;
+          return target;
+        }
+        for (const key of keys) {
+          const val = obj[key];
+          const path = prefix ? (prefix + '.' + key) : key;
+          if (isPlainObject(val)) {
+            flattenObject(val, path, target);
+          } else if (Array.isArray(val) && val.length > 0 && val.every((item) => isPlainObject(item))) {
+            val.forEach((item, idx) => flattenObject(item, path + '.' + idx, target));
+          } else {
+            target[path] = val;
+          }
+        }
+        return target;
+      }
+
+      function normalizeValue(val, keyHint) {
+        if (typeof val === 'string') {
+          let s = val.trim().replace(/\s+/g, ' ');
+          const looksEmailKey = /(^|[._-])e?mail($|[._-])/i.test(keyHint || '');
+          const compact = s.replace(/\s*@\s*/g, '@');
+          if (looksEmailKey || EMAIL_RE.test(compact)) {
+            s = compact.toLowerCase();
+          }
+          return s;
+        }
+        if (Array.isArray(val)) {
+          return val.map((item) => normalizeValue(item, keyHint));
+        }
+        if (isPlainObject(val)) {
+          const out = {};
+          for (const k of Object.keys(val)) {
+            const cleanKey = k.trim();
+            out[cleanKey] = normalizeValue(val[k], cleanKey);
+          }
+          return out;
+        }
+        return val;
+      }
+
+      function stableStringify(val) {
+        if (val === null || typeof val !== 'object') return JSON.stringify(val);
+        if (Array.isArray(val)) return '[' + val.map(stableStringify).join(',') + ']';
+        const keys = Object.keys(val).sort();
+        return '{' + keys.map((k) => JSON.stringify(k) + ':' + stableStringify(val[k])).join(',') + '}';
+      }
+
+      function collectColumns(rows) {
+        const seen = new Set();
+        const cols = [];
+        for (const r of rows) {
+          for (const k of Object.keys(r)) {
+            if (!seen.has(k)) {
+              seen.add(k);
+              cols.push(k);
+            }
+          }
+        }
+        return cols;
+      }
+
+      function syncDedupeDropdown(columns) {
+        const select = els.dedupeFieldSelect;
+        const prev = select.value;
+        const options = ['<option value="__full_row__">Full Row (all columns)</option>'];
+        for (const col of columns) {
+          options.push('<option value="' + escapeHtml(col) + '">' + escapeHtml(col) + '</option>');
+        }
+        select.innerHTML = options.join('');
+
+        if (state.userPickedDedupe && (prev === '__full_row__' || columns.includes(prev))) {
+          select.value = prev;
+        } else {
+          const emailCol = columns.find((c) => /(^|[._-])e?mail$/i.test(c)) || columns.find((c) => /email/i.test(c));
+          select.value = emailCol || '__full_row__';
+        }
+      }
+
+      function cellToCsvString(val) {
+        if (val === null || val === undefined) return '';
+        if (Array.isArray(val)) {
+          if (val.every((v) => v === null || typeof v !== 'object')) {
+            return val.join('; ');
+          }
+          return JSON.stringify(val);
+        }
+        if (typeof val === 'object') return JSON.stringify(val);
+        return String(val);
+      }
+
+      function toCsv(rows, columns) {
+        if (columns.length === 0) return '';
+        const esc = (raw) => {
+          const s = cellToCsvString(raw);
+          if (/[",\r\n]/.test(s)) {
+            return '"' + s.replace(/"/g, '""') + '"';
+          }
+          return s;
+        };
+        const lines = [columns.map(esc).join(',')];
+        for (const row of rows) {
+          lines.push(columns.map((c) => esc(row[c])).join(','));
+        }
+        return lines.join('\n');
+      }
+
+      function detectStringFormat(strings) {
+        const nonEmpty = strings.filter((s) => s.length > 0);
+        if (nonEmpty.length === 0) return null;
+        if (nonEmpty.every((s) => EMAIL_RE.test(s))) return 'email';
+        if (nonEmpty.every((s) => UUID_RE.test(s))) return 'uuid';
+        if (nonEmpty.every((s) => ISO_DATETIME_RE.test(s))) return 'date-time';
+        if (nonEmpty.every((s) => ISO_DATE_RE.test(s))) return 'date';
+        if (nonEmpty.every((s) => URI_RE.test(s))) return 'uri';
+        return null;
+      }
+
+      function inferValueSchema(values) {
+        const types = new Set();
+        const stringSamples = [];
+        const arrayItems = [];
+        const objectSamples = [];
+        let allNumsInt = true;
+
+        for (const v of values) {
+          if (v === undefined) continue;
+          if (v === null) {
+            types.add('null');
+          } else if (Array.isArray(v)) {
+            types.add('array');
+            for (const item of v) arrayItems.push(item);
+          } else if (typeof v === 'object') {
+            types.add('object');
+            objectSamples.push(v);
+          } else if (typeof v === 'boolean') {
+            types.add('boolean');
+          } else if (typeof v === 'number') {
+            if (!Number.isInteger(v)) allNumsInt = false;
+            types.add('number');
+          } else if (typeof v === 'string') {
+            types.add('string');
+            stringSamples.push(v);
+          }
+        }
+
+        if (types.has('number') && allNumsInt) {
+          types.delete('number');
+          types.add('integer');
+        }
+
+        const typeList = Array.from(types);
+        const schema = {};
+        if (typeList.length === 1) {
+          schema.type = typeList[0];
+        } else if (typeList.length > 1) {
+          schema.type = typeList;
+        }
+
+        if (types.has('string')) {
+          const fmt = detectStringFormat(stringSamples);
+          if (fmt) schema.format = fmt;
+        }
+        if (types.has('array')) {
+          schema.items = arrayItems.length > 0 ? inferValueSchema(arrayItems) : {};
+        }
+        if (types.has('object') && objectSamples.length > 0) {
+          const nested = inferObjectSchema(objectSamples);
+          schema.properties = nested.properties;
+          if (nested.required.length > 0) schema.required = nested.required;
+          schema.additionalProperties = false;
+        }
+        return schema;
+      }
+
+      function inferObjectSchema(objects) {
+        const keys = collectColumns(objects);
+        const properties = {};
+        const required = [];
+
+        for (const key of keys) {
+          const vals = [];
+          let presentCount = 0;
+          for (const obj of objects) {
+            if (Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined) {
+              presentCount++;
+              vals.push(obj[key]);
+            }
+          }
+          properties[key] = inferValueSchema(vals);
+          if (presentCount === objects.length && objects.length > 0) {
+            required.push(key);
+          }
+        }
+        return { properties, required };
+      }
+
+      function buildDraft07Schema(rows) {
+        const objSchema = inferObjectSchema(rows);
+        return {
+          $schema: 'http://json-schema.org/draft-07/schema#',
+          title: 'CleanedDataset',
+          description: 'Auto-inferred Draft-07 JSON Schema generated client-side by RelayTools Hub.',
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: objSchema.properties,
+            required: objSchema.required,
+            additionalProperties: false
+          }
+        };
+      }
+
+      function formatCellHtml(val) {
+        if (val === null || val === undefined) {
+          return '<span class="cell-null">null</span>';
+        }
+        if (typeof val === 'boolean') {
+          return '<span class="cell-bool">' + String(val) + '</span>';
+        }
+        if (typeof val === 'number') {
+          return '<span class="cell-num">' + String(val) + '</span>';
+        }
+        if (Array.isArray(val)) {
+          return escapeHtml(val.every((x) => x === null || typeof x !== 'object') ? val.join(', ') : JSON.stringify(val));
+        }
+        if (typeof val === 'object') {
+          return '<code>' + escapeHtml(JSON.stringify(val)) + '</code>';
+        }
+        if (val === '') {
+          return '<span class="cell-null">(empty)</span>';
+        }
+        return escapeHtml(val);
+      }
+
+      function renderPreviewTable() {
+        const filter = els.tableFilterInput.value.trim().toLowerCase();
+        const rows = state.cleanRows;
+        const cols = state.columns;
+
+        if (rows.length === 0 || cols.length === 0) {
+          els.previewTableWrap.innerHTML = '<div style="padding:18px;" class="muted small">No rows to display. Paste JSON, NDJSON, or CSV above.</div>';
+          els.tableSummaryNote.textContent = '';
+          return;
+        }
+
+        const filtered = filter
+          ? rows.filter((r) => cols.some((c) => cellToCsvString(r[c]).toLowerCase().includes(filter)))
+          : rows;
+
+        const MAX_RENDER = 250;
+        const slice = filtered.slice(0, MAX_RENDER);
+
+        const headHtml = '<thead><tr><th>#</th>' + cols.map((c) => '<th>' + escapeHtml(c) + '</th>').join('') + '</tr></thead>';
+        const bodyHtml = '<tbody>' + slice.map((r, idx) => {
+          return '<tr><td class="muted">' + (idx + 1) + '</td>' + cols.map((c) => '<td>' + formatCellHtml(r[c]) + '</td>').join('') + '</tr>';
+        }).join('') + '</tbody>';
+
+        els.previewTableWrap.innerHTML = '<table>' + headHtml + bodyHtml + '</table>';
+        els.tableSummaryNote.textContent = filtered.length > MAX_RENDER
+          ? 'Showing first ' + MAX_RENDER + ' of ' + filtered.length + ' matching rows (all ' + rows.length + ' rows included in exports).'
+          : 'Showing ' + filtered.length + ' of ' + rows.length + ' clean rows.';
+      }
+
+      function setAlert(type, message) {
+        if (!message) {
+          els.statusAlert.innerHTML = '';
+          return;
+        }
+        els.statusAlert.innerHTML = '<div class="alert alert-' + type + '">' + escapeHtml(message) + '</div>';
+      }
+
+      function processData() {
+        const raw = els.rawInput.value;
+        const formatMode = els.formatSelect.value;
+        const doFlatten = els.optFlatten.checked;
+        const doDedupe = els.optDedupe.checked;
+        const doNormalize = els.optNormalize.checked;
+        const doSchema = els.optSchema.checked;
+
+        els.schemaTabBtn.style.display = doSchema ? '' : 'none';
+        if (!doSchema && document.getElementById('schemaPanel').classList.contains('active')) {
+          activateTab('tablePanel');
+        }
+
+        if (!raw.trim()) {
+          state.cleanRows = [];
+          state.columns = [];
+          state.cleanJsonText = '[]';
+          state.cleanCsvText = '';
+          state.schemaText = '{}';
+          els.kpiRowsIn.textContent = '0';
+          els.kpiRowsOut.textContent = '0';
+          els.kpiDupes.textContent = '0';
+          els.kpiCols.textContent = '0';
+          els.detectedFormatPill.textContent = 'Empty';
+          els.cleanJsonOut.textContent = '[]';
+          els.cleanCsvOut.textContent = '';
+          els.schemaOut.textContent = '{}';
+          setAlert('blue', 'Paste JSON, NDJSON, or CSV text above — or click one of the sample buttons to test immediately.');
+          renderPreviewTable();
+          return;
+        }
+
+        let parsed;
+        try {
+          parsed = parseInput(raw, formatMode);
+        } catch (err) {
+          setAlert('red', 'Parse error: ' + (err && err.message ? err.message : String(err)));
+          els.detectedFormatPill.textContent = 'Parse Error';
+          return;
+        }
+
+        const rowsIn = parsed.records.length;
+        let transformed = parsed.records.map((rec) => {
+          let item = isPlainObject(rec) ? rec : { value: rec };
+          if (doFlatten) {
+            item = flattenObject(item, '', {});
+          }
+          if (doNormalize) {
+            item = normalizeValue(item, '');
+          }
+          return item;
+        });
+
+        const colsBeforeDedupe = collectColumns(transformed);
+        syncDedupeDropdown(colsBeforeDedupe);
+
+        const dedupeField = els.dedupeFieldSelect.value;
+        let cleanRows = transformed;
+        let dupesRemoved = 0;
+
+        if (doDedupe) {
+          const seenKeys = new Set();
+          cleanRows = [];
+          for (const row of transformed) {
+            let key;
+            if (dedupeField === '__full_row__') {
+              key = stableStringify(row);
+            } else {
+              const fieldVal = row[dedupeField];
+              key = fieldVal === undefined ? '__MISSING__' + stableStringify(row) : stableStringify(fieldVal);
+            }
+            if (seenKeys.has(key)) {
+              dupesRemoved++;
+            } else {
+              seenKeys.add(key);
+              cleanRows.push(row);
+            }
+          }
+        }
+
+        const columns = collectColumns(cleanRows);
+        state.cleanRows = cleanRows;
+        state.columns = columns;
+        state.cleanJsonText = JSON.stringify(cleanRows, null, 2);
+        state.cleanCsvText = toCsv(cleanRows, columns);
+        state.schemaText = doSchema ? JSON.stringify(buildDraft07Schema(cleanRows), null, 2) : '// Enable "Infer Draft-07 JSON Schema" to generate schema.';
+
+        els.kpiRowsIn.textContent = String(rowsIn);
+        els.kpiRowsOut.textContent = String(cleanRows.length);
+        els.kpiDupes.textContent = String(dupesRemoved);
+        els.kpiCols.textContent = String(columns.length);
+        els.detectedFormatPill.textContent = 'Detected: ' + parsed.format;
+
+        els.cleanJsonOut.textContent = state.cleanJsonText;
+        els.cleanCsvOut.textContent = state.cleanCsvText;
+        els.schemaOut.textContent = state.schemaText;
+
+        const dedupeDesc = doDedupe
+          ? ('Deduplicated by ' + (dedupeField === '__full_row__' ? 'full row' : '"' + dedupeField + '"') + ' (' + dupesRemoved + ' removed).')
+          : 'Deduplication disabled.';
+        setAlert('green', 'Cleaned ' + rowsIn + ' row(s) from ' + parsed.format + ' → ' + cleanRows.length + ' clean row(s) across ' + columns.length + ' column(s). ' + dedupeDesc);
+        renderPreviewTable();
+      }
+
+      function activateTab(panelId) {
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+          const active = btn.dataset.tab === panelId;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach((panel) => {
+          panel.classList.toggle('active', panel.id === panelId);
+        });
+      }
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+      });
+
+      let debounceTimer = null;
+      function scheduleProcess() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(processData, 160);
+      }
+
+      els.rawInput.addEventListener('input', () => {
+        state.userPickedDedupe = false;
+        scheduleProcess();
+      });
+      els.formatSelect.addEventListener('change', processData);
+      els.optFlatten.addEventListener('change', () => {
+        state.userPickedDedupe = false;
+        processData();
+      });
+      els.optDedupe.addEventListener('change', processData);
+      els.optNormalize.addEventListener('change', processData);
+      els.optSchema.addEventListener('change', processData);
+      els.dedupeFieldSelect.addEventListener('change', () => {
+        state.userPickedDedupe = true;
+        processData();
+      });
+      els.tableFilterInput.addEventListener('input', renderPreviewTable);
+      document.getElementById('runCleanBtn').addEventListener('click', processData);
+
+      document.getElementById('loadJsonSampleBtn').addEventListener('click', () => {
+        state.userPickedDedupe = false;
+        els.formatSelect.value = 'auto';
+        els.rawInput.value = JSON.stringify(SAMPLE_MESSY_JSON, null, 2);
+        processData();
+      });
+      document.getElementById('loadNdjsonSampleBtn').addEventListener('click', () => {
+        state.userPickedDedupe = false;
+        els.formatSelect.value = 'auto';
+        els.rawInput.value = SAMPLE_NDJSON;
+        processData();
+      });
+      document.getElementById('loadCsvSampleBtn').addEventListener('click', () => {
+        state.userPickedDedupe = false;
+        els.formatSelect.value = 'auto';
+        els.rawInput.value = SAMPLE_CSV;
+        processData();
+      });
+      document.getElementById('clearInputBtn').addEventListener('click', () => {
+        state.userPickedDedupe = false;
+        els.rawInput.value = '';
+        processData();
+      });
+
+      const downloadJson = () => downloadFile('clean-data.json', state.cleanJsonText, 'application/json;charset=utf-8');
+      const downloadCsv = () => downloadFile('clean-data.csv', state.cleanCsvText, 'text/csv;charset=utf-8');
+      const downloadSchema = () => downloadFile('inferred-schema.json', state.schemaText, 'application/schema+json;charset=utf-8');
+
+      document.getElementById('downloadJsonBtn').addEventListener('click', downloadJson);
+      document.getElementById('downloadJsonBtn2').addEventListener('click', downloadJson);
+      document.getElementById('downloadCsvBtn').addEventListener('click', downloadCsv);
+      document.getElementById('downloadCsvBtn2').addEventListener('click', downloadCsv);
+      document.getElementById('downloadSchemaBtn').addEventListener('click', downloadSchema);
+      document.getElementById('copyCleanJsonTopBtn').addEventListener('click', function () {
+        copyText(state.cleanJsonText, this);
+      });
+
+      els.rawInput.value = JSON.stringify(SAMPLE_MESSY_JSON, null, 2);
+      processData();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML to Clean Markdown &amp; LLM RAG Chunk Splitter — RelayTools Hub</title>
+  <meta name="description" content="100% client-side HTML-to-Markdown converter and LLM RAG chunk splitter. Strips nav, scripts, styles, footers &amp; asides via DOMParser, estimates tokens, and exports rag-chunks.json." />
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "HTML to Clean Markdown & LLM RAG Chunk Splitter",
+    "description": "100% client-side browser utility that strips scripts, styles, navigation, footers, and asides via DOMParser, converts clean article HTML to Markdown, estimates LLM token counts, and splits content into configurable overlapping RAG chunks.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "All (Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "DOMParser boilerplate stripping for script, style, nav, footer, and aside elements",
+      "Clean HTML to Markdown conversion supporting headings, lists, links, fenced code, tables, and blockquotes",
+      "Instant word count, noise reduction percentage, and LLM token estimation (~chars/4)",
+      "Configurable chunkSizeChars and overlapChars RAG chunk splitter with heading context tracking",
+      "One-click Copy Markdown and Download rag-chunks.json"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .toggle-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .toggle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-chip:hover { border-color: var(--accent); }
+    .toggle-chip input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      margin: 0;
+      cursor: pointer;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .preset-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .chip-btn {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chip-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .output-pre {
+      max-height: 460px;
+      overflow-y: auto;
+    }
+    .chunk-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 12px;
+    }
+    @media (max-width: 820px) {
+      .chunk-list { grid-template-columns: 1fr; }
+    }
+    .chunk-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chunk-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chunk-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chunk-body {
+      margin: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 12.2px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">RT</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-link" href="../index.html">Tools Hub</a>
+        <a class="nav-link" href="../catalog.html">Apify Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Free Deploy</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">100% Client-Side · DOMParser + RAG Chunker</span>
+      <h1>HTML-to-Clean-Markdown &amp; LLM RAG Chunk Splitter</h1>
+      <p>Paste raw webpage HTML or plain text. Automatically strips <code>&lt;script&gt;</code>, <code>&lt;style&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;footer&gt;</code>, and <code>&lt;aside&gt;</code> boilerplate, converts headings, lists, code, blockquotes, links &amp; tables to crisp Markdown, estimates LLM tokens, and exports overlapping RAG chunks as JSON.</p>
+    </section>
+
+    <section class="card" aria-labelledby="input-heading">
+      <div class="toolbar">
+        <div>
+          <h2 id="input-heading">1. Paste Raw HTML or Plain Text</h2>
+          <p class="muted small" style="margin:0;">A realistic article page with noisy nav, scripts, ads, tables, and code blocks is pre-loaded below.</p>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" id="loadHtmlSampleBtn">Load Sample Article HTML</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="loadTextSampleBtn">Load Plain Text Sample</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="clearInputBtn">Clear</button>
+        </div>
+      </div>
+
+      <textarea id="rawHtmlInput" rows="11" spellcheck="false" aria-label="Raw HTML or plain text input" placeholder="Paste raw HTML markup or plain text here..."></textarea>
+
+      <div class="toggle-grid" role="group" aria-label="HTML cleaning options">
+        <label class="toggle-chip">
+          <input type="checkbox" id="optStripBoilerplate" checked />
+          <span>Strip <code>&lt;nav&gt;</code>, <code>&lt;footer&gt;</code>, <code>&lt;aside&gt;</code></span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optStripScripts" checked />
+          <span>Strip <code>&lt;script&gt;</code>, <code>&lt;style&gt;</code>, <code>&lt;svg&gt;</code></span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optKeepLinks" checked />
+          <span>Preserve Markdown Links <code>[text](url)</code></span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="optSmartBoundary" checked />
+          <span>Split on Headings / Paragraph Boundaries</span>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="inputModeSelect">Input Mode</label>
+          <select id="inputModeSelect">
+            <option value="auto" selected>Auto-Detect (HTML vs Plain Text)</option>
+            <option value="html">Force HTML → Markdown</option>
+            <option value="text">Force Plain Text / Markdown</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="chunkSizeInput">Chunk Size (<code>chunkSizeChars</code>)</label>
+          <input type="number" id="chunkSizeInput" value="750" min="100" max="32000" step="50" />
+          <div class="preset-row">
+            <span class="muted small">Presets:</span>
+            <button type="button" class="chip-btn" data-size="400" data-overlap="80">400 / 80</button>
+            <button type="button" class="chip-btn" data-size="750" data-overlap="120">750 / 120</button>
+            <button type="button" class="chip-btn" data-size="1500" data-overlap="200">1500 / 200</button>
+            <button type="button" class="chip-btn" data-size="3000" data-overlap="300">3000 / 300</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="overlapInput">Overlap (<code>overlapChars</code>)</label>
+          <input type="number" id="overlapInput" value="120" min="0" max="16000" step="20" />
+          <div class="preset-row"><span class="muted small" id="overlapHint">Overlap kept strictly below chunk size.</span></div>
+        </div>
+        <div class="field" style="flex:0 0 auto; min-width:auto;">
+          <button type="button" class="btn btn-primary" id="convertBtn">Convert &amp; Split</button>
+        </div>
+      </div>
+
+      <div id="statusAlert" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="grid-4" style="margin-bottom:20px;" aria-label="Markdown and RAG KPIs">
+      <div class="kpi">
+        <div class="kpi-label">Est. LLM Tokens</div>
+        <div class="kpi-value" id="kpiTokens">0</div>
+        <div class="kpi-sub" id="kpiTokenFormula">~chars / 4</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clean Words</div>
+        <div class="kpi-value" id="kpiWords">0</div>
+        <div class="kpi-sub" id="kpiCharsSub">0 clean chars</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Noise Stripped</div>
+        <div class="kpi-value" id="kpiReduction">0%</div>
+        <div class="kpi-sub" id="kpiRawSub">from 0 raw chars</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">RAG Chunks</div>
+        <div class="kpi-value" id="kpiChunks">0</div>
+        <div class="kpi-sub" id="kpiAvgChunk">avg 0 tokens/chunk</div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="md-heading">
+      <div class="toolbar">
+        <div>
+          <h2 id="md-heading" style="margin:0;">2. Clean LLM-Ready Markdown</h2>
+          <p class="muted small" id="docTitleNote" style="margin:4px 0 0;"></p>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-primary btn-sm" onclick="copyElementText('markdownOut', this)">Copy Markdown</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="downloadMdBtn">Download clean.md</button>
+        </div>
+      </div>
+      <pre id="markdownOut" class="output-pre"></pre>
+    </section>
+
+    <section class="card" aria-labelledby="chunks-heading">
+      <div class="toolbar">
+        <div>
+          <h2 id="chunks-heading" style="margin:0;">3. Live RAG Chunks</h2>
+          <p class="muted small" style="margin:4px 0 0;">Each chunk includes index, active heading context, character offsets, word count, and token estimate.</p>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-primary btn-sm" id="downloadChunksBtn">Download rag-chunks.json</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="copyChunksJsonBtn">Copy Chunks JSON</button>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:8px;">
+        <div class="field" style="max-width:360px;">
+          <label for="chunkFilterInput">Filter Chunks</label>
+          <input type="search" id="chunkFilterInput" placeholder="Search chunk text or heading..." />
+        </div>
+        <div class="muted small" id="chunkCountNote" style="padding-bottom:10px;"></div>
+      </div>
+
+      <div id="chunkCardsContainer" class="chunk-list"></div>
+    </section>
+
+    <section class="apify-cta" aria-label="Cloud RAG ingestion actors">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Production RAG Pipelines · Apify Cloud &amp; MCP</span>
+        <h3>Crawling hundreds of docs pages or extracting tables from PDFs?</h3>
+        <p>Automate headless web crawling to LLM Markdown and multi-page PDF table extraction directly into Pinecone, Qdrant, Weaviate, or MCP agents using our cloud Apify Actors.</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/web-markdown-llm-cleaner" target="_blank" rel="noopener noreferrer">Web Markdown LLM Cleaner ↗</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/pdf-table-json-extractor" target="_blank" rel="noopener noreferrer">PDF Table JSON Extractor ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> — Privacy-first browser tools &amp; cloud Apify Actors. Zero tracking, zero uploads.</div>
+      <div class="btn-group">
+        <a href="../index.html">Tools Hub</a>
+        <span>·</span>
+        <a href="../catalog.html">Apify Catalog</a>
+        <span>·</span>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <span>·</span>
+        <a href="../deploy-free.html">Free Deploy</a>
+        <span>·</span>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      const SAMPLE_HTML = [
+        '<!DOCTYPE html>',
+        '<html lang="en">',
+        '<head>',
+        '  <title>Production RAG Chunking Guide (2026)</title>',
+        '  <style>body { font-family: sans-serif; } .ad-banner { display: block; }</style>',
+        '  <script>window.__analytics = { track: function() { return true; } };<' + '/script>',
+        '</head>',
+        '<body>',
+        '  <nav class="top-nav"><a href="/">Home</a> | <a href="/pricing">Pricing</a> | <a href="/login">Sign In</a></nav>',
+        '  <aside class="sidebar"><h4>Sponsored Ad</h4><p>Sign up for our weekly newsletter and get 20% off!</p></aside>',
+        '  <main>',
+        '    <article>',
+        '      <h1>Designing High-Precision RAG Pipelines</h1>',
+        '      <p>Retrieval-Augmented Generation (<strong>RAG</strong>) quality depends heavily on <em>clean HTML extraction</em> and well-tuned chunk boundaries. Stripping navigation chrome before embedding saves up to 60% of vector storage and prevents irrelevant boilerplate from polluting top-k recall.</p>',
+        '      <blockquote>Good chunking beats bigger context windows: cleaner inputs reduce hallucinations and cut LLM latency in half.</blockquote>',
+        '      <h2>1. Recommended Chunking Defaults</h2>',
+        '      <ul>',
+        '        <li><strong>Chunk size:</strong> 600–1,200 characters for technical docs and API references.</li>',
+        '        <li><strong>Overlap:</strong> 10%–20% sliding overlap so definitions spanning boundaries stay intact.</li>',
+        '        <li><strong>Metadata:</strong> Always attach <code>headingContext</code>, source URL, and token estimates.</li>',
+        '      </ul>',
+        '      <h2>2. Benchmark Comparison</h2>',
+        '      <table>',
+        '        <thead>',
+        '          <tr><th>Strategy</th><th>Avg Recall@5</th><th>Token Overhead</th></tr>',
+        '        </thead>',
+        '        <tbody>',
+        '          <tr><td>Raw HTML Dump</td><td>54%</td><td>High (+140%)</td></tr>',
+        '          <tr><td>Clean Markdown + Recursive Split</td><td>89%</td><td>Low (+12%)</td></tr>',
+        '          <tr><td>Markdown + Heading Context</td><td>93%</td><td>Low (+15%)</td></tr>',
+        '        </tbody>',
+        '      </table>',
+        '      <h2>3. Quick Python Embedding Snippet</h2>',
+        '      <p>Load the exported <code>rag-chunks.json</code> file directly into your indexing script via <a href="https://apify.com/regenerative_cornice/web-markdown-llm-cleaner">Web Markdown LLM Cleaner</a>:</p>',
+        '      <pre><code class="language-python">import json\n\nwith open("rag-chunks.json", "r", encoding="utf-8") as f:\n    payload = json.load(f)\n\nfor chunk in payload["chunks"]:\n    print(chunk["index"], chunk["estimatedTokens"], chunk["headingContext"])</code></pre>',
+        '      <h3>Checklist Before Indexing</h3>',
+        '      <ol>',
+        '        <li>Remove scripts, styles, cookie banners, and footers.</li>',
+        '        <li>Preserve Markdown tables and fenced code blocks.</li>',
+        '        <li>Verify token distribution across chunks before calling your embedding API.</li>',
+        '      </ol>',
+        '    </article>',
+        '  </main>',
+        '  <footer><p>© 2026 Example Corp · Privacy Policy · Terms · Cookie Settings</p></footer>',
+        '</body>',
+        '</html>'
+      ].join('\n');
+
+      const SAMPLE_PLAIN_TEXT = [
+        '# Model Context Protocol (MCP) Server Checklist',
+        '',
+        'MCP servers expose structured tools, resources, and prompts to LLM clients such as Claude Desktop, Cursor, and Windsurf.',
+        '',
+        '## Core Design Rules',
+        '- Keep tool schemas narrow with explicit JSON Schema descriptions and sensible defaults.',
+        '- Return concise, deterministic JSON payloads rather than giant uncleaned HTML blobs.',
+        '- Enforce strict timeouts and clear error messages so agents can recover cleanly.',
+        '',
+        '## Operational Reliability',
+        'Before shipping an MCP server to production, validate input schemas with automated tests, cap output size per tool call, and log structured latency metrics. Pair browser-side preprocessing with cloud Apify Actors whenever you need headless rendering, residential proxies, or scheduled refreshes.'
+      ].join('\n');
+
+      const els = {
+        rawHtmlInput: document.getElementById('rawHtmlInput'),
+        inputModeSelect: document.getElementById('inputModeSelect'),
+        optStripBoilerplate: document.getElementById('optStripBoilerplate'),
+        optStripScripts: document.getElementById('optStripScripts'),
+        optKeepLinks: document.getElementById('optKeepLinks'),
+        optSmartBoundary: document.getElementById('optSmartBoundary'),
+        chunkSizeInput: document.getElementById('chunkSizeInput'),
+        overlapInput: document.getElementById('overlapInput'),
+        overlapHint: document.getElementById('overlapHint'),
+        statusAlert: document.getElementById('statusAlert'),
+        kpiTokens: document.getElementById('kpiTokens'),
+        kpiTokenFormula: document.getElementById('kpiTokenFormula'),
+        kpiWords: document.getElementById('kpiWords'),
+        kpiCharsSub: document.getElementById('kpiCharsSub'),
+        kpiReduction: document.getElementById('kpiReduction'),
+        kpiRawSub: document.getElementById('kpiRawSub'),
+        kpiChunks: document.getElementById('kpiChunks'),
+        kpiAvgChunk: document.getElementById('kpiAvgChunk'),
+        docTitleNote: document.getElementById('docTitleNote'),
+        markdownOut: document.getElementById('markdownOut'),
+        chunkFilterInput: document.getElementById('chunkFilterInput'),
+        chunkCountNote: document.getElementById('chunkCountNote'),
+        chunkCardsContainer: document.getElementById('chunkCardsContainer')
+      };
+
+      const state = {
+        title: '',
+        markdown: '',
+        chunks: [],
+        exportJson: '{}'
+      };
+
+      function looksLikeHtml(str) {
+        return /<\/?(?:html|head|body|article|main|section|div|p|h[1-6]|ul|ol|li|table|tr|td|th|nav|footer|aside|script|style|a|blockquote|pre)\b[^>]*>/i.test(str);
+      }
+
+      function countWords(text) {
+        const trimmed = text.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).length;
+      }
+
+      function estimateTokens(text) {
+        if (!text) return 0;
+        return Math.ceil(text.length / 4);
+      }
+
+      function cleanInlineText(text) {
+        return text.replace(/\s+/g, ' ');
+      }
+
+      function convertTable(tableEl, opts) {
+        const rows = Array.from(tableEl.querySelectorAll('tr'));
+        if (rows.length === 0) return '';
+
+        const matrix = rows.map((tr) => {
+          const cells = Array.from(tr.children).filter((el) => el.tagName === 'TH' || el.tagName === 'TD');
+          return cells.map((cell) => {
+            const inner = serializeChildren(cell, opts, 0).replace(/\n+/g, ' ').trim();
+            return inner.replace(/\|/g, '\\|');
+          });
+        }).filter((r) => r.length > 0);
+
+        if (matrix.length === 0) return '';
+        const colCount = Math.max.apply(null, matrix.map((r) => r.length));
+        const normalized = matrix.map((r) => {
+          const copy = r.slice();
+          while (copy.length < colCount) copy.push('');
+          return copy;
+        });
+
+        const header = '| ' + normalized[0].join(' | ') + ' |';
+        const sep = '| ' + normalized[0].map(() => '---').join(' | ') + ' |';
+        const body = normalized.slice(1).map((r) => '| ' + r.join(' | ') + ' |');
+        return '\n\n' + [header, sep].concat(body).join('\n') + '\n\n';
+      }
+
+      function serializeList(listEl, opts, depth) {
+        const isOrdered = listEl.tagName === 'OL';
+        const items = Array.from(listEl.children).filter((el) => el.tagName === 'LI');
+        const indent = '  '.repeat(depth);
+        const lines = [];
+
+        items.forEach((li, idx) => {
+          const marker = isOrdered ? ((idx + 1) + '. ') : '- ';
+          const parts = [];
+          const nested = [];
+
+          Array.from(li.childNodes).forEach((child) => {
+            if (child.nodeType === 1 && (child.tagName === 'UL' || child.tagName === 'OL')) {
+              nested.push(serializeList(child, opts, depth + 1));
+            } else {
+              parts.push(nodeToMarkdown(child, opts, depth + 1));
+            }
+          });
+
+          const mainText = parts.join('').replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+          if (mainText) {
+            lines.push(indent + marker + mainText);
+          }
+          nested.forEach((n) => {
+            if (n.trim()) lines.push(n.replace(/^\n+|\n+$/g, ''));
+          });
+        });
+
+        if (lines.length === 0) return '';
+        return (depth === 0 ? '\n\n' : '\n') + lines.join('\n') + (depth === 0 ? '\n\n' : '');
+      }
+
+      function serializeChildren(node, opts, depth) {
+        let out = '';
+        Array.from(node.childNodes).forEach((child) => {
+          out += nodeToMarkdown(child, opts, depth);
+        });
+        return out;
+      }
+
+      function nodeToMarkdown(node, opts, depth) {
+        if (node.nodeType === 3) {
+          return cleanInlineText(node.nodeValue || '');
+        }
+        if (node.nodeType !== 1) return '';
+
+        const tag = node.tagName.toUpperCase();
+
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE') {
+          return '';
+        }
+        if (tag === 'BR') return '\n';
+        if (tag === 'HR') return '\n\n---\n\n';
+
+        if (/^H[1-6]$/.test(tag)) {
+          const level = Number(tag.charAt(1));
+          const text = serializeChildren(node, opts, depth).replace(/\s+/g, ' ').trim();
+          return text ? ('\n\n' + '#'.repeat(level) + ' ' + text + '\n\n') : '';
+        }
+
+        if (tag === 'PRE') {
+          const codeEl = node.querySelector('code');
+          const langMatch = codeEl && codeEl.className ? codeEl.className.match(/(?:language|lang)-([a-z0-9_+-]+)/i) : null;
+          const lang = langMatch ? langMatch[1] : '';
+          const rawCode = (codeEl ? codeEl.textContent : node.textContent) || '';
+          const cleanedCode = rawCode.replace(/^\n+|\n+$/g, '');
+          return '\n\n```' + lang + '\n' + cleanedCode + '\n```\n\n';
+        }
+
+        if (tag === 'CODE') {
+          const txt = (node.textContent || '').trim();
+          if (!txt) return '';
+          const fence = txt.includes('`') ? '``' : '`';
+          return fence + txt + fence;
+        }
+
+        if (tag === 'STRONG' || tag === 'B') {
+          const txt = serializeChildren(node, opts, depth).trim();
+          return txt ? ('**' + txt + '**') : '';
+        }
+
+        if (tag === 'EM' || tag === 'I') {
+          const txt = serializeChildren(node, opts, depth).trim();
+          return txt ? ('*' + txt + '*') : '';
+        }
+
+        if (tag === 'DEL' || tag === 'S') {
+          const txt = serializeChildren(node, opts, depth).trim();
+          return txt ? ('~~' + txt + '~~') : '';
+        }
+
+        if (tag === 'A') {
+          const label = serializeChildren(node, opts, depth).replace(/\s+/g, ' ').trim();
+          const href = (node.getAttribute('href') || '').trim();
+          if (!label) return '';
+          if (opts.keepLinks && href && !/^javascript:/i.test(href)) {
+            return '[' + label + '](' + href + ')';
+          }
+          return label;
+        }
+
+        if (tag === 'IMG') {
+          const alt = (node.getAttribute('alt') || '').trim();
+          const src = (node.getAttribute('src') || '').trim();
+          if (!alt) return '';
+          return opts.keepLinks && src ? ('![' + alt + '](' + src + ')') : alt;
+        }
+
+        if (tag === 'BLOCKQUOTE') {
+          const inner = serializeChildren(node, opts, depth).trim();
+          if (!inner) return '';
+          const quoted = inner.split('\n').map((l) => '> ' + l.trim()).join('\n');
+          return '\n\n' + quoted + '\n\n';
+        }
+
+        if (tag === 'UL' || tag === 'OL') {
+          return serializeList(node, opts, depth);
+        }
+
+        if (tag === 'TABLE') {
+          return convertTable(node, opts);
+        }
+
+        if (tag === 'P' || tag === 'FIGCAPTION') {
+          const inner = serializeChildren(node, opts, depth).replace(/[ \t]+/g, ' ').trim();
+          return inner ? ('\n\n' + inner + '\n\n') : '';
+        }
+
+        if (tag === 'DIV' || tag === 'SECTION' || tag === 'ARTICLE' || tag === 'MAIN' || tag === 'HEADER') {
+          const inner = serializeChildren(node, opts, depth).trim();
+          return inner ? ('\n\n' + inner + '\n\n') : '';
+        }
+
+        return serializeChildren(node, opts, depth);
+      }
+
+      function normalizeMarkdown(md) {
+        return md
+          .replace(/\r\n/g, '\n')
+          .replace(/[ \t]+\n/g, '\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+      }
+
+      function htmlToCleanMarkdown(rawHtml, opts) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawHtml, 'text/html');
+        const title = (doc.querySelector('title') && doc.querySelector('title').textContent || '').trim();
+
+        const removeSelectors = [];
+        if (opts.stripScripts) {
+          removeSelectors.push('script', 'style', 'noscript', 'svg', 'iframe', 'template', 'canvas');
+        }
+        if (opts.stripBoilerplate) {
+          removeSelectors.push('nav', 'footer', 'aside', '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]', '[aria-hidden="true"]');
+        }
+
+        if (removeSelectors.length > 0) {
+          doc.querySelectorAll(removeSelectors.join(',')).forEach((el) => el.remove());
+        }
+
+        const root = doc.body || doc.documentElement;
+        const md = normalizeMarkdown(serializeChildren(root, opts, 0));
+        return { title, markdown: md };
+      }
+
+      function findHeadingAtOffset(text, offset) {
+        const slice = text.slice(0, offset + 1);
+        const matches = slice.match(/^#{1,6}\s+.+$/gm);
+        if (!matches || matches.length === 0) return 'Document Root';
+        return matches[matches.length - 1].replace(/^#{1,6}\s+/, '').trim();
+      }
+
+      function findSmartSplitPoint(text, start, targetEnd) {
+        if (targetEnd >= text.length) return text.length;
+        const minSplit = start + Math.floor((targetEnd - start) * 0.55);
+        const windowText = text.slice(minSplit, targetEnd);
+
+        const headingIdx = windowText.lastIndexOf('\n#');
+        if (headingIdx > 0) return minSplit + headingIdx + 1;
+
+        const paraIdx = windowText.lastIndexOf('\n\n');
+        if (paraIdx > 0) return minSplit + paraIdx + 2;
+
+        const lineIdx = windowText.lastIndexOf('\n');
+        if (lineIdx > 0) return minSplit + lineIdx + 1;
+
+        const sentenceMatch = windowText.match(/[\s\S]*[.!?]\s+/);
+        if (sentenceMatch && sentenceMatch[0].length > 0) {
+          return minSplit + sentenceMatch[0].length;
+        }
+
+        const spaceIdx = windowText.lastIndexOf(' ');
+        if (spaceIdx > 0) return minSplit + spaceIdx + 1;
+
+        return targetEnd;
+      }
+
+      function splitRagChunks(markdown, chunkSizeChars, overlapChars, smartBoundary) {
+        const clean = markdown.trim();
+        if (!clean) return [];
+
+        const size = Math.max(100, Math.min(32000, Math.floor(chunkSizeChars) || 750));
+        const overlap = Math.max(0, Math.min(size - 20, Math.floor(overlapChars) || 0));
+
+        const chunks = [];
+        let cursor = 0;
+
+        while (cursor < clean.length) {
+          const rawEnd = Math.min(clean.length, cursor + size);
+          let end = smartBoundary ? findSmartSplitPoint(clean, cursor, rawEnd) : rawEnd;
+          if (end <= cursor) end = rawEnd;
+
+          const chunkText = clean.slice(cursor, end).trim();
+          if (chunkText.length > 0) {
+            chunks.push({
+              index: chunks.length + 1,
+              headingContext: findHeadingAtOffset(clean, cursor),
+              charStart: cursor,
+              charEnd: end,
+              charCount: chunkText.length,
+              wordCount: countWords(chunkText),
+              estimatedTokens: estimateTokens(chunkText),
+              overlapFromPrevious: chunks.length > 0 ? overlap : 0,
+              text: chunkText
+            });
+          }
+
+          if (end >= clean.length) break;
+          let nextCursor = end - overlap;
+          if (smartBoundary && overlap > 0 && nextCursor > cursor) {
+            const spaceSnap = clean.indexOf(' ', nextCursor);
+            if (spaceSnap !== -1 && spaceSnap < end) {
+              nextCursor = spaceSnap + 1;
+            }
+          }
+          cursor = Math.max(cursor + 1, nextCursor);
+        }
+
+        return chunks;
+      }
+
+      function renderChunkCards() {
+        const filter = els.chunkFilterInput.value.trim().toLowerCase();
+        const chunks = state.chunks;
+        if (chunks.length === 0) {
+          els.chunkCardsContainer.innerHTML = '<div class="muted small">No chunks generated yet.</div>';
+          els.chunkCountNote.textContent = '';
+          return;
+        }
+
+        const filtered = filter
+          ? chunks.filter((c) => c.text.toLowerCase().includes(filter) || c.headingContext.toLowerCase().includes(filter))
+          : chunks;
+
+        els.chunkCountNote.textContent = 'Showing ' + filtered.length + ' of ' + chunks.length + ' chunks.';
+
+        els.chunkCardsContainer.innerHTML = filtered.map((chunk) => {
+          return (
+            '<article class="chunk-card">' +
+              '<div class="chunk-head">' +
+                '<div class="chunk-meta">' +
+                  '<span class="pill pill-teal">Chunk #' + chunk.index + ' / ' + chunks.length + '</span>' +
+                  '<span class="pill pill-blue">~' + chunk.estimatedTokens + ' tok</span>' +
+                  '<span class="pill pill-green">' + chunk.charCount + ' chars</span>' +
+                  (chunk.overlapFromPrevious > 0 ? '<span class="pill pill-amber">overlap ' + chunk.overlapFromPrevious + '</span>' : '') +
+                '</div>' +
+                '<button type="button" class="btn btn-secondary btn-sm copy-chunk-btn" data-idx="' + (chunk.index - 1) + '">Copy Chunk</button>' +
+              '</div>' +
+              '<div class="small muted"><strong>Context:</strong> ' + escapeHtml(chunk.headingContext) + ' · ' + chunk.wordCount + ' words (offsets ' + chunk.charStart + '–' + chunk.charEnd + ')</div>' +
+              '<pre class="chunk-body">' + escapeHtml(chunk.text) + '</pre>' +
+            '</article>'
+          );
+        }).join('');
+
+        els.chunkCardsContainer.querySelectorAll('.copy-chunk-btn').forEach((btn) => {
+          btn.addEventListener('click', function () {
+            const idx = Number(this.dataset.idx);
+            if (state.chunks[idx]) {
+              copyText(state.chunks[idx].text, this);
+            }
+          });
+        });
+      }
+
+      function runPipeline() {
+        const raw = els.rawHtmlInput.value;
+        const mode = els.inputModeSelect.value;
+        const chunkSize = Math.max(100, Number(els.chunkSizeInput.value) || 750);
+        let overlap = Math.max(0, Number(els.overlapInput.value) || 0);
+        if (overlap >= chunkSize) {
+          overlap = Math.max(0, chunkSize - 20);
+          els.overlapHint.textContent = 'Clamped overlap to ' + overlap + ' chars (< chunk size).';
+        } else {
+          els.overlapHint.textContent = 'Using ' + overlap + ' char sliding overlap.';
+        }
+
+        if (!raw.trim()) {
+          state.title = '';
+          state.markdown = '';
+          state.chunks = [];
+          state.exportJson = '{}';
+          els.markdownOut.textContent = '';
+          els.docTitleNote.textContent = '';
+          els.kpiTokens.textContent = '0';
+          els.kpiWords.textContent = '0';
+          els.kpiCharsSub.textContent = '0 clean chars';
+          els.kpiReduction.textContent = '0%';
+          els.kpiRawSub.textContent = 'from 0 raw chars';
+          els.kpiChunks.textContent = '0';
+          els.kpiAvgChunk.textContent = 'avg 0 tokens/chunk';
+          els.statusAlert.innerHTML = '<div class="alert alert-blue">Paste raw HTML or plain text above — or click "Load Sample Article HTML" to try it.</div>';
+          renderChunkCards();
+          return;
+        }
+
+        const treatAsHtml = mode === 'html' || (mode === 'auto' && looksLikeHtml(raw));
+        let title = '';
+        let markdown = '';
+
+        if (treatAsHtml) {
+          const res = htmlToCleanMarkdown(raw, {
+            stripBoilerplate: els.optStripBoilerplate.checked,
+            stripScripts: els.optStripScripts.checked,
+            keepLinks: els.optKeepLinks.checked
+          });
+          title = res.title;
+          markdown = res.markdown;
+        } else {
+          markdown = normalizeMarkdown(raw);
+        }
+
+        const chunks = splitRagChunks(markdown, chunkSize, overlap, els.optSmartBoundary.checked);
+        const totalTokens = estimateTokens(markdown);
+        const totalWords = countWords(markdown);
+        const rawLen = raw.length;
+        const cleanLen = markdown.length;
+        const reductionPct = rawLen > 0 ? Math.max(0, Math.round(((rawLen - cleanLen) / rawLen) * 100)) : 0;
+        const avgTokens = chunks.length > 0
+          ? Math.round(chunks.reduce((acc, c) => acc + c.estimatedTokens, 0) / chunks.length)
+          : 0;
+
+        state.title = title;
+        state.markdown = markdown;
+        state.chunks = chunks;
+        state.exportJson = JSON.stringify({
+          generatedAt: new Date().toISOString(),
+          sourceMode: treatAsHtml ? 'html' : 'plain_text',
+          documentTitle: title || null,
+          config: {
+            chunkSizeChars: chunkSize,
+            overlapChars: overlap,
+            smartBoundary: els.optSmartBoundary.checked,
+            stripBoilerplate: els.optStripBoilerplate.checked,
+            stripScripts: els.optStripScripts.checked,
+            preserveLinks: els.optKeepLinks.checked
+          },
+          stats: {
+            rawChars: rawLen,
+            cleanChars: cleanLen,
+            noiseReductionPct: reductionPct,
+            wordCount: totalWords,
+            estimatedTokens: totalTokens,
+            chunkCount: chunks.length
+          },
+          chunks: chunks
+        }, null, 2);
+
+        els.kpiTokens.textContent = totalTokens.toLocaleString();
+        els.kpiTokenFormula.textContent = '~' + cleanLen.toLocaleString() + ' chars / 4';
+        els.kpiWords.textContent = totalWords.toLocaleString();
+        els.kpiCharsSub.textContent = cleanLen.toLocaleString() + ' clean chars';
+        els.kpiReduction.textContent = reductionPct + '%';
+        els.kpiRawSub.textContent = 'from ' + rawLen.toLocaleString() + ' raw chars';
+        els.kpiChunks.textContent = String(chunks.length);
+        els.kpiAvgChunk.textContent = 'avg ~' + avgTokens + ' tokens/chunk';
+
+        els.docTitleNote.textContent = title
+          ? ('Extracted <title>: "' + title + '" · Mode: ' + (treatAsHtml ? 'HTML → Markdown' : 'Plain Text / Markdown'))
+          : ('Mode: ' + (treatAsHtml ? 'HTML → Markdown' : 'Plain Text / Markdown'));
+
+        els.markdownOut.textContent = markdown;
+        els.statusAlert.innerHTML = '<div class="alert alert-green">Converted ' + rawLen.toLocaleString() + ' chars (' + (treatAsHtml ? 'HTML' : 'Plain Text') + ') into ' + cleanLen.toLocaleString() + ' chars of clean Markdown (~' + totalTokens.toLocaleString() + ' tokens) across ' + chunks.length + ' RAG chunk(s).</div>';
+        renderChunkCards();
+      }
+
+      let timer = null;
+      function scheduleRun() {
+        clearTimeout(timer);
+        timer = setTimeout(runPipeline, 150);
+      }
+
+      els.rawHtmlInput.addEventListener('input', scheduleRun);
+      els.inputModeSelect.addEventListener('change', runPipeline);
+      els.optStripBoilerplate.addEventListener('change', runPipeline);
+      els.optStripScripts.addEventListener('change', runPipeline);
+      els.optKeepLinks.addEventListener('change', runPipeline);
+      els.optSmartBoundary.addEventListener('change', runPipeline);
+      els.chunkSizeInput.addEventListener('input', scheduleRun);
+      els.overlapInput.addEventListener('input', scheduleRun);
+      els.chunkFilterInput.addEventListener('input', renderChunkCards);
+      document.getElementById('convertBtn').addEventListener('click', runPipeline);
+
+      document.querySelectorAll('.chip-btn[data-size]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          els.chunkSizeInput.value = btn.dataset.size;
+          els.overlapInput.value = btn.dataset.overlap;
+          runPipeline();
+        });
+      });
+
+      document.getElementById('loadHtmlSampleBtn').addEventListener('click', () => {
+        els.inputModeSelect.value = 'auto';
+        els.rawHtmlInput.value = SAMPLE_HTML;
+        runPipeline();
+      });
+      document.getElementById('loadTextSampleBtn').addEventListener('click', () => {
+        els.inputModeSelect.value = 'auto';
+        els.rawHtmlInput.value = SAMPLE_PLAIN_TEXT;
+        runPipeline();
+      });
+      document.getElementById('clearInputBtn').addEventListener('click', () => {
+        els.rawHtmlInput.value = '';
+        runPipeline();
+      });
+      document.getElementById('downloadMdBtn').addEventListener('click', () => {
+        downloadFile('clean-article.md', state.markdown, 'text/markdown;charset=utf-8');
+      });
+      document.getElementById('downloadChunksBtn').addEventListener('click', () => {
+        downloadFile('rag-chunks.json', state.exportJson, 'application/json;charset=utf-8');
+      });
+      document.getElementById('copyChunksJsonBtn').addEventListener('click', function () {
+        copyText(state.exportJson, this);
+      });
+
+      els.rawHtmlInput.value = SAMPLE_HTML;
+      runPipeline();
+    })();
+  </script>
+</body>
+</html>

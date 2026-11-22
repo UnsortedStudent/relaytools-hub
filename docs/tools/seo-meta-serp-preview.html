@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google SERP Preview, Meta Length Auditor &amp; Schema.org JSON-LD Builder — RelayTools</title>
+  <meta name="description" content="Free interactive Google desktop &amp; mobile SERP snippet preview, pixel-width title and meta description auditor, OpenGraph/Twitter meta tag generator, and Schema.org JSON-LD builder.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Google SERP Snippet Preview & Schema.org JSON-LD Builder",
+    "description": "Free client-side SEO tool to preview desktop and mobile Google SERP snippets, audit title and meta description length in characters and pixels, generate HTML meta/OpenGraph/Twitter tags, and build validated Schema.org JSON-LD markup.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .meter-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 8px;
+    }
+    .meter-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+    .meter-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .15s ease, background .15s ease;
+    }
+    .serp-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.95fr);
+      gap: 18px;
+      align-items: start;
+      margin-top: 14px;
+    }
+    .serp-frame {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      background: #ffffff;
+      color: #202124;
+      font-family: Arial, sans-serif;
+    }
+    body.dark .serp-frame {
+      background: #202124;
+      color: #e8eaed;
+      border-color: #3c4043;
+    }
+    .serp-frame-mobile {
+      max-width: 390px;
+      width: 100%;
+      border-radius: 20px;
+      border-width: 2px;
+      padding: 16px;
+    }
+    .serp-device-tag {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .serp-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .serp-favicon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f1f3f4;
+      border: 1px solid #dadce0;
+      color: #1a73e8;
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    body.dark .serp-favicon {
+      background: #303134;
+      border-color: #5f6368;
+      color: #8ab4f8;
+    }
+    .serp-site-name {
+      font-size: 14px;
+      line-height: 1.2;
+      color: #202124;
+    }
+    body.dark .serp-site-name { color: #dadce0; }
+    .serp-breadcrumb {
+      font-size: 12px;
+      line-height: 1.3;
+      color: #4d5156;
+      word-break: break-word;
+    }
+    body.dark .serp-breadcrumb { color: #bdc1c6; }
+    .serp-title {
+      font-size: 20px;
+      line-height: 1.3;
+      font-weight: 400;
+      color: #1a0dab;
+      margin: 4px 0 5px;
+      word-break: break-word;
+    }
+    .serp-frame-mobile .serp-title {
+      font-size: 18px;
+      line-height: 1.28;
+    }
+    body.dark .serp-title { color: #8ab4f8; }
+    .serp-desc {
+      font-size: 14px;
+      line-height: 1.58;
+      color: #4d5156;
+      margin: 0;
+      word-break: break-word;
+    }
+    body.dark .serp-desc { color: #bdc1c6; }
+    .audit-list {
+      list-style: none;
+      margin: 10px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .audit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      font-size: 13.5px;
+    }
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .faq-row {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .faq-row-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+    @media (max-width: 860px) {
+      .serp-stage { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">R</span>
+        <span>RelayTools</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">40 APIs Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP &amp; n8n Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button id="themeToggleBtn" class="nav-btn" type="button" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <span class="eyebrow">SEO &amp; Structured Data · 100% Client-Side</span>
+      <h1>Google SERP Preview, Meta Auditor &amp; JSON-LD Builder</h1>
+      <p>Preview desktop and mobile Google search snippets in real time, measure pixel and character truncation limits, copy ready-to-paste HTML/OpenGraph/Twitter tags, and generate validated Schema.org JSON-LD blocks.</p>
+    </header>
+
+    <!-- PART A: LIVE SERP PREVIEW & META AUDITOR -->
+    <section class="card" aria-labelledby="serpHeading">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div>
+          <h2 id="serpHeading">Part A: Live Google SERP Preview &amp; Length Auditor</h2>
+          <p class="muted small" style="margin:0;">Optimal targets: <strong>50&ndash;60 chars</strong> (&le; 600px) for titles and <strong>140&ndash;160 chars</strong> (&le; 920px desktop) for meta descriptions.</p>
+        </div>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn btn-secondary btn-sm" type="button" onclick="loadSerpPreset('saas')">SaaS Preset</button>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="loadSerpPreset('guide')">Blog Guide</button>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="loadSerpPreset('over')">Over-Limit Test</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="serpTitle">Page Title (&lt;title&gt;)</label>
+          <input id="serpTitle" type="text" value="Technical SEO Audit Checklist for 2026 | RelayTools" oninput="updateSerp()">
+          <div class="meter-box">
+            <div class="meter-head">
+              <span id="titleCountLabel">0 / 60 chars · 0px / 600px</span>
+              <span id="titleStatusPill" class="pill pill-green">Optimal</span>
+            </div>
+            <div class="meter-track"><div id="titleMeterFill" class="meter-fill" style="width:0%;background:var(--green);"></div></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="serpUrl">Canonical Page URL</label>
+          <input id="serpUrl" type="url" value="https://relaytools.dev/guides/technical-seo-audit-checklist" oninput="updateSerp()">
+          <div class="form-row" style="margin-top:8px;margin-bottom:0;">
+            <div class="field" style="min-width:140px;">
+              <label for="serpSiteName">Site / Brand Name</label>
+              <input id="serpSiteName" type="text" value="RelayTools" oninput="updateSerp()">
+            </div>
+            <div class="field" style="min-width:140px;">
+              <label for="serpRobots">Robots Meta</label>
+              <select id="serpRobots" onchange="updateSerp()">
+                <option value="index, follow" selected>index, follow</option>
+                <option value="noindex, follow">noindex, follow</option>
+                <option value="noindex, nofollow">noindex, nofollow</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="field">
+          <label for="serpDesc">Meta Description</label>
+          <textarea id="serpDesc" style="min-height:92px;font-family:inherit;font-size:14px;" oninput="updateSerp()">Audit crawlability, Core Web Vitals, structured JSON-LD data, and broken links in minutes with our free interactive SEO tools and automated cloud APIs.</textarea>
+          <div class="meter-box">
+            <div class="meter-head">
+              <span id="descCountLabel">0 / 160 chars · 0px / 920px</span>
+              <span id="descStatusPill" class="pill pill-green">Optimal</span>
+            </div>
+            <div class="meter-track"><div id="descMeterFill" class="meter-fill" style="width:0%;background:var(--green);"></div></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="serpOgImage">OpenGraph / Twitter Image URL (Optional)</label>
+          <input id="serpOgImage" type="url" value="https://relaytools.dev/assets/og-seo-checklist.png" oninput="updateSerp()">
+          <div class="grid-3" style="margin-top:10px;gap:10px;">
+            <div class="kpi">
+              <div class="kpi-label">SEO Snippet Score</div>
+              <div id="kpiScore" class="kpi-value">100</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Title Pixels</div>
+              <div id="kpiTitlePx" class="kpi-value">0px</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Meta Pixels</div>
+              <div id="kpiDescPx" class="kpi-value">0px</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE DESKTOP & MOBILE PREVIEWS -->
+      <div class="serp-stage">
+        <div class="serp-frame" aria-label="Desktop Google SERP preview">
+          <div class="serp-device-tag">
+            <span>Desktop Google Search Preview (~600px)</span>
+            <span id="desktopTruncBadge" class="pill pill-green">Fits Cleanly</span>
+          </div>
+          <div class="serp-header">
+            <span id="deskFavicon" class="serp-favicon">R</span>
+            <div>
+              <div id="deskSiteName" class="serp-site-name">RelayTools</div>
+              <div id="deskBreadcrumb" class="serp-breadcrumb">https://relaytools.dev &rsaquo; guides &rsaquo; technical-seo-audit-checklist</div>
+            </div>
+          </div>
+          <div id="deskTitle" class="serp-title"></div>
+          <p id="deskDesc" class="serp-desc"></p>
+        </div>
+
+        <div class="serp-frame serp-frame-mobile" aria-label="Mobile Google SERP preview">
+          <div class="serp-device-tag">
+            <span>Mobile Preview (~360px)</span>
+            <span id="mobileTruncBadge" class="pill pill-green">Fits Cleanly</span>
+          </div>
+          <div class="serp-header">
+            <span id="mobFavicon" class="serp-favicon">R</span>
+            <div>
+              <div id="mobSiteName" class="serp-site-name">RelayTools</div>
+              <div id="mobBreadcrumb" class="serp-breadcrumb">relaytools.dev &rsaquo; guides</div>
+            </div>
+          </div>
+          <div id="mobTitle" class="serp-title"></div>
+          <p id="mobDesc" class="serp-desc"></p>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <h3>Live On-Page Snippet Diagnostics</h3>
+        <ul id="serpAuditList" class="audit-list"></ul>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">Generated HTML &lt;meta&gt;, OpenGraph &amp; Twitter Card Tags</h3>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn btn-primary btn-sm" type="button" onclick="copyElementText('metaTagsOutput', this)">Copy HTML Tags</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="downloadMetaTags()">Download meta-tags.html</button>
+          </div>
+        </div>
+        <pre id="metaTagsOutput" class="code-block"></pre>
+      </div>
+    </section>
+
+    <!-- PART B: SCHEMA.ORG JSON-LD BUILDER -->
+    <section class="card" aria-labelledby="schemaHeading">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <h2 id="schemaHeading">Part B: Schema.org JSON-LD Structured Data Builder</h2>
+          <p class="muted small" style="margin:0;">Choose a rich-result schema type, edit the structured fields, and copy validated <code>&lt;script type="application/ld+json"&gt;</code> markup.</p>
+        </div>
+        <span id="jsonLdValidPill" class="pill pill-green">Valid JSON-LD</span>
+      </div>
+
+      <div class="tab-bar" role="tablist" aria-label="Schema.org types">
+        <button type="button" class="btn btn-primary btn-sm schema-tab" data-type="Organization" onclick="selectSchemaType('Organization')">Organization</button>
+        <button type="button" class="btn btn-secondary btn-sm schema-tab" data-type="LocalBusiness" onclick="selectSchemaType('LocalBusiness')">LocalBusiness</button>
+        <button type="button" class="btn btn-secondary btn-sm schema-tab" data-type="Product" onclick="selectSchemaType('Product')">Product</button>
+        <button type="button" class="btn btn-secondary btn-sm schema-tab" data-type="FAQPage" onclick="selectSchemaType('FAQPage')">FAQPage</button>
+        <button type="button" class="btn btn-secondary btn-sm schema-tab" data-type="SoftwareApplication" onclick="selectSchemaType('SoftwareApplication')">SoftwareApplication</button>
+      </div>
+
+      <div id="schemaFormArea"></div>
+
+      <div style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">Generated &lt;script type="application/ld+json"&gt; Output</h3>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn btn-primary btn-sm" type="button" onclick="copyElementText('jsonLdScriptOutput', this)">Copy &lt;script&gt; Tag</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="copyRawJsonLd(this)">Copy Raw JSON</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="downloadJsonLd()">Download .json</button>
+          </div>
+        </div>
+        <pre id="jsonLdScriptOutput" class="code-block"></pre>
+      </div>
+    </section>
+
+    <!-- APIFY BULK FUNNEL CTA -->
+    <aside class="apify-cta" aria-label="Automate bulk SEO and Schema.org auditing on Apify">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Need Bulk Audits Across 1,000+ URLs?</span>
+        <h3>Automate On-Page SEO, Broken Links &amp; Schema.org Extraction via API or MCP</h3>
+        <p>Run scheduled cloud audits across entire websites, detect missing meta tags and 404 links at scale, or mine structured Schema.org JSON-LD entities &amp; public contacts directly into JSON, n8n, or Claude MCP.</p>
+      </div>
+      <div class="btn-row" style="margin-top:0;">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/seo-onpage-broken-links-auditor" target="_blank" rel="noopener">SEO &amp; Broken Links Auditor &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/schema-org-jsonld-contact-miner" target="_blank" rel="noopener">Schema.org JSON-LD Miner &rarr;</a>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> &mdash; Free browser utilities &amp; 40 cloud data APIs.</div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">40 APIs</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      const SCRIPT_CLOSE = '<' + '/script>';
+      let measureCtx = null;
+      try {
+        const canvas = document.createElement('canvas');
+        measureCtx = canvas.getContext('2d');
+      } catch (_) {}
+
+      function measurePixels(text, font) {
+        if (!text) return 0;
+        if (measureCtx) {
+          measureCtx.font = font;
+          return Math.round(measureCtx.measureText(text).width);
+        }
+        return Math.round(text.length * (font.indexOf('20px') !== -1 ? 9.8 : 6.7));
+      }
+
+      function truncateToPixels(text, font, maxPx) {
+        if (!text) return '';
+        if (measurePixels(text, font) <= maxPx) return text;
+        const ellipsis = ' ...';
+        let lo = 0;
+        let hi = text.length;
+        while (lo < hi) {
+          const mid = Math.ceil((lo + hi) / 2);
+          if (measurePixels(text.slice(0, mid).trimEnd() + ellipsis, font) <= maxPx) {
+            lo = mid;
+          } else {
+            hi = mid - 1;
+          }
+        }
+        return text.slice(0, Math.max(1, lo)).trimEnd() + ellipsis;
+      }
+
+      function formatBreadcrumb(rawUrl) {
+        try {
+          const parsed = new URL(rawUrl.trim().startsWith('http') ? rawUrl.trim() : 'https://' + rawUrl.trim());
+          const parts = parsed.pathname.split('/').filter(Boolean);
+          const desktopCrumb = parts.length
+            ? parsed.origin + ' \u203a ' + parts.join(' \u203a ')
+            : parsed.origin;
+          const mobileCrumb = parts.length
+            ? parsed.hostname + ' \u203a ' + parts.slice(0, 2).join(' \u203a ') + (parts.length > 2 ? ' \u203a ...' : '')
+            : parsed.hostname;
+          return {
+            valid: true,
+            https: parsed.protocol === 'https:',
+            host: parsed.hostname,
+            canonical: parsed.href,
+            desktop: desktopCrumb,
+            mobile: mobileCrumb
+          };
+        } catch (_) {
+          return {
+            valid: false,
+            https: false,
+            host: 'example.com',
+            canonical: rawUrl.trim() || 'https://example.com/',
+            desktop: rawUrl.trim() || 'https://example.com',
+            mobile: rawUrl.trim() || 'example.com'
+          };
+        }
+      }
+
+      function setMeter(fillId, pillId, labelId, chars, px, optMin, optMax, maxPx, warnMin) {
+        const fill = document.getElementById(fillId);
+        const pill = document.getElementById(pillId);
+        const label = document.getElementById(labelId);
+        label.textContent = chars + ' / ' + optMax + ' chars \u00b7 ' + px + 'px / ' + maxPx + 'px';
+
+        const pct = Math.min(100, Math.round((Math.max(chars / optMax, px / maxPx)) * 100));
+        fill.style.width = pct + '%';
+
+        if (chars === 0) {
+          fill.style.background = 'var(--red)';
+          pill.className = 'pill pill-red';
+          pill.textContent = 'Missing';
+          return 'missing';
+        }
+        if (chars > optMax || px > maxPx) {
+          fill.style.background = 'var(--red)';
+          pill.className = 'pill pill-red';
+          pill.textContent = 'Truncation Risk';
+          return 'over';
+        }
+        if (chars >= optMin && chars <= optMax) {
+          fill.style.background = 'var(--green)';
+          pill.className = 'pill pill-green';
+          pill.textContent = 'Optimal';
+          return 'optimal';
+        }
+        if (chars < warnMin) {
+          fill.style.background = 'var(--amber)';
+          pill.className = 'pill pill-amber';
+          pill.textContent = 'Too Short';
+          return 'short';
+        }
+        fill.style.background = 'var(--blue)';
+        pill.className = 'pill pill-blue';
+        pill.textContent = 'Good (Room Left)';
+        return 'good';
+      }
+
+      window.loadSerpPreset = function (preset) {
+        const titleEl = document.getElementById('serpTitle');
+        const urlEl = document.getElementById('serpUrl');
+        const siteEl = document.getElementById('serpSiteName');
+        const descEl = document.getElementById('serpDesc');
+        const imgEl = document.getElementById('serpOgImage');
+        if (preset === 'saas') {
+          titleEl.value = 'Technical SEO Audit Checklist for 2026 | RelayTools';
+          urlEl.value = 'https://relaytools.dev/guides/technical-seo-audit-checklist';
+          siteEl.value = 'RelayTools';
+          descEl.value = 'Audit crawlability, Core Web Vitals, structured JSON-LD data, and broken links in minutes with our free interactive SEO tools and automated cloud APIs.';
+          imgEl.value = 'https://relaytools.dev/assets/og-seo-checklist.png';
+        } else if (preset === 'guide') {
+          titleEl.value = 'How to Control GPTBot & ClaudeBot in robots.txt (2026)';
+          urlEl.value = 'https://acme-engineering.io/blog/ai-crawler-robots-txt-guide';
+          siteEl.value = 'Acme Engineering';
+          descEl.value = 'Learn which AI user-agents index search vs. train LLMs, copy tested robots.txt allow/block directives, and verify crawl rules without breaking SEO traffic.';
+          imgEl.value = 'https://acme-engineering.io/images/robots-guide-og.png';
+        } else if (preset === 'over') {
+          titleEl.value = 'The Complete Ultimate Enterprise Guide to Technical SEO, Crawl Budget Optimization, Structured Data & Global Multi-Region Sitemaps 2026';
+          urlEl.value = 'http://example.com/category/2026/seo/deep-nested/long-article-slug-that-overflows';
+          siteEl.value = 'Example Corp';
+          descEl.value = 'This intentionally long meta description exceeds the 160-character and 920-pixel threshold so you can preview exactly where Google desktop and mobile search snippets cut off text with an ellipsis in real search results.';
+          imgEl.value = '';
+        }
+        window.updateSerp();
+      };
+
+      window.updateSerp = function () {
+        const title = document.getElementById('serpTitle').value.trim();
+        const rawUrl = document.getElementById('serpUrl').value.trim();
+        const siteName = document.getElementById('serpSiteName').value.trim() || 'Website';
+        const desc = document.getElementById('serpDesc').value.trim();
+        const robots = document.getElementById('serpRobots').value;
+        const ogImage = document.getElementById('serpOgImage').value.trim();
+
+        const titlePx = measurePixels(title, '400 20px Arial');
+        const descPx = measurePixels(desc, '400 14px Arial');
+        const urlInfo = formatBreadcrumb(rawUrl);
+
+        const titleState = setMeter('titleMeterFill', 'titleStatusPill', 'titleCountLabel', title.length, titlePx, 50, 60, 600, 30);
+        const descState = setMeter('descMeterFill', 'descStatusPill', 'descCountLabel', desc.length, descPx, 140, 160, 920, 70);
+
+        document.getElementById('kpiTitlePx').textContent = titlePx + 'px';
+        document.getElementById('kpiDescPx').textContent = descPx + 'px';
+
+        const favChar = (siteName[0] || urlInfo.host[0] || 'W').toUpperCase();
+        document.getElementById('deskFavicon').textContent = favChar;
+        document.getElementById('mobFavicon').textContent = favChar;
+        document.getElementById('deskSiteName').textContent = siteName;
+        document.getElementById('mobSiteName').textContent = siteName;
+        document.getElementById('deskBreadcrumb').textContent = urlInfo.desktop;
+        document.getElementById('mobBreadcrumb').textContent = urlInfo.mobile;
+
+        const deskTitleTxt = title ? truncateToPixels(title, '400 20px Arial', 585) : 'Enter a page title above...';
+        const deskDescTxt = desc ? truncateToPixels(desc, '400 14px Arial', 920) : 'Enter a meta description to preview how Google renders your snippet.';
+        const mobTitleTxt = title ? truncateToPixels(title, '400 18px Arial', 610) : 'Enter a page title above...';
+        const mobDescTxt = desc ? truncateToPixels(desc, '400 14px Arial', 680) : 'Enter a meta description to preview mobile snippet wrapping.';
+
+        document.getElementById('deskTitle').textContent = deskTitleTxt;
+        document.getElementById('deskDesc').textContent = deskDescTxt;
+        document.getElementById('mobTitle').textContent = mobTitleTxt;
+        document.getElementById('mobDesc').textContent = mobDescTxt;
+
+        const deskTrunc = (titlePx > 600 || descPx > 920);
+        const deskBadge = document.getElementById('desktopTruncBadge');
+        deskBadge.className = deskTrunc ? 'pill pill-amber' : 'pill pill-green';
+        deskBadge.textContent = deskTrunc ? 'Ellipsis Truncated' : 'Fits Cleanly';
+
+        const mobTrunc = (titlePx > 610 || descPx > 680);
+        const mobBadge = document.getElementById('mobileTruncBadge');
+        mobBadge.className = mobTrunc ? 'pill pill-amber' : 'pill pill-green';
+        mobBadge.textContent = mobTrunc ? 'Mobile Truncated' : 'Fits Cleanly';
+
+        // Audit checklist & score
+        let score = 100;
+        const checks = [];
+        if (titleState === 'optimal') {
+          checks.push({ tone: 'pill-green', tag: 'PASS', msg: 'Title length (' + title.length + ' chars, ' + titlePx + 'px) is inside the 50\u201360 char / 600px sweet spot.' });
+        } else if (titleState === 'good') {
+          score -= 6;
+          checks.push({ tone: 'pill-blue', tag: 'INFO', msg: 'Title (' + title.length + ' chars) fits without truncation, with room to add a brand or secondary keyword up to 60 chars.' });
+        } else if (titleState === 'short') {
+          score -= 18;
+          checks.push({ tone: 'pill-amber', tag: 'WARN', msg: 'Title is short (' + title.length + ' chars). Aim for 50\u201360 characters to maximize search click-through rate.' });
+        } else if (titleState === 'over') {
+          score -= 22;
+          checks.push({ tone: 'pill-red', tag: 'TRIM', msg: 'Title exceeds desktop limit (' + title.length + ' chars / ' + titlePx + 'px). Google may truncate or rewrite it.' });
+        } else {
+          score -= 40;
+          checks.push({ tone: 'pill-red', tag: 'FAIL', msg: 'Page title is empty. Add a unique, descriptive 50\u201360 character title.' });
+        }
+
+        if (descState === 'optimal') {
+          checks.push({ tone: 'pill-green', tag: 'PASS', msg: 'Meta description (' + desc.length + ' chars, ' + descPx + 'px) hits the 140\u2013160 char optimal range.' });
+        } else if (descState === 'good') {
+          score -= 5;
+          checks.push({ tone: 'pill-blue', tag: 'INFO', msg: 'Meta description (' + desc.length + ' chars) displays cleanly; expanding toward 140\u2013160 chars adds SERP real estate.' });
+        } else if (descState === 'short') {
+          score -= 15;
+          checks.push({ tone: 'pill-amber', tag: 'WARN', msg: 'Meta description is short (' + desc.length + ' chars). Target 140\u2013160 characters with a clear value proposition.' });
+        } else if (descState === 'over') {
+          score -= 18;
+          checks.push({ tone: 'pill-red', tag: 'TRIM', msg: 'Meta description (' + desc.length + ' chars / ' + descPx + 'px) risks truncation on desktop (>920px) and mobile (>680px).' });
+        } else {
+          score -= 30;
+          checks.push({ tone: 'pill-red', tag: 'FAIL', msg: 'Meta description is missing. Search engines will pull arbitrary page text instead.' });
+        }
+
+        if (urlInfo.valid && urlInfo.https) {
+          checks.push({ tone: 'pill-green', tag: 'PASS', msg: 'Canonical URL uses HTTPS and clean breadcrumb hierarchy.' });
+        } else {
+          score -= 12;
+          checks.push({ tone: 'pill-amber', tag: 'WARN', msg: 'Use a valid absolute HTTPS canonical URL (https://...) for secure indexing.' });
+        }
+
+        if (robots.indexOf('noindex') !== -1) {
+          score -= 10;
+          checks.push({ tone: 'pill-amber', tag: 'NOTE', msg: 'Robots directive contains "noindex" \u2014 this page will be excluded from Google search results.' });
+        }
+
+        score = Math.max(0, Math.min(100, score));
+        document.getElementById('kpiScore').textContent = score + '/100';
+
+        const listEl = document.getElementById('serpAuditList');
+        listEl.innerHTML = checks.map(function (c) {
+          return '<li class="audit-item"><span class="pill ' + c.tone + '">' + escapeHtml(c.tag) + '</span><span>' + escapeHtml(c.msg) + '</span></li>';
+        }).join('');
+
+        // Meta / OG / Twitter HTML generator
+        const escAttr = function (v) {
+          return String(v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+        const lines = [
+          '<!-- Primary Meta Tags -->',
+          '<title>' + escapeHtml(title) + '</title>',
+          '<meta name="description" content="' + escAttr(desc) + '">',
+          '<link rel="canonical" href="' + escAttr(urlInfo.canonical) + '">',
+          '<meta name="robots" content="' + escAttr(robots) + '">',
+          '',
+          '<!-- Open Graph / Facebook -->',
+          '<meta property="og:type" content="website">',
+          '<meta property="og:site_name" content="' + escAttr(siteName) + '">',
+          '<meta property="og:url" content="' + escAttr(urlInfo.canonical) + '">',
+          '<meta property="og:title" content="' + escAttr(title) + '">',
+          '<meta property="og:description" content="' + escAttr(desc) + '">'
+        ];
+        if (ogImage) {
+          lines.push('<meta property="og:image" content="' + escAttr(ogImage) + '">');
+        }
+        lines.push(
+          '',
+          '<!-- Twitter / X Card -->',
+          '<meta name="twitter:card" content="' + (ogImage ? 'summary_large_image' : 'summary') + '">',
+          '<meta name="twitter:url" content="' + escAttr(urlInfo.canonical) + '">',
+          '<meta name="twitter:title" content="' + escAttr(title) + '">',
+          '<meta name="twitter:description" content="' + escAttr(desc) + '">'
+        );
+        if (ogImage) {
+          lines.push('<meta name="twitter:image" content="' + escAttr(ogImage) + '">');
+        }
+        document.getElementById('metaTagsOutput').textContent = lines.join('\n');
+      };
+
+      window.downloadMetaTags = function () {
+        const content = document.getElementById('metaTagsOutput').textContent;
+        downloadFile('meta-tags.html', content + '\n', 'text/html;charset=utf-8');
+      };
+
+      // --- PART B: SCHEMA.ORG JSON-LD BUILDER ---
+      const schemaState = {
+        activeType: 'Organization',
+        Organization: {
+          name: 'RelayTools Hub',
+          url: 'https://relaytools.dev',
+          logo: 'https://relaytools.dev/assets/logo.png',
+          description: 'Free client-side developer utilities and 40 cloud data extraction APIs for SEO, compliance, and AI agents.',
+          email: 'hello@relaytools.dev',
+          sameAs: 'https://github.com/relaytools\nhttps://apify.com/regenerative_cornice'
+        },
+        LocalBusiness: {
+          subType: 'LocalBusiness',
+          name: 'Northstar Dental Studio',
+          url: 'https://northstardental.example.com',
+          telephone: '+1-512-555-0148',
+          priceRange: '$$',
+          streetAddress: '410 Congress Ave Suite 200',
+          addressLocality: 'Austin',
+          addressRegion: 'TX',
+          postalCode: '78701',
+          addressCountry: 'US',
+          openingHours: 'Mo-Fr 08:30-17:30'
+        },
+        Product: {
+          name: 'Cloud SEO & Compliance API Bundle',
+          description: 'Automated pay-per-event APIs for technical SEO audits, Schema.org mining, and U.S. regulatory compliance monitoring.',
+          image: 'https://relaytools.dev/assets/product-bundle.png',
+          brand: 'RelayTools',
+          sku: 'RT-SEO-2026',
+          price: '29.00',
+          priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock',
+          ratingValue: '4.9',
+          reviewCount: '42'
+        },
+        FAQPage: {
+          items: [
+            {
+              q: 'How long should an SEO title tag be in 2026?',
+              a: 'Keep page titles between 50 and 60 characters (under 600 pixels wide) so Google displays the full headline without ellipsis truncation.'
+            },
+            {
+              q: 'Does Schema.org JSON-LD help with AI search and rich snippets?',
+              a: 'Yes. Valid JSON-LD gives Google, Bing, and AI answer engines unambiguous entity metadata for products, FAQs, software apps, and local businesses.'
+            }
+          ]
+        },
+        SoftwareApplication: {
+          name: 'RelayTools SERP & Schema Studio',
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'Any (Web Browser)',
+          url: 'https://relaytools.dev/tools/seo-meta-serp-preview.html',
+          description: 'Browser-based Google SERP snippet previewer, meta tag length auditor, and Schema.org JSON-LD builder.',
+          softwareVersion: '2.0',
+          price: '0',
+          priceCurrency: 'USD',
+          ratingValue: '4.8',
+          reviewCount: '64'
+        }
+      };
+
+      function fieldHtml(id, label, val, type, extra) {
+        const t = type || 'text';
+        const handler = 'oninput="onSchemaFieldChange(\'' + id + '\', this.value)"';
+        if (t === 'textarea') {
+          return '<div class="field"><label for="sf_' + id + '">' + escapeHtml(label) + '</label>' +
+            '<textarea id="sf_' + id + '" style="min-height:78px;" ' + handler + '>' + escapeHtml(val) + '</textarea></div>';
+        }
+        return '<div class="field"><label for="sf_' + id + '">' + escapeHtml(label) + '</label>' +
+          '<input id="sf_' + id + '" type="' + t + '" value="' + escapeHtml(val) + '" ' + (extra || '') + ' ' + handler + '></div>';
+      }
+
+      function selectHtml(id, label, val, options) {
+        const opts = options.map(function (o) {
+          const ov = typeof o === 'string' ? o : o.v;
+          const ol = typeof o === 'string' ? o : o.l;
+          return '<option value="' + escapeHtml(ov) + '"' + (ov === val ? ' selected' : '') + '>' + escapeHtml(ol) + '</option>';
+        }).join('');
+        return '<div class="field"><label for="sf_' + id + '">' + escapeHtml(label) + '</label>' +
+          '<select id="sf_' + id + '" onchange="onSchemaFieldChange(\'' + id + '\', this.value)">' + opts + '</select></div>';
+      }
+
+      window.selectSchemaType = function (type) {
+        schemaState.activeType = type;
+        document.querySelectorAll('.schema-tab').forEach(function (btn) {
+          const active = btn.getAttribute('data-type') === type;
+          btn.className = 'btn btn-sm schema-tab ' + (active ? 'btn-primary' : 'btn-secondary');
+        });
+        renderSchemaForm();
+        updateJsonLd();
+      };
+
+      window.onSchemaFieldChange = function (key, value) {
+        schemaState[schemaState.activeType][key] = value;
+        updateJsonLd();
+      };
+
+      window.onFaqChange = function (idx, field, value) {
+        if (schemaState.FAQPage.items[idx]) {
+          schemaState.FAQPage.items[idx][field] = value;
+          updateJsonLd();
+        }
+      };
+
+      window.addFaqRow = function () {
+        schemaState.FAQPage.items.push({ q: '', a: '' });
+        renderSchemaForm();
+        updateJsonLd();
+      };
+
+      window.removeFaqRow = function (idx) {
+        if (schemaState.FAQPage.items.length <= 1) return;
+        schemaState.FAQPage.items.splice(idx, 1);
+        renderSchemaForm();
+        updateJsonLd();
+      };
+
+      function renderSchemaForm() {
+        const area = document.getElementById('schemaFormArea');
+        const t = schemaState.activeType;
+        const d = schemaState[t];
+
+        if (t === 'Organization') {
+          area.innerHTML =
+            '<div class="grid-2">' +
+              fieldHtml('name', 'Organization Name', d.name) +
+              fieldHtml('url', 'Website URL', d.url, 'url') +
+              fieldHtml('logo', 'Logo Image URL', d.logo, 'url') +
+              fieldHtml('email', 'Contact Email', d.email) +
+              fieldHtml('description', 'Description', d.description, 'textarea') +
+              fieldHtml('sameAs', 'Social / Profile URLs (one per line)', d.sameAs, 'textarea') +
+            '</div>';
+        } else if (t === 'LocalBusiness') {
+          area.innerHTML =
+            '<div class="grid-3">' +
+              selectHtml('subType', 'Business Category', d.subType, [
+                'LocalBusiness', 'Restaurant', 'Dentist', 'LegalService', 'Store', 'ProfessionalService', 'MedicalBusiness'
+              ]) +
+              fieldHtml('name', 'Business Name', d.name) +
+              fieldHtml('url', 'Website URL', d.url, 'url') +
+              fieldHtml('telephone', 'Phone Number', d.telephone) +
+              fieldHtml('priceRange', 'Price Range (e.g. $$)', d.priceRange) +
+              fieldHtml('openingHours', 'Opening Hours', d.openingHours) +
+              fieldHtml('streetAddress', 'Street Address', d.streetAddress) +
+              fieldHtml('addressLocality', 'City', d.addressLocality) +
+              fieldHtml('addressRegion', 'State / Region', d.addressRegion) +
+              fieldHtml('postalCode', 'Postal Code', d.postalCode) +
+              fieldHtml('addressCountry', 'Country Code (e.g. US)', d.addressCountry) +
+            '</div>';
+        } else if (t === 'Product') {
+          area.innerHTML =
+            '<div class="grid-3">' +
+              fieldHtml('name', 'Product Name', d.name) +
+              fieldHtml('brand', 'Brand Name', d.brand) +
+              fieldHtml('sku', 'SKU', d.sku) +
+              fieldHtml('price', 'Price', d.price) +
+              selectHtml('priceCurrency', 'Currency', d.priceCurrency, ['USD', 'EUR', 'GBP', 'CAD', 'AUD']) +
+              selectHtml('availability', 'Availability', d.availability, [
+                { v: 'https://schema.org/InStock', l: 'In Stock' },
+                { v: 'https://schema.org/OutOfStock', l: 'Out of Stock' },
+                { v: 'https://schema.org/PreOrder', l: 'Pre-Order' }
+              ]) +
+              fieldHtml('image', 'Product Image URL', d.image, 'url') +
+              fieldHtml('ratingValue', 'Rating (1-5, optional)', d.ratingValue) +
+              fieldHtml('reviewCount', 'Review Count (optional)', d.reviewCount) +
+            '</div>' +
+            '<div style="margin-top:12px;">' + fieldHtml('description', 'Product Description', d.description, 'textarea') + '</div>';
+        } else if (t === 'FAQPage') {
+          const rows = d.items.map(function (item, idx) {
+            return '<div class="faq-row">' +
+              '<div class="faq-row-head">' +
+                '<strong>Question #' + (idx + 1) + '</strong>' +
+                (d.items.length > 1 ? '<button type="button" class="btn btn-secondary btn-sm" onclick="removeFaqRow(' + idx + ')">Remove</button>' : '') +
+              '</div>' +
+              '<div class="grid-2">' +
+                '<div class="field"><label for="faq_q_' + idx + '">Question</label>' +
+                  '<input id="faq_q_' + idx + '" type="text" value="' + escapeHtml(item.q) + '" oninput="onFaqChange(' + idx + ', \'q\', this.value)"></div>' +
+                '<div class="field"><label for="faq_a_' + idx + '">Answer</label>' +
+                  '<input id="faq_a_' + idx + '" type="text" value="' + escapeHtml(item.a) + '" oninput="onFaqChange(' + idx + ', \'a\', this.value)"></div>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+          area.innerHTML = rows + '<button type="button" class="btn btn-secondary btn-sm" onclick="addFaqRow()">+ Add FAQ Question</button>';
+        } else if (t === 'SoftwareApplication') {
+          area.innerHTML =
+            '<div class="grid-3">' +
+              fieldHtml('name', 'Software / App Name', d.name) +
+              selectHtml('applicationCategory', 'Category', d.applicationCategory, [
+                'DeveloperApplication', 'BusinessApplication', 'WebApplication', 'UtilitiesApplication', 'FinanceApplication', 'SecurityApplication'
+              ]) +
+              fieldHtml('operatingSystem', 'Operating System', d.operatingSystem) +
+              fieldHtml('url', 'Application URL', d.url, 'url') +
+              fieldHtml('softwareVersion', 'Version', d.softwareVersion) +
+              fieldHtml('price', 'Price (0 for Free)', d.price) +
+              selectHtml('priceCurrency', 'Currency', d.priceCurrency, ['USD', 'EUR', 'GBP']) +
+              fieldHtml('ratingValue', 'Rating (optional)', d.ratingValue) +
+              fieldHtml('reviewCount', 'Review Count (optional)', d.reviewCount) +
+            '</div>' +
+            '<div style="margin-top:12px;">' + fieldHtml('description', 'Description', d.description, 'textarea') + '</div>';
+        }
+      }
+
+      function buildSchemaObject() {
+        const t = schemaState.activeType;
+        const d = schemaState[t];
+        if (t === 'Organization') {
+          const obj = { '@context': 'https://schema.org', '@type': 'Organization', name: d.name.trim() };
+          if (d.url.trim()) obj.url = d.url.trim();
+          if (d.logo.trim()) obj.logo = d.logo.trim();
+          if (d.description.trim()) obj.description = d.description.trim();
+          if (d.email.trim()) obj.email = d.email.trim();
+          const links = d.sameAs.split(/\r?\n|,/).map(function (s) { return s.trim(); }).filter(Boolean);
+          if (links.length) obj.sameAs = links;
+          return obj;
+        }
+        if (t === 'LocalBusiness') {
+          const obj = {
+            '@context': 'https://schema.org',
+            '@type': d.subType || 'LocalBusiness',
+            name: d.name.trim()
+          };
+          if (d.url.trim()) obj.url = d.url.trim();
+          if (d.telephone.trim()) obj.telephone = d.telephone.trim();
+          if (d.priceRange.trim()) obj.priceRange = d.priceRange.trim();
+          if (d.openingHours.trim()) obj.openingHours = d.openingHours.trim();
+          obj.address = {
+            '@type': 'PostalAddress',
+            streetAddress: d.streetAddress.trim(),
+            addressLocality: d.addressLocality.trim(),
+            addressRegion: d.addressRegion.trim(),
+            postalCode: d.postalCode.trim(),
+            addressCountry: d.addressCountry.trim()
+          };
+          return obj;
+        }
+        if (t === 'Product') {
+          const obj = {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: d.name.trim()
+          };
+          if (d.description.trim()) obj.description = d.description.trim();
+          if (d.image.trim()) obj.image = d.image.trim();
+          if (d.sku.trim()) obj.sku = d.sku.trim();
+          if (d.brand.trim()) obj.brand = { '@type': 'Brand', name: d.brand.trim() };
+          obj.offers = {
+            '@type': 'Offer',
+            price: d.price.trim() || '0',
+            priceCurrency: d.priceCurrency || 'USD',
+            availability: d.availability || 'https://schema.org/InStock'
+          };
+          if (d.ratingValue.trim() && d.reviewCount.trim()) {
+            obj.aggregateRating = {
+              '@type': 'AggregateRating',
+              ratingValue: d.ratingValue.trim(),
+              reviewCount: d.reviewCount.trim()
+            };
+          }
+          return obj;
+        }
+        if (t === 'FAQPage') {
+          const mainEntity = d.items
+            .filter(function (it) { return it.q.trim() || it.a.trim(); })
+            .map(function (it) {
+              return {
+                '@type': 'Question',
+                name: it.q.trim(),
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: it.a.trim()
+                }
+              };
+            });
+          return {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: mainEntity
+          };
+        }
+        const app = {
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: d.name.trim(),
+          applicationCategory: d.applicationCategory || 'DeveloperApplication',
+          operatingSystem: d.operatingSystem.trim() || 'Any'
+        };
+        if (d.url.trim()) app.url = d.url.trim();
+        if (d.description.trim()) app.description = d.description.trim();
+        if (d.softwareVersion.trim()) app.softwareVersion = d.softwareVersion.trim();
+        app.offers = {
+          '@type': 'Offer',
+          price: d.price.trim() || '0',
+          priceCurrency: d.priceCurrency || 'USD'
+        };
+        if (d.ratingValue.trim() && d.reviewCount.trim()) {
+          app.aggregateRating = {
+            '@type': 'AggregateRating',
+            ratingValue: d.ratingValue.trim(),
+            reviewCount: d.reviewCount.trim()
+          };
+        }
+        return app;
+      }
+
+      let latestRawJson = '{}';
+
+      function updateJsonLd() {
+        const pill = document.getElementById('jsonLdValidPill');
+        const out = document.getElementById('jsonLdScriptOutput');
+        try {
+          const obj = buildSchemaObject();
+          const serialized = JSON.stringify(obj, null, 2);
+          JSON.parse(serialized); // Strict round-trip JSON validation
+          latestRawJson = serialized;
+          out.textContent = '<script type="application/ld+json">\n' + serialized + '\n' + SCRIPT_CLOSE;
+          const missingName = (schemaState.activeType !== 'FAQPage' && !obj.name);
+          const emptyFaq = (schemaState.activeType === 'FAQPage' && (!obj.mainEntity || obj.mainEntity.length === 0));
+          if (missingName || emptyFaq) {
+            pill.className = 'pill pill-amber';
+            pill.textContent = 'Valid JSON \u00b7 Fill Required Fields';
+          } else {
+            pill.className = 'pill pill-green';
+            pill.textContent = 'Valid JSON-LD \u00b7 ' + schemaState.activeType;
+          }
+        } catch (err) {
+          pill.className = 'pill pill-red';
+          pill.textContent = 'Invalid JSON: ' + err.message;
+        }
+      }
+
+      window.copyRawJsonLd = function (btn) {
+        copyText(latestRawJson, btn);
+      };
+
+      window.downloadJsonLd = function () {
+        const slug = schemaState.activeType.toLowerCase();
+        downloadFile('schema-' + slug + '.json', latestRawJson + '\n', 'application/ld+json;charset=utf-8');
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        window.updateSerp();
+        renderSchemaForm();
+        updateJsonLd();
+      });
+    })();
+  </script>
+</body>
+</html>

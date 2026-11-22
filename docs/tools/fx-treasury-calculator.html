@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live ECB Currency Converter &amp; U.S. Treasury Rates / Debt Tracker — RelayTools Hub</title>
+  <meta name="description" content="Free live ECB currency converter (Frankfurter API) with multi-currency CSV export, plus live U.S. Treasury average interest rates (Bills, Notes, Bonds) and real-time U.S. National Debt tracker.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <style>
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .fx-highlight {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin: 14px 0 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .fx-big-result {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.2;
+      word-break: break-word;
+    }
+    .fx-sub-meta {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .chip {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .num {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      white-space: nowrap;
+    }
+    th.num { text-align: right; }
+    .rate-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 150px;
+    }
+    .rate-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--surface-alt);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .rate-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .status-line {
+      min-height: 24px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 820px) {
+      .fx-big-result { font-size: 22px; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Live ECB Currency Converter & U.S. Treasury Rates / Debt Tracker",
+    "description": "Free interactive browser tool for live European Central Bank foreign exchange conversion with multi-currency CSV export, combined with official U.S. Treasury average interest rates and daily National Debt tracking.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any (Web Browser)",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Live European Central Bank FX rates via Frankfurter API",
+      "Instant multi-currency comparison table across EUR, GBP, JPY, CAD, AUD, CHF, MXN and 30+ ECB currencies",
+      "1-click Copy CSV and Download CSV export",
+      "Live U.S. Treasury Bills, Notes, and Bonds average interest rates from Fiscal Data API",
+      "Real-time U.S. National Debt (Debt to the Penny) tracker"
+    ],
+    "provider": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot" aria-hidden="true">R</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">API Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button type="button" class="nav-btn" id="themeToggleBtn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">Live Finance &amp; Macro Suite</span>
+      <h1>ECB Currency Converter + U.S. Treasury Rates &amp; Debt Tracker</h1>
+      <p>Convert global currencies using live European Central Bank reference rates via Frankfurter, and monitor official U.S. Treasury Bills, Notes, Bonds yields and Debt to the Penny &mdash; queried live in your browser with zero sign-up.</p>
+    </section>
+
+    <!-- SECTION A: ECB LIVE FX -->
+    <section class="card" aria-labelledby="fxHeading">
+      <div class="section-header">
+        <div>
+          <h2 id="fxHeading">Section A: Live ECB Currency Converter</h2>
+          <p class="muted small" style="margin:0;">Source: <code>api.frankfurter.dev/v1/latest</code> (European Central Bank daily reference rates)</p>
+        </div>
+        <div class="btn-group">
+          <span class="pill pill-teal" id="fxDateBadge">Loading ECB date&hellip;</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="fxRefreshBtn">Refresh Live FX</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field" style="max-width:210px;">
+          <label for="fxAmount">Amount</label>
+          <input type="number" id="fxAmount" value="1000" min="0" step="any" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="fxBase">Base Currency</label>
+          <select id="fxBase"></select>
+        </div>
+        <div style="padding-bottom:2px;">
+          <button type="button" class="btn btn-secondary" id="fxSwapBtn" title="Swap base and target currencies">&harr; Swap</button>
+        </div>
+        <div class="field">
+          <label for="fxTarget">Quick Convert Target</label>
+          <select id="fxTarget"></select>
+        </div>
+      </div>
+
+      <div class="chip-row" aria-label="Quick amount presets">
+        <span class="small muted" style="font-weight:700;">Quick Amounts:</span>
+        <button type="button" class="chip" data-amount="100">100</button>
+        <button type="button" class="chip" data-amount="1000">1,000</button>
+        <button type="button" class="chip" data-amount="10000">10,000</button>
+        <button type="button" class="chip" data-amount="100000">100,000</button>
+        <button type="button" class="chip" data-amount="1000000">1,000,000</button>
+      </div>
+
+      <div id="fxStatus" class="status-line" aria-live="polite"></div>
+
+      <div class="fx-highlight" id="fxHighlight">
+        <div>
+          <div class="kpi-label" id="fxPairLabel">Converted Amount</div>
+          <div class="fx-big-result" id="fxBigResult">Loading live ECB rates&hellip;</div>
+          <div class="fx-sub-meta" id="fxRateDetail">Fetching latest reference exchange rates from Frankfurter&hellip;</div>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-primary btn-sm" id="fxCopyConvertedBtn">Copy Result</button>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top:18px;">
+        <div>
+          <h3 style="margin:0;">Multi-Currency Comparison Matrix</h3>
+          <p class="muted small" style="margin:2px 0 0;" id="fxTableSubtitle">Comparing major currencies (EUR, GBP, JPY, CAD, AUD, CHF, MXN)</p>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-secondary btn-sm" id="fxToggleScopeBtn">Show All ECB Currencies</button>
+          <button type="button" class="btn btn-primary btn-sm" id="fxCopyCsvBtn">Copy CSV</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="fxDownloadCsvBtn">Download CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Currency</th>
+              <th class="num">Rate (1 Base)</th>
+              <th class="num">Converted Value</th>
+              <th class="num">Inverse Rate</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="fxTableBody">
+            <tr><td colspan="6" class="muted">Loading live exchange rates&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION B: U.S. TREASURY LIVE RATES & DEBT -->
+    <section class="card" aria-labelledby="treasuryHeading">
+      <div class="section-header">
+        <div>
+          <h2 id="treasuryHeading">Section B: Official U.S. Treasury Interest Rates &amp; National Debt</h2>
+          <p class="muted small" style="margin:0;">Source: <code>api.fiscaldata.treasury.gov</code> (U.S. Department of the Treasury Fiscal Data API)</p>
+        </div>
+        <div class="btn-group">
+          <span class="pill pill-blue" id="treasuryDateBadge">Loading Fiscal Data&hellip;</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="treasuryRefreshBtn">Refresh Treasury</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="treasuryCopyCsvBtn">Copy Rates CSV</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="treasuryDownloadJsonBtn">Download JSON</button>
+        </div>
+      </div>
+
+      <div id="treasuryStatus" class="status-line" aria-live="polite"></div>
+
+      <h3 style="margin-top:4px;">U.S. National Debt (Debt to the Penny)</h3>
+      <div class="grid-3" style="margin-bottom:18px;">
+        <div class="kpi">
+          <div class="kpi-label">Total Public Debt Outstanding</div>
+          <div class="kpi-value" id="debtTotalShort">&mdash;</div>
+          <div class="kpi-sub" id="debtTotalExact">Loading&hellip;</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Debt Held by the Public</div>
+          <div class="kpi-value" id="debtPublicShort">&mdash;</div>
+          <div class="kpi-sub" id="debtPublicExact">Loading&hellip;</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Intragovernmental Holdings</div>
+          <div class="kpi-value" id="debtIntraShort">&mdash;</div>
+          <div class="kpi-sub" id="debtIntraExact">Loading&hellip;</div>
+        </div>
+      </div>
+
+      <h3>Headline U.S. Treasury Marketable Yields</h3>
+      <div class="grid-4" style="margin-bottom:18px;">
+        <div class="kpi">
+          <div class="kpi-label">Treasury Bills Avg Rate</div>
+          <div class="kpi-value" id="rateBills">&mdash;</div>
+          <div class="kpi-sub" id="estBills">Annualized yield estimate</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Treasury Notes Avg Rate</div>
+          <div class="kpi-value" id="rateNotes">&mdash;</div>
+          <div class="kpi-sub" id="estNotes">Annualized yield estimate</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Treasury Bonds Avg Rate</div>
+          <div class="kpi-value" id="rateBonds">&mdash;</div>
+          <div class="kpi-sub" id="estBonds">Annualized yield estimate</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Debt Record Date</div>
+          <div class="kpi-value" id="debtRecordDate" style="font-size:20px;">&mdash;</div>
+          <div class="kpi-sub" id="ratesRecordDate">Rates period loading&hellip;</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div>
+          <h3 style="margin:0;">Latest U.S. Treasury Average Interest Rates (Top 10 Records)</h3>
+          <p class="muted small" style="margin:2px 0 0;">Live snapshot from <code>avg_interest_rates?sort=-record_date&amp;page[size]=10</code></p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Security Description</th>
+              <th>Type</th>
+              <th class="num">Avg Interest Rate</th>
+              <th>Relative Yield</th>
+              <th>Record Date</th>
+            </tr>
+          </thead>
+          <tbody id="treasuryRatesBody">
+            <tr><td colspan="5" class="muted">Loading U.S. Treasury average interest rates&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- APIFY BULK / MCP FUNNEL CTA -->
+    <section class="apify-cta" aria-label="Scale with Apify Financial Data Actors">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Need Bulk Historical Feeds, Webhooks, or AI Agent MCP Tools?</span>
+        <h3>Automate Global FX, Crypto, U.S. Treasury &amp; SEC XBRL Pipelines on Apify</h3>
+        <p>Run scheduled datasets, historical time-series exports, and Model Context Protocol (MCP) tool calls for AI finance agents with production-ready Apify Actors.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/open-exchange-crypto-fx-rates" target="_blank" rel="noopener noreferrer">Open Exchange &amp; Crypto FX Rates &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/us-treasury-fiscal-rates-api" target="_blank" rel="noopener noreferrer">U.S. Treasury Fiscal Rates API &rarr;</a>
+          <a class="btn btn-secondary btn-sm" href="https://apify.com/regenerative_cornice/sec-xbrl-company-financials" target="_blank" rel="noopener noreferrer">SEC XBRL Company Financials &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <strong>RelayTools Hub</strong> &mdash; Free browser-native finance, research &amp; geo tools powered by live open public APIs.
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">API Catalog</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener noreferrer">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const CURRENCY_NAMES = {
+        USD: 'US Dollar',
+        EUR: 'Euro',
+        GBP: 'British Pound',
+        JPY: 'Japanese Yen',
+        CAD: 'Canadian Dollar',
+        AUD: 'Australian Dollar',
+        CHF: 'Swiss Franc',
+        MXN: 'Mexican Peso',
+        CNY: 'Chinese Yuan',
+        INR: 'Indian Rupee',
+        BRL: 'Brazilian Real',
+        SEK: 'Swedish Krona',
+        NOK: 'Norwegian Krone',
+        DKK: 'Danish Krone',
+        NZD: 'New Zealand Dollar',
+        SGD: 'Singapore Dollar',
+        HKD: 'Hong Kong Dollar',
+        KRW: 'South Korean Won',
+        ZAR: 'South African Rand',
+        PLN: 'Polish Zloty',
+        TRY: 'Turkish Lira',
+        CZK: 'Czech Koruna',
+        HUF: 'Hungarian Forint',
+        IDR: 'Indonesian Rupiah',
+        ILS: 'Israeli New Shekel',
+        ISK: 'Icelandic Krona',
+        MYR: 'Malaysian Ringgit',
+        PHP: 'Philippine Peso',
+        RON: 'Romanian Leu',
+        THB: 'Thai Baht'
+      };
+
+      const FEATURED_CODES = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'MXN', 'USD'];
+
+      const state = {
+        base: 'USD',
+        target: 'EUR',
+        date: '',
+        rates: {},
+        showAllCurrencies: false,
+        treasuryRates: [],
+        treasuryDebt: null
+      };
+
+      const els = {
+        amount: document.getElementById('fxAmount'),
+        base: document.getElementById('fxBase'),
+        target: document.getElementById('fxTarget'),
+        swapBtn: document.getElementById('fxSwapBtn'),
+        refreshFxBtn: document.getElementById('fxRefreshBtn'),
+        fxDateBadge: document.getElementById('fxDateBadge'),
+        fxStatus: document.getElementById('fxStatus'),
+        fxPairLabel: document.getElementById('fxPairLabel'),
+        fxBigResult: document.getElementById('fxBigResult'),
+        fxRateDetail: document.getElementById('fxRateDetail'),
+        fxCopyConvertedBtn: document.getElementById('fxCopyConvertedBtn'),
+        fxToggleScopeBtn: document.getElementById('fxToggleScopeBtn'),
+        fxTableSubtitle: document.getElementById('fxTableSubtitle'),
+        fxTableBody: document.getElementById('fxTableBody'),
+        fxCopyCsvBtn: document.getElementById('fxCopyCsvBtn'),
+        fxDownloadCsvBtn: document.getElementById('fxDownloadCsvBtn'),
+        treasuryDateBadge: document.getElementById('treasuryDateBadge'),
+        treasuryStatus: document.getElementById('treasuryStatus'),
+        treasuryRefreshBtn: document.getElementById('treasuryRefreshBtn'),
+        treasuryCopyCsvBtn: document.getElementById('treasuryCopyCsvBtn'),
+        treasuryDownloadJsonBtn: document.getElementById('treasuryDownloadJsonBtn'),
+        debtTotalShort: document.getElementById('debtTotalShort'),
+        debtTotalExact: document.getElementById('debtTotalExact'),
+        debtPublicShort: document.getElementById('debtPublicShort'),
+        debtPublicExact: document.getElementById('debtPublicExact'),
+        debtIntraShort: document.getElementById('debtIntraShort'),
+        debtIntraExact: document.getElementById('debtIntraExact'),
+        debtRecordDate: document.getElementById('debtRecordDate'),
+        ratesRecordDate: document.getElementById('ratesRecordDate'),
+        rateBills: document.getElementById('rateBills'),
+        rateNotes: document.getElementById('rateNotes'),
+        rateBonds: document.getElementById('rateBonds'),
+        estBills: document.getElementById('estBills'),
+        estNotes: document.getElementById('estNotes'),
+        estBonds: document.getElementById('estBonds'),
+        treasuryRatesBody: document.getElementById('treasuryRatesBody')
+      };
+
+      function formatNumber(n, decimals) {
+        if (!Number.isFinite(n)) return '0';
+        const d = typeof decimals === 'number' ? decimals : (Math.abs(n) >= 100 ? 2 : 4);
+        return n.toLocaleString('en-US', {
+          minimumFractionDigits: d,
+          maximumFractionDigits: d
+        });
+      }
+
+      function formatCurrencyShort(val) {
+        const num = Number(val);
+        if (!Number.isFinite(num)) return 'N/A';
+        if (Math.abs(num) >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T';
+        if (Math.abs(num) >= 1e9) return '$' + (num / 1e9).toFixed(2) + 'B';
+        if (Math.abs(num) >= 1e6) return '$' + (num / 1e6).toFixed(2) + 'M';
+        return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function formatDollarsExact(val) {
+        const num = Number(val);
+        if (!Number.isFinite(num)) return 'N/A';
+        return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function csvEscape(v) {
+        const s = String(v == null ? '' : v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+
+      function getAmount() {
+        const v = parseFloat(els.amount.value);
+        return Number.isFinite(v) && v >= 0 ? v : 0;
+      }
+
+      function populateSelects(allCodes) {
+        const sorted = Array.from(new Set(allCodes)).sort();
+        const optsHtml = sorted.map(function (code) {
+          const label = code + (CURRENCY_NAMES[code] ? ' — ' + CURRENCY_NAMES[code] : '');
+          return '<option value="' + escapeHtml(code) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+        els.base.innerHTML = optsHtml;
+        els.target.innerHTML = optsHtml;
+        if (sorted.indexOf(state.base) === -1) state.base = sorted[0] || 'USD';
+        if (sorted.indexOf(state.target) === -1 || state.target === state.base) {
+          state.target = state.base === 'EUR' ? 'USD' : 'EUR';
+        }
+        els.base.value = state.base;
+        els.target.value = state.target;
+      }
+
+      function getVisibleCodes() {
+        const available = Object.keys(state.rates).sort();
+        if (state.showAllCurrencies) {
+          return available;
+        }
+        const subset = FEATURED_CODES.filter(function (c) {
+          return c !== state.base && Object.prototype.hasOwnProperty.call(state.rates, c);
+        });
+        return subset.length ? subset : available.slice(0, 8);
+      }
+
+      function renderFxOutputs() {
+        const amount = getAmount();
+        const base = state.base;
+        const target = state.target;
+        const rate = target === base ? 1 : state.rates[target];
+
+        if (!Number.isFinite(rate)) {
+          els.fxBigResult.textContent = 'Rate unavailable';
+          els.fxRateDetail.textContent = 'Select another target currency.';
+        } else {
+          const converted = amount * rate;
+          const inverse = rate > 0 ? 1 / rate : 0;
+          const targetDecimals = target === 'JPY' || target === 'KRW' || target === 'IDR' || target === 'HUF' ? 0 : 2;
+          els.fxPairLabel.textContent = base + ' to ' + target + ' (ECB Live Rate)';
+          els.fxBigResult.textContent = formatNumber(amount, 2) + ' ' + base + ' = ' + formatNumber(converted, targetDecimals) + ' ' + target;
+          els.fxRateDetail.textContent = '1 ' + base + ' = ' + formatNumber(rate, 5) + ' ' + target +
+            '  |  1 ' + target + ' = ' + formatNumber(inverse, 5) + ' ' + base +
+            (state.date ? '  |  ECB Date: ' + state.date : '');
+        }
+
+        const codes = getVisibleCodes();
+        els.fxTableSubtitle.textContent = state.showAllCurrencies
+          ? 'Showing all ' + codes.length + ' live ECB currencies against ' + base
+          : 'Comparing major currencies (' + codes.join(', ') + ') against ' + base;
+        els.fxToggleScopeBtn.textContent = state.showAllCurrencies
+          ? 'Show Major Currencies'
+          : 'Show All ECB Currencies (' + Object.keys(state.rates).length + ')';
+
+        if (!codes.length) {
+          els.fxTableBody.innerHTML = '<tr><td colspan="6" class="muted">No exchange rates available.</td></tr>';
+          return;
+        }
+
+        const rowsHtml = codes.map(function (code) {
+          const r = state.rates[code];
+          const conv = amount * r;
+          const inv = r > 0 ? 1 / r : 0;
+          const dec = (code === 'JPY' || code === 'KRW' || code === 'IDR' || code === 'HUF') ? 2 : 2;
+          const name = CURRENCY_NAMES[code] || code;
+          const isTarget = code === target;
+          return '<tr' + (isTarget ? ' style="background:var(--accent-soft);"' : '') + '>' +
+            '<td><strong>' + escapeHtml(code) + '</strong>' + (isTarget ? ' <span class="pill pill-teal">Target</span>' : '') + '</td>' +
+            '<td>' + escapeHtml(name) + '</td>' +
+            '<td class="num">' + escapeHtml(formatNumber(r, 5)) + '</td>' +
+            '<td class="num"><strong>' + escapeHtml(formatNumber(conv, dec)) + ' ' + escapeHtml(code) + '</strong></td>' +
+            '<td class="num">' + escapeHtml(formatNumber(inv, 5)) + '</td>' +
+            '<td>' +
+              '<div class="btn-group">' +
+                '<button type="button" class="btn btn-secondary btn-sm" data-fx-copy="' + escapeHtml(code) + '">Copy</button>' +
+                '<button type="button" class="btn btn-secondary btn-sm" data-fx-base="' + escapeHtml(code) + '">Set Base</button>' +
+              '</div>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+
+        els.fxTableBody.innerHTML = rowsHtml;
+        updateYieldEstimates();
+      }
+
+      function buildFxCsv() {
+        const amount = getAmount();
+        const codes = getVisibleCodes();
+        const lines = [['base_currency', 'amount', 'target_currency', 'currency_name', 'ecb_rate', 'converted_amount', 'inverse_rate', 'ecb_date'].join(',')];
+        codes.forEach(function (code) {
+          const r = state.rates[code];
+          const conv = amount * r;
+          const inv = r > 0 ? 1 / r : 0;
+          lines.push([
+            state.base,
+            amount.toFixed(2),
+            code,
+            CURRENCY_NAMES[code] || code,
+            r.toFixed(6),
+            conv.toFixed(4),
+            inv.toFixed(6),
+            state.date
+          ].map(csvEscape).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      async function loadFxRates(baseCurrency) {
+        const requestedBase = baseCurrency || state.base || 'USD';
+        els.fxStatus.innerHTML = '<div class="alert alert-blue">Fetching live ECB rates for <strong>' + escapeHtml(requestedBase) + '</strong>&hellip;</div>';
+        els.refreshFxBtn.disabled = true;
+        try {
+          const url = 'https://api.frankfurter.dev/v1/latest?base=' + encodeURIComponent(requestedBase);
+          const res = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error('HTTP ' + res.status + ' from Frankfurter API');
+          const data = await res.json();
+          if (!data || !data.rates) throw new Error('Unexpected response format from Frankfurter API');
+
+          state.base = data.base || requestedBase;
+          state.date = data.date || '';
+          state.rates = data.rates;
+
+          const allCodes = [state.base].concat(Object.keys(state.rates));
+          populateSelects(allCodes);
+          els.fxDateBadge.textContent = 'ECB Date: ' + (state.date || 'Live');
+          els.fxStatus.innerHTML = '';
+          renderFxOutputs();
+        } catch (err) {
+          els.fxDateBadge.textContent = 'FX Error';
+          els.fxStatus.innerHTML = '<div class="alert alert-red">Could not load live ECB rates: ' + escapeHtml(err.message) + '. Check your network and click Refresh Live FX.</div>';
+        } finally {
+          els.refreshFxBtn.disabled = false;
+        }
+      }
+
+      function findRateByKeyword(records, keyword) {
+        const lower = keyword.toLowerCase();
+        return records.find(function (r) {
+          return String(r.security_desc || '').toLowerCase().indexOf(lower) !== -1;
+        }) || null;
+      }
+
+      function updateYieldEstimates() {
+        const amount = getAmount();
+        const bills = findRateByKeyword(state.treasuryRates, 'treasury bills');
+        const notes = findRateByKeyword(state.treasuryRates, 'treasury notes');
+        const bonds = findRateByKeyword(state.treasuryRates, 'treasury bonds');
+
+        if (bills) {
+          const pct = parseFloat(bills.avg_interest_rate_amt);
+          els.estBills.textContent = Number.isFinite(pct)
+            ? 'Est. ' + formatDollarsExact(amount * pct / 100) + '/yr on ' + formatNumber(amount, 0)
+            : 'Marketable short-term';
+        }
+        if (notes) {
+          const pct = parseFloat(notes.avg_interest_rate_amt);
+          els.estNotes.textContent = Number.isFinite(pct)
+            ? 'Est. ' + formatDollarsExact(amount * pct / 100) + '/yr on ' + formatNumber(amount, 0)
+            : 'Marketable medium-term';
+        }
+        if (bonds) {
+          const pct = parseFloat(bonds.avg_interest_rate_amt);
+          els.estBonds.textContent = Number.isFinite(pct)
+            ? 'Est. ' + formatDollarsExact(amount * pct / 100) + '/yr on ' + formatNumber(amount, 0)
+            : 'Marketable long-term';
+        }
+      }
+
+      function renderTreasury() {
+        const debt = state.treasuryDebt;
+        if (debt) {
+          els.debtTotalShort.textContent = formatCurrencyShort(debt.tot_pub_debt_out_amt);
+          els.debtTotalExact.textContent = formatDollarsExact(debt.tot_pub_debt_out_amt);
+          els.debtPublicShort.textContent = formatCurrencyShort(debt.debt_held_public_amt);
+          els.debtPublicExact.textContent = formatDollarsExact(debt.debt_held_public_amt);
+          els.debtIntraShort.textContent = formatCurrencyShort(debt.intragov_hold_amt);
+          els.debtIntraExact.textContent = formatDollarsExact(debt.intragov_hold_amt);
+          els.debtRecordDate.textContent = debt.record_date || 'N/A';
+        }
+
+        const rates = state.treasuryRates;
+        const bills = findRateByKeyword(rates, 'treasury bills');
+        const notes = findRateByKeyword(rates, 'treasury notes');
+        const bonds = findRateByKeyword(rates, 'treasury bonds');
+
+        els.rateBills.textContent = bills ? Number(bills.avg_interest_rate_amt).toFixed(3) + '%' : 'N/A';
+        els.rateNotes.textContent = notes ? Number(notes.avg_interest_rate_amt).toFixed(3) + '%' : 'N/A';
+        els.rateBonds.textContent = bonds ? Number(bonds.avg_interest_rate_amt).toFixed(3) + '%' : 'N/A';
+
+        const latestRateDate = rates.length ? (rates[0].record_date || 'N/A') : 'N/A';
+        els.ratesRecordDate.textContent = 'Avg Rates As Of: ' + latestRateDate;
+        els.treasuryDateBadge.textContent = 'Treasury Live: ' + (debt && debt.record_date ? debt.record_date : latestRateDate);
+
+        if (!rates.length) {
+          els.treasuryRatesBody.innerHTML = '<tr><td colspan="5" class="muted">No U.S. Treasury rate records returned.</td></tr>';
+          return;
+        }
+
+        const maxRate = Math.max.apply(null, rates.map(function (r) {
+          const n = parseFloat(r.avg_interest_rate_amt);
+          return Number.isFinite(n) ? n : 0;
+        }).concat([1]));
+
+        els.treasuryRatesBody.innerHTML = rates.map(function (row) {
+          const pct = parseFloat(row.avg_interest_rate_amt);
+          const pctStr = Number.isFinite(pct) ? pct.toFixed(3) + '%' : String(row.avg_interest_rate_amt || 'N/A');
+          const width = Number.isFinite(pct) ? Math.max(4, Math.min(100, (pct / maxRate) * 100)) : 0;
+          const isMarketable = String(row.security_type_desc || '').toLowerCase() === 'marketable';
+          const badgeClass = isMarketable ? 'pill-green' : 'pill-amber';
+          return '<tr>' +
+            '<td><strong>' + escapeHtml(row.security_desc || 'Unknown') + '</strong></td>' +
+            '<td><span class="pill ' + badgeClass + '">' + escapeHtml(row.security_type_desc || 'N/A') + '</span></td>' +
+            '<td class="num"><strong>' + escapeHtml(pctStr) + '</strong></td>' +
+            '<td>' +
+              '<div class="rate-bar-wrap">' +
+                '<div class="rate-bar-track"><div class="rate-bar-fill" style="width:' + width.toFixed(1) + '%;"></div></div>' +
+              '</div>' +
+            '</td>' +
+            '<td>' + escapeHtml(row.record_date || 'N/A') + '</td>' +
+          '</tr>';
+        }).join('');
+
+        updateYieldEstimates();
+      }
+
+      function buildTreasuryCsv() {
+        const lines = [['record_date', 'security_type_desc', 'security_desc', 'avg_interest_rate_amt'].join(',')];
+        state.treasuryRates.forEach(function (r) {
+          lines.push([
+            r.record_date,
+            r.security_type_desc,
+            r.security_desc,
+            r.avg_interest_rate_amt
+          ].map(csvEscape).join(','));
+        });
+        return lines.join('\n');
+      }
+
+      async function loadTreasuryData() {
+        els.treasuryStatus.innerHTML = '<div class="alert alert-blue">Fetching live U.S. Treasury interest rates and Debt to the Penny&hellip;</div>';
+        els.treasuryRefreshBtn.disabled = true;
+        try {
+          const ratesUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates?sort=-record_date&page[size]=10';
+          const debtUrl = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1';
+
+          const [ratesRes, debtRes] = await Promise.all([
+            fetch(ratesUrl, { headers: { Accept: 'application/json' } }),
+            fetch(debtUrl, { headers: { Accept: 'application/json' } })
+          ]);
+
+          if (!ratesRes.ok) throw new Error('Treasury avg_interest_rates HTTP ' + ratesRes.status);
+          if (!debtRes.ok) throw new Error('Treasury debt_to_penny HTTP ' + debtRes.status);
+
+          const [ratesJson, debtJson] = await Promise.all([ratesRes.json(), debtRes.json()]);
+          state.treasuryRates = Array.isArray(ratesJson.data) ? ratesJson.data : [];
+          state.treasuryDebt = (Array.isArray(debtJson.data) && debtJson.data.length) ? debtJson.data[0] : null;
+
+          els.treasuryStatus.innerHTML = '';
+          renderTreasury();
+        } catch (err) {
+          els.treasuryDateBadge.textContent = 'Treasury Error';
+          els.treasuryStatus.innerHTML = '<div class="alert alert-red">Could not load U.S. Treasury Fiscal Data: ' + escapeHtml(err.message) + '.</div>';
+        } finally {
+          els.treasuryRefreshBtn.disabled = false;
+        }
+      }
+
+      // Event bindings
+      els.amount.addEventListener('input', renderFxOutputs);
+
+      els.base.addEventListener('change', function () {
+        const nextBase = els.base.value;
+        if (nextBase === state.target) {
+          state.target = state.base;
+        }
+        loadFxRates(nextBase);
+      });
+
+      els.target.addEventListener('change', function () {
+        state.target = els.target.value;
+        renderFxOutputs();
+      });
+
+      els.swapBtn.addEventListener('click', function () {
+        const prevBase = state.base;
+        const prevTarget = state.target;
+        state.target = prevBase;
+        loadFxRates(prevTarget);
+      });
+
+      els.refreshFxBtn.addEventListener('click', function () {
+        loadFxRates(state.base);
+      });
+
+      els.fxCopyConvertedBtn.addEventListener('click', function () {
+        copyText(els.fxBigResult.textContent, els.fxCopyConvertedBtn);
+      });
+
+      els.fxToggleScopeBtn.addEventListener('click', function () {
+        state.showAllCurrencies = !state.showAllCurrencies;
+        renderFxOutputs();
+      });
+
+      els.fxCopyCsvBtn.addEventListener('click', function () {
+        copyText(buildFxCsv(), els.fxCopyCsvBtn);
+      });
+
+      els.fxDownloadCsvBtn.addEventListener('click', function () {
+        const stamp = state.date || 'latest';
+        downloadFile('ecb-fx-' + state.base.toLowerCase() + '-' + stamp + '.csv', buildFxCsv(), 'text/csv;charset=utf-8');
+      });
+
+      document.querySelectorAll('.chip[data-amount]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          els.amount.value = chip.getAttribute('data-amount');
+          renderFxOutputs();
+        });
+      });
+
+      els.fxTableBody.addEventListener('click', function (ev) {
+        const copyBtn = ev.target.closest('button[data-fx-copy]');
+        if (copyBtn) {
+          const code = copyBtn.getAttribute('data-fx-copy');
+          const r = state.rates[code];
+          if (Number.isFinite(r)) {
+            const val = (getAmount() * r).toFixed(2) + ' ' + code;
+            copyText(val, copyBtn);
+          }
+          return;
+        }
+        const baseBtn = ev.target.closest('button[data-fx-base]');
+        if (baseBtn) {
+          const nextBase = baseBtn.getAttribute('data-fx-base');
+          if (nextBase) {
+            state.target = state.base;
+            loadFxRates(nextBase);
+          }
+        }
+      });
+
+      els.treasuryRefreshBtn.addEventListener('click', loadTreasuryData);
+
+      els.treasuryCopyCsvBtn.addEventListener('click', function () {
+        copyText(buildTreasuryCsv(), els.treasuryCopyCsvBtn);
+      });
+
+      els.treasuryDownloadJsonBtn.addEventListener('click', function () {
+        const payload = {
+          fetched_at: new Date().toISOString(),
+          debt_to_penny: state.treasuryDebt,
+          avg_interest_rates: state.treasuryRates
+        };
+        downloadFile('us-treasury-live-snapshot.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+      });
+
+      // Boot live queries immediately on page load
+      loadFxRates('USD');
+      loadTreasuryData();
+    })();
+  </script>
+</body>
+</html>

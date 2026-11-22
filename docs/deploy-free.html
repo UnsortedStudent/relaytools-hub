@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$0/Month Deployment &amp; SEO Indexing Guide — RelayTools Hub</title>
+  <meta name="description" content="Plain-English 3-minute guide to host RelayTools Hub free forever on Cloudflare Pages or GitHub Pages and submit your sitemap to Google Search Console and Bing.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://unsortedstudent.github.io/relaytools-hub/deploy-free.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RelayTools Hub">
+  <meta property="og:title" content="$0/Month Deployment &amp; SEO Indexing Guide — RelayTools Hub">
+  <meta property="og:description" content="Plain-English 3-minute guide to host RelayTools Hub free forever on Cloudflare Pages or GitHub Pages and submit your sitemap to Google Search Console and Bing.">
+  <meta property="og:url" content="https://unsortedstudent.github.io/relaytools-hub/deploy-free.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="$0/Month Deployment &amp; SEO Indexing Guide — RelayTools Hub">
+  <meta name="twitter:description" content="Plain-English 3-minute guide to host RelayTools Hub free forever on Cloudflare Pages or GitHub Pages and submit your sitemap to Google Search Console and Bing.">
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+.kpi-strip { margin-bottom: 24px; }
+.steps-list { padding-left: 20px; margin: 10px 0 12px; }
+.steps-list li { margin-bottom: 8px; }
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.guide-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.guide-box h3 { margin: 0 0 8px; }
+.checklist-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+  cursor: pointer;
+  font-size: 14px;
+}
+.check-row input { width: auto; margin-top: 4px; }
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Deploy RelayTools Hub Free on Cloudflare Pages or GitHub Pages",
+  "description": "Step-by-step plain-English guide to host RelayTools Hub for $0/month on Cloudflare Pages or GitHub Pages and submit sitemap.xml to Google Search Console and Bing.",
+  "url": "https://unsortedstudent.github.io/relaytools-hub/deploy-free.html",
+  "totalTime": "PT3M"
+}
+  </script>
+</head>
+<body>
+<header class="site-nav">
+  <div class="site-nav-inner">
+    <a class="brand-logo" href="index.html">
+      <span class="brand-dot" aria-hidden="true">R</span>
+      <span>RelayTools Hub</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" href="index.html">Free Tools</a><a class="nav-link" href="catalog.html">40 APIs &amp; MCP</a><a class="nav-link" href="mcp-guide.html">MCP Guide</a><a class="nav-link active" href="deploy-free.html" aria-current="page">$0 Deploy Guide</a>
+      <button class="nav-btn" id="themeToggleBtn" type="button" onclick="toggleTheme()">Dark Mode</button>
+      <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+    </nav>
+  </div>
+</header>
+<main class="container">
+<section class="hero">
+  <span class="eyebrow">$0/Month Forever &bull; Zero Servers &bull; 3-Minute Launch</span>
+  <h1>Put RelayTools Hub Live on the Internet for $0/Month</h1>
+  <p>Because every page inside <code>web_hub/public/</code> is pure static HTML, CSS, and JavaScript, you pay <strong>$0/month forever</strong> with free HTTPS, unlimited global CDN bandwidth, and zero server maintenance. Follow the plain-English steps below to publish in 3 minutes and turn on free search traffic.</p>
+</section>
+
+<section class="grid-3 kpi-strip">
+  <div class="kpi">
+    <div class="kpi-label">Monthly Hosting Bill</div>
+    <div class="kpi-value">$0.00</div>
+    <div class="small muted">Cloudflare Pages or GitHub Pages</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Setup Time</div>
+    <div class="kpi-value">~3 Min</div>
+    <div class="small muted">Drag-and-drop folder upload</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Included SEO Files</div>
+    <div class="kpi-value">Ready</div>
+    <div class="small muted"><code>sitemap.xml</code>, <code>robots.txt</code>, <code>_headers</code></div>
+  </div>
+</section>
+
+<section class="card">
+  <span class="pill pill-green" style="margin-bottom: 8px;">Recommended &bull; Fastest &bull; No Coding Needed</span>
+  <h2>Option 1: Drag-and-Drop to Cloudflare Pages (2 Minutes, $0/Month)</h2>
+  <p class="muted">Cloudflare Pages gives you unlimited bandwidth, free automatic HTTPS, a fast global CDN, and automatically applies our security <code>_headers</code> file &mdash; no credit card required.</p>
+  <ol class="steps-list">
+    <li>Go to <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener">dash.cloudflare.com &nearr;</a> and create a free account (or sign in).</li>
+    <li>In the left sidebar, click <strong>Workers &amp; Pages</strong> &rarr; click <strong>Create</strong> &rarr; select the <strong>Pages</strong> tab &rarr; click <strong>Upload assets</strong> (Direct Upload).</li>
+    <li>Give your site a project name such as <code>relaytools</code>. Your live free URL will become <code>https://relaytools.pages.dev</code>.</li>
+    <li>Open Windows File Explorer to <code>web_hub\public</code>, drag the entire <strong><code>public</code></strong> folder into Cloudflare&rsquo;s upload box, and click <strong>Deploy site</strong>.</li>
+    <li>Within ~15 seconds your site is live! Open your new URL and check <code>/</code>, <code>/catalog.html</code>, <code>/mcp-guide.html</code>, and <code>/sitemap.xml</code>.</li>
+  </ol>
+  <div class="alert alert-green">
+    <strong>Pro Tip (Optional 1-Line URL Sync):</strong> If your live Cloudflare URL is different from <code>https://unsortedstudent.github.io/relaytools-hub</code>, run this single command locally to update <code>sitemap.xml</code>, <code>robots.txt</code>, and canonical SEO links, then drag-and-drop <code>web_hub/public</code> one more time:
+  </div>
+  <div class="code-header">
+    <span class="small"><strong>Update canonical URLs &amp; sitemap</strong></span>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('rebuildCmd', this)">Copy Command</button>
+  </div>
+  <pre id="rebuildCmd"><code>python web_hub/build_hub.py --base-url https://YOUR-LIVE-SITE.pages.dev</code></pre>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <span class="pill pill-blue" style="margin-bottom: 8px;">Option 2A &bull; Auto-Updates on Git Push</span>
+    <h2>Cloudflare Pages + GitHub</h2>
+    <p class="small muted">Ideal if you want your site to auto-republish every time you add new tools or update Actor statuses.</p>
+    <ol class="steps-list small">
+      <li>Create a free public GitHub repository (e.g., <code>relaytools-hub</code>) and copy <code>web_hub/GITHUB_SHOWCASE_README.md</code> as the repo&rsquo;s root <code>README.md</code> for bonus developer discovery!</li>
+      <li>Push <code>web_hub/</code> using the commands below.</li>
+      <li>In Cloudflare Dashboard &rarr; <strong>Workers &amp; Pages</strong> &rarr; <strong>Create</strong> &rarr; <strong>Pages</strong> &rarr; <strong>Connect to Git</strong>.</li>
+      <li>Select your repo, leave <strong>Build command</strong> blank, set <strong>Build output directory</strong> to <code>web_hub/public</code>, and click <strong>Save and Deploy</strong>.</li>
+    </ol>
+    <div class="code-header">
+      <span class="small"><strong>Git push commands</strong></span>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="copyElementText('gitPushCmd', this)">Copy</button>
+    </div>
+    <pre id="gitPushCmd"><code>git init
+git add web_hub
+git commit -m &quot;Launch RelayTools Hub&quot;
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/relaytools-hub.git
+git push -u origin main</code></pre>
+  </div>
+
+  <div class="card">
+    <span class="pill pill-teal" style="margin-bottom: 8px;">Option 2B &bull; 100% Inside GitHub</span>
+    <h2>GitHub Pages ($0/Month Alternative)</h2>
+    <p class="small muted">Prefer hosting right on GitHub with zero extra accounts?</p>
+    <ol class="steps-list small">
+      <li>Create a public repo on <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new &nearr;</a> and upload the contents of <code>web_hub/public/</code> into a <code>docs/</code> folder (or the repo root).</li>
+      <li>Open your repository &rarr; click <strong>Settings</strong> &rarr; click <strong>Pages</strong> in the left sidebar.</li>
+      <li>Under <strong>Build and deployment</strong>, set Source = <strong>Deploy from a branch</strong>, Branch = <code>main</code>, Folder = <code>/docs</code> (or <code>/ (root)</code>), and click <strong>Save</strong>.</li>
+      <li>Wait ~60 seconds and refresh the Pages screen &mdash; GitHub will display your live HTTPS URL (<code>https://username.github.io/repo-name/</code>).</li>
+      <li>Run <code>build_hub.py --base-url https://username.github.io/repo-name</code> so <code>sitemap.xml</code> matches your exact GitHub Pages address.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="card">
+  <span class="pill pill-amber" style="margin-bottom: 8px;">Free Organic Search Traffic (5 Minutes)</span>
+  <h2>Submit Your Sitemap to Google &amp; Bing So Free Traffic Starts Flowing</h2>
+  <p class="muted">Every tool page targets high-intent developer, security, and compliance searches (like <em>SPF 10-lookup checker</em>, <em>CVSS v3.1 calculator</em>, <em>DOI to BibTeX</em>, and <em>AI robots.txt generator</em>). Submitting your sitemap tells search engines to index all 16 pages immediately instead of waiting weeks.</p>
+  <div class="grid-2" style="margin-top: 14px;">
+    <div class="guide-box">
+      <h3>1. Google Search Console</h3>
+      <ol class="steps-list small">
+        <li>Visit <a href="https://search.google.com/search-console" target="_blank" rel="noopener">search.google.com/search-console &nearr;</a> and click <strong>Add property</strong>.</li>
+        <li>Choose <strong>URL prefix</strong> and paste your live site URL (e.g., <code>https://relaytools.pages.dev</code>).</li>
+        <li>Verify ownership using the quick <strong>HTML file</strong> upload or <strong>HTML meta tag</strong> method (Cloudflare DNS also verifies in 1 click if you connect a custom domain).</li>
+        <li>Click <strong>Sitemaps</strong> in the left menu, type <code>sitemap.xml</code>, and click <strong>Submit</strong>.</li>
+        <li>Use the top <strong>URL Inspection</strong> bar to click <strong>Request Indexing</strong> on your homepage and top 3 tools (<code>email-auth-checker.html</code>, <code>dmarc-spf-generator.html</code>, <code>cvss-security-headers-tool.html</code>).</li>
+      </ol>
+    </div>
+    <div class="guide-box">
+      <h3>2. Bing Webmaster Tools (1-Click Import!)</h3>
+      <ol class="steps-list small">
+        <li>Visit <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener">bing.com/webmasters &nearr;</a> and sign in with your Google account.</li>
+        <li>Click <strong>Import your sites from Google Search Console</strong> &mdash; Bing automatically verifies your site and imports your <code>sitemap.xml</code> in one click!</li>
+        <li>Why this matters: Bing&rsquo;s search index also feeds <strong>DuckDuckGo, Yahoo, Ecosia, Microsoft Copilot, and ChatGPT web search</strong>.</li>
+        <li>Bonus free traffic: Add your live RelayTools Hub URL to your <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify creator profile &nearr;</a> bio and your GitHub showcase repository&rsquo;s <strong>Website</strong> field!</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="launchChecklist">
+  <h2>Your 5-Minute Launch Checklist</h2>
+  <p class="small muted">Your checkmarks are saved locally in your browser so you can track progress.</p>
+  <div class="checklist-stack">
+    <label class="check-row"><input type="checkbox" data-step="cf-upload"> <span>Uploaded <code>web_hub/public/</code> to Cloudflare Pages (or GitHub Pages) and opened the live URL</span></label>
+    <label class="check-row"><input type="checkbox" data-step="base-url"> <span>Synced <code>sitemap.xml</code> &amp; canonical URLs with <code>build_hub.py --base-url ...</code></span></label>
+    <label class="check-row"><input type="checkbox" data-step="gsc"> <span>Submitted <code>sitemap.xml</code> in Google Search Console and requested indexing for top tools</span></label>
+    <label class="check-row"><input type="checkbox" data-step="bing"> <span>Imported site into Bing Webmaster Tools (1-click GSC import)</span></label>
+    <label class="check-row"><input type="checkbox" data-step="github"> <span>Published <code>GITHUB_SHOWCASE_README.md</code> on GitHub with topics <code>mcp</code>, <code>apify</code>, <code>public-data</code>, <code>devsecops</code></span></label>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <strong>RelayTools Hub</strong> &mdash; 12 Free Browser Tools &amp; 40 Cloud Public-Data APIs / MCP Servers.
+      <div class="small muted">Catalog synced 2026-11-22 &bull; All browser utilities run client-side with zero sign-up.</div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="catalog.html">All 40 APIs</a>
+      <a href="mcp-guide.html">MCP Guide</a>
+      <a href="deploy-free.html">$0 Deploy Guide</a>
+      <a href="sitemap.xml">Sitemap</a>
+      <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store</a>
+    </div>
+  </div>
+</footer>
+<script src="assets/common.js"></script>
+  <script>
+(function () {
+  var STORAGE_KEY = 'relaytools_deploy_checklist_v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#launchChecklist input[type="checkbox"]'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; } catch (_) {}
+
+  boxes.forEach(function (box) {
+    var key = box.getAttribute('data-step');
+    if (key && saved[key]) box.checked = true;
+    box.addEventListener('change', function () {
+      if (!key) return;
+      saved[key] = box.checked;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saved)); } catch (_) {}
+    });
+  });
+})();
+  </script>
+</body>
+</html>

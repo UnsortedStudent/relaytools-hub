@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Aware robots.txt &amp; XML Sitemap Generator (2026) — RelayTools</title>
+  <meta name="description" content="Free 100% client-side AI-aware robots.txt builder with per-bot toggles for GPTBot, OAI-SearchBot, ClaudeBot, Anthropic-ai, PerplexityBot, Google-Extended, and CCBot plus a valid XML sitemap.xml generator.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "AI-Aware robots.txt & XML Sitemap Generator",
+    "description": "Free client-side technical SEO tool to generate robots.txt policies with 2026 AI crawler Allow/Block toggles (GPTBot, OAI-SearchBot, ClaudeBot, Anthropic-ai, PerplexityBot, Google-Extended, CCBot) and valid XML sitemaps.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RelayTools Hub",
+      "url": "https://apify.com/regenerative_cornice"
+    }
+  }
+  </script>
+  <style>
+    .bot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .bot-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .bot-info strong {
+      font-size: 14.5px;
+      display: block;
+    }
+    .bot-info span {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .toggle-pair {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .toggle-opt {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .toggle-opt.allow-active {
+      background: var(--green);
+      color: #fff;
+    }
+    .toggle-opt.block-active {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    input[type="date"] {
+      width: 100%;
+      padding: 10px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14.5px;
+      font-family: inherit;
+    }
+    @media (max-width: 780px) {
+      .bot-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">R</span>
+        <span>RelayTools</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">40 APIs Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP &amp; n8n Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button id="themeToggleBtn" class="nav-btn" type="button" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <span class="eyebrow">Technical SEO &amp; AI Crawler Governance · 100% Client-Side</span>
+      <h1>AI-Aware <code>robots.txt</code> &amp; XML Sitemap Builder</h1>
+      <p>Configure traditional crawl rules alongside granular 2026 AI crawler directives (<code>GPTBot</code>, <code>OAI-SearchBot</code>, <code>ClaudeBot</code>, <code>Anthropic-ai</code>, <code>PerplexityBot</code>, <code>Google-Extended</code>, <code>CCBot</code>) and generate standards-compliant <code>sitemap.xml</code> files in seconds.</p>
+    </header>
+
+    <!-- PART A: ROBOTS.TXT BUILDER -->
+    <section class="card" aria-labelledby="robotsHeading">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <h2 id="robotsHeading">Part A: AI-Aware <code>robots.txt</code> Builder</h2>
+          <p class="muted small" style="margin:0;">Every edit updates your live <code>robots.txt</code> output instantly with zero server requests.</p>
+        </div>
+        <span id="robotsSummaryPill" class="pill pill-teal">AI Policy Ready</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="siteUrl">Site Base URL</label>
+          <input id="siteUrl" type="url" value="https://example.com" oninput="onSiteUrlChange()">
+        </div>
+        <div class="field">
+          <label for="sitemapUrl">Sitemap URL (referenced in robots.txt)</label>
+          <input id="sitemapUrl" type="url" value="https://example.com/sitemap.xml" oninput="onSitemapUrlManual()">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:12px;">
+        <div class="field">
+          <label for="defaultPolicy">Default Wildcard Policy (<code>User-agent: *</code>)</label>
+          <select id="defaultPolicy" onchange="renderRobots()">
+            <option value="allow" selected>Allow crawling (except Disallow paths below)</option>
+            <option value="disallow">Disallow entire site (staging / private mode)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="crawlDelay">Optional Crawl-Delay (seconds, leave blank to omit)</label>
+          <input id="crawlDelay" type="number" min="0" max="120" step="1" placeholder="e.g., 5" oninput="renderRobots()">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:12px;">
+        <div class="field">
+          <label for="allowPaths">Allow Paths (one per line)</label>
+          <textarea id="allowPaths" style="min-height:92px;" oninput="renderRobots()">/
+/assets/</textarea>
+        </div>
+        <div class="field">
+          <label for="disallowPaths">Disallow Paths (one per line)</label>
+          <textarea id="disallowPaths" style="min-height:92px;" oninput="renderRobots()">/admin/
+/api/private/
+/checkout/
+/tmp/</textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">2026 AI Crawler Policy Toggles</h3>
+          <div class="btn-row">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyAiPreset('balanced')">Allow Search / Block Training</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyAiPreset('allow_all')">Allow All AI Bots</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyAiPreset('block_all')">Block All AI Bots</button>
+          </div>
+        </div>
+        <div id="aiBotGrid" class="bot-grid"></div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">Live <code>robots.txt</code> Preview</h3>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary btn-sm" onclick="copyElementText('robotsOutput', this)">Copy robots.txt</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadRobots()">Download robots.txt</button>
+          </div>
+        </div>
+        <pre id="robotsOutput" class="code-block"></pre>
+      </div>
+    </section>
+
+    <!-- PART B: XML SITEMAP GENERATOR -->
+    <section class="card" aria-labelledby="sitemapHeading">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <h2 id="sitemapHeading">Part B: XML Sitemap (<code>sitemap.xml</code>) Generator</h2>
+          <p class="muted small" style="margin:0;">Paste full URLs or relative paths (resolved automatically against your Site Base URL). All XML special characters are safely escaped.</p>
+        </div>
+        <span id="sitemapValidPill" class="pill pill-green">Valid XML</span>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="field">
+          <label for="smChangefreq">Default <code>&lt;changefreq&gt;</code></label>
+          <select id="smChangefreq" onchange="renderSitemap()">
+            <option value="daily">daily</option>
+            <option value="weekly" selected>weekly</option>
+            <option value="monthly">monthly</option>
+            <option value="yearly">yearly</option>
+            <option value="hourly">hourly</option>
+            <option value="always">always</option>
+            <option value="never">never</option>
+            <option value="">(omit changefreq)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="smPriority">Default <code>&lt;priority&gt;</code></label>
+          <select id="smPriority" onchange="renderSitemap()">
+            <option value="1.0">1.0 (Highest)</option>
+            <option value="0.9">0.9</option>
+            <option value="0.8" selected>0.8 (Standard)</option>
+            <option value="0.7">0.7</option>
+            <option value="0.6">0.6</option>
+            <option value="0.5">0.5</option>
+            <option value="0.3">0.3</option>
+            <option value="">(omit priority)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="smLastmod"><code>&lt;lastmod&gt;</code> Date (leave blank to omit)</label>
+          <input id="smLastmod" type="date" onchange="renderSitemap()">
+        </div>
+      </div>
+
+      <div class="field">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <label for="smUrls">Page URLs (one per line; relative paths like <code>/pricing</code> supported)</label>
+          <div class="btn-row">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadSampleUrls()">Load Sample URLs</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="dedupeAndSortUrls()">Deduplicate &amp; Sort</button>
+          </div>
+        </div>
+        <textarea id="smUrls" style="min-height:140px;" oninput="renderSitemap()">https://example.com/
+https://example.com/features
+https://example.com/pricing
+https://example.com/docs/getting-started
+https://example.com/blog/ai-crawler-policy-2026
+/contact?source=footer&amp;ref=nav</textarea>
+      </div>
+
+      <div id="sitemapNotice" class="small muted" style="margin-top:8px;"></div>
+
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 style="margin:0;">Live <code>sitemap.xml</code> Output</h3>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary btn-sm" onclick="copyElementText('sitemapOutput', this)">Copy sitemap.xml</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadSitemap()">Download sitemap.xml</button>
+          </div>
+        </div>
+        <pre id="sitemapOutput" class="code-block"></pre>
+      </div>
+    </section>
+
+    <!-- APIFY SITEMAP & RSS MONITORING CTA -->
+    <aside class="apify-cta" aria-label="Audit sitemaps and monitor website changes on Apify">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Audit &amp; Monitor Live Sites Automatically</span>
+        <h3>Inventory 10,000+ Sitemap URLs &amp; Track Competitor Changelogs via API</h3>
+        <p>Recursively crawl nested sitemap indexes, verify HTTP status codes and orphan URLs in bulk, or convert RSS/Atom feeds and product changelogs into clean JSON webhooks for n8n &amp; AI agents.</p>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/sitemap-url-inventory-auditor" target="_blank" rel="noopener">Sitemap URL Inventory Auditor &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/rss-changelog-monitor-json" target="_blank" rel="noopener">RSS &amp; Changelog Monitor &rarr;</a>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> &mdash; Free browser utilities &amp; 40 cloud data APIs.</div>
+      <div class="nav-links">
+        <a href="../index.html">Free Tools</a>
+        <a href="../catalog.html">40 APIs</a>
+        <a href="../mcp-guide.html">MCP Guide</a>
+        <a href="../deploy-free.html">Deploy Free</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    (function () {
+      const AI_BOTS = [
+        { agent: 'GPTBot', role: 'OpenAI model training crawler', policy: 'block', kind: 'training' },
+        { agent: 'OAI-SearchBot', role: 'OpenAI ChatGPT Search index bot', policy: 'allow', kind: 'search' },
+        { agent: 'ClaudeBot', role: 'Anthropic Claude web crawler', policy: 'block', kind: 'training' },
+        { agent: 'Anthropic-ai', role: 'Anthropic bulk training agent', policy: 'block', kind: 'training' },
+        { agent: 'PerplexityBot', role: 'Perplexity AI answer citation bot', policy: 'allow', kind: 'search' },
+        { agent: 'Google-Extended', role: 'Google Gemini / Vertex AI training control', policy: 'block', kind: 'training' },
+        { agent: 'CCBot', role: 'Common Crawl open dataset crawler', policy: 'block', kind: 'training' }
+      ];
+
+      let sitemapManuallyEdited = false;
+
+      function normalizeBaseUrl(raw) {
+        let val = String(raw || '').trim();
+        if (!val) return 'https://example.com';
+        if (!/^https?:\/\//i.test(val)) val = 'https://' + val;
+        return val.replace(/\/+$/, '');
+      }
+
+      function escapeXml(str) {
+        return String(str == null ? '' : str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&apos;');
+      }
+
+      window.onSiteUrlChange = function () {
+        if (!sitemapManuallyEdited) {
+          document.getElementById('sitemapUrl').value = normalizeBaseUrl(document.getElementById('siteUrl').value) + '/sitemap.xml';
+        }
+        window.renderRobots();
+        window.renderSitemap();
+      };
+
+      window.onSitemapUrlManual = function () {
+        sitemapManuallyEdited = true;
+        window.renderRobots();
+      };
+
+      window.setBotPolicy = function (agent, policy) {
+        for (let i = 0; i < AI_BOTS.length; i++) {
+          if (AI_BOTS[i].agent === agent) {
+            AI_BOTS[i].policy = policy;
+            break;
+          }
+        }
+        renderBotGrid();
+        window.renderRobots();
+      };
+
+      window.applyAiPreset = function (preset) {
+        AI_BOTS.forEach(function (bot) {
+          if (preset === 'allow_all') {
+            bot.policy = 'allow';
+          } else if (preset === 'block_all') {
+            bot.policy = 'block';
+          } else {
+            bot.policy = bot.kind === 'search' ? 'allow' : 'block';
+          }
+        });
+        renderBotGrid();
+        window.renderRobots();
+      };
+
+      function renderBotGrid() {
+        const grid = document.getElementById('aiBotGrid');
+        grid.innerHTML = AI_BOTS.map(function (bot) {
+          const isAllow = bot.policy === 'allow';
+          return '<div class="bot-card">' +
+            '<div class="bot-info">' +
+              '<strong>' + escapeHtml(bot.agent) + '</strong>' +
+              '<span>' + escapeHtml(bot.role) + '</span>' +
+            '</div>' +
+            '<div class="toggle-pair" role="group" aria-label="' + escapeHtml(bot.agent) + ' crawl policy">' +
+              '<button type="button" class="toggle-opt ' + (isAllow ? 'allow-active' : '') + '" onclick="setBotPolicy(\'' + bot.agent + '\', \'allow\')">Allow</button>' +
+              '<button type="button" class="toggle-opt ' + (!isAllow ? 'block-active' : '') + '" onclick="setBotPolicy(\'' + bot.agent + '\', \'block\')">Block</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      window.renderRobots = function () {
+        const siteBase = normalizeBaseUrl(document.getElementById('siteUrl').value);
+        const sitemapUrl = document.getElementById('sitemapUrl').value.trim();
+        const defaultPolicy = document.getElementById('defaultPolicy').value;
+        const crawlDelay = document.getElementById('crawlDelay').value.trim();
+        const allowLines = document.getElementById('allowPaths').value
+          .split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+        const disallowLines = document.getElementById('disallowPaths').value
+          .split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+
+        const out = [
+          '# robots.txt generated by RelayTools Hub',
+          '# Site: ' + siteBase,
+          '',
+          'User-agent: *'
+        ];
+
+        if (defaultPolicy === 'disallow') {
+          out.push('Disallow: /');
+        } else {
+          if (allowLines.length) {
+            allowLines.forEach(function (p) { out.push('Allow: ' + p); });
+          } else {
+            out.push('Allow: /');
+          }
+          disallowLines.forEach(function (p) { out.push('Disallow: ' + p); });
+        }
+
+        if (crawlDelay && /^\d+$/.test(crawlDelay) && Number(crawlDelay) > 0) {
+          out.push('Crawl-delay: ' + crawlDelay);
+        }
+
+        out.push('', '# 2026 AI Crawler Policies');
+        let allowedCount = 0;
+        let blockedCount = 0;
+        AI_BOTS.forEach(function (bot) {
+          out.push('User-agent: ' + bot.agent);
+          if (bot.policy === 'allow') {
+            allowedCount++;
+            out.push('Allow: /');
+          } else {
+            blockedCount++;
+            out.push('Disallow: /');
+          }
+          out.push('');
+        });
+
+        if (sitemapUrl) {
+          out.push('Sitemap: ' + sitemapUrl);
+        }
+
+        document.getElementById('robotsOutput').textContent = out.join('\n').trimEnd() + '\n';
+        const pill = document.getElementById('robotsSummaryPill');
+        pill.textContent = allowedCount + ' AI Allowed \u00b7 ' + blockedCount + ' AI Blocked';
+      };
+
+      window.downloadRobots = function () {
+        const text = document.getElementById('robotsOutput').textContent;
+        downloadFile('robots.txt', text, 'text/plain;charset=utf-8');
+      };
+
+      // --- PART B: XML SITEMAP GENERATOR ---
+      function parseSitemapUrls() {
+        const base = normalizeBaseUrl(document.getElementById('siteUrl').value);
+        const rawLines = document.getElementById('smUrls').value.split(/\r?\n/);
+        const seen = new Set();
+        const valid = [];
+        let skipped = 0;
+
+        rawLines.forEach(function (line) {
+          const trimmed = line.trim();
+          if (!trimmed) return;
+          let resolved = trimmed;
+          if (trimmed.startsWith('/')) {
+            resolved = base + trimmed;
+          } else if (!/^https?:\/\//i.test(trimmed)) {
+            resolved = base + '/' + trimmed;
+          }
+          try {
+            const u = new URL(resolved);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+              skipped++;
+              return;
+            }
+            const href = u.href;
+            if (!seen.has(href)) {
+              seen.add(href);
+              valid.push(href);
+            }
+          } catch (_) {
+            skipped++;
+          }
+        });
+        return { urls: valid, skipped: skipped };
+      }
+
+      window.loadSampleUrls = function () {
+        const base = normalizeBaseUrl(document.getElementById('siteUrl').value);
+        document.getElementById('smUrls').value = [
+          base + '/',
+          base + '/features',
+          base + '/pricing',
+          base + '/docs/api-reference',
+          base + '/blog/technical-seo-checklist',
+          base + '/about',
+          base + '/contact'
+        ].join('\n');
+        window.renderSitemap();
+      };
+
+      window.dedupeAndSortUrls = function () {
+        const parsed = parseSitemapUrls();
+        parsed.urls.sort();
+        document.getElementById('smUrls').value = parsed.urls.join('\n');
+        window.renderSitemap();
+      };
+
+      window.renderSitemap = function () {
+        const changefreq = document.getElementById('smChangefreq').value;
+        const priority = document.getElementById('smPriority').value;
+        const lastmod = document.getElementById('smLastmod').value.trim();
+        const parsed = parseSitemapUrls();
+
+        const lines = [
+          '<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        ];
+
+        parsed.urls.forEach(function (url, idx) {
+          lines.push('  <url>');
+          lines.push('    <loc>' + escapeXml(url) + '</loc>');
+          if (lastmod) {
+            lines.push('    <lastmod>' + escapeXml(lastmod) + '</lastmod>');
+          }
+          if (changefreq) {
+            lines.push('    <changefreq>' + escapeXml(changefreq) + '</changefreq>');
+          }
+          if (priority) {
+            const pVal = (idx === 0 && url.replace(/\/+$/, '') === normalizeBaseUrl(document.getElementById('siteUrl').value))
+              ? '1.0'
+              : priority;
+            lines.push('    <priority>' + escapeXml(pVal) + '</priority>');
+          }
+          lines.push('  </url>');
+        });
+
+        lines.push('</urlset>');
+        const xml = lines.join('\n') + '\n';
+        document.getElementById('sitemapOutput').textContent = xml;
+
+        // Validate generated XML via browser DOMParser
+        const pill = document.getElementById('sitemapValidPill');
+        const notice = document.getElementById('sitemapNotice');
+        let xmlOk = true;
+        try {
+          if (typeof DOMParser !== 'undefined') {
+            const doc = new DOMParser().parseFromString(xml, 'application/xml');
+            if (doc.getElementsByTagName('parsererror').length > 0) {
+              xmlOk = false;
+            }
+          }
+        } catch (_) {
+          xmlOk = false;
+        }
+
+        const sizeKb = (new Blob([xml]).size / 1024).toFixed(2);
+        if (!xmlOk) {
+          pill.className = 'pill pill-red';
+          pill.textContent = 'XML Parse Error';
+        } else if (parsed.urls.length === 0) {
+          pill.className = 'pill pill-amber';
+          pill.textContent = '0 URLs Entered';
+        } else {
+          pill.className = 'pill pill-green';
+          pill.textContent = 'Valid XML \u00b7 ' + parsed.urls.length + ' URLs \u00b7 ' + sizeKb + ' KB';
+        }
+
+        notice.textContent = parsed.urls.length + ' unique URL(s) included' +
+          (parsed.skipped ? ' (' + parsed.skipped + ' malformed line(s) skipped).' : '.') +
+          ' Spec limit: 50,000 URLs / 50 MB per sitemap file.';
+      };
+
+      window.downloadSitemap = function () {
+        const xml = document.getElementById('sitemapOutput').textContent;
+        downloadFile('sitemap.xml', xml, 'application/xml;charset=utf-8');
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date();
+        const iso = today.getFullYear() + '-' +
+          String(today.getMonth() + 1).padStart(2, '0') + '-' +
+          String(today.getDate()).padStart(2, '0');
+        document.getElementById('smLastmod').value = iso;
+
+        renderBotGrid();
+        window.renderRobots();
+        window.renderSitemap();
+      });
+    })();
+  </script>
+</body>
+</html>

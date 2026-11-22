@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVSS v3.1 Calculator &amp; HTTP Security Headers Generator — RelayTools Hub</title>
+  <meta name="description" content="Free 2-in-1 cybersecurity utility: exact FIRST.org CVSS v3.1 Base Score Calculator with vector presets (Log4Shell, XSS) plus HTTP Security Headers Config Generator for Cloudflare Pages, Nginx, Apache .htaccess, and Vercel.">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CVSS v3.1 Base Score Calculator & HTTP Security Headers Generator",
+    "description": "2-in-1 browser cybersecurity tool featuring an exact FIRST.org CVSS v3.1 Base Score Calculator with vector string parser/presets and a multi-platform HTTP Security Headers configuration generator for Cloudflare Pages _headers, Nginx, Apache .htaccess, and Vercel vercel.json.",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires modern web browser with JavaScript enabled",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Exact FIRST.org CVSS v3.1 Base Score equation and Roundup implementation",
+      "All 8 CVSS v3.1 Base Metrics (AV, AC, PR, UI, S, C, I, A) with Scope-dependent PR weights",
+      "1-click CVE presets (Log4Shell 10.0, Reflected XSS 6.1, Heartbleed 7.5, Local PrivEsc 7.8)",
+      "Bidirectional CVSS:3.1 vector string generator and parser",
+      "HTTP Security Headers builder for HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy",
+      "Instant config export for Cloudflare Pages _headers, Nginx, Apache .htaccess, and Vercel vercel.json"
+    ]
+  }
+  </script>
+  <style>
+    .mode-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .mode-tab {
+      padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--ink); font-weight: 700; font-size: 14px; cursor: pointer;
+    }
+    .mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    body.dark .mode-tab.active { color: #042f2e; }
+    .cvss-score-banner {
+      display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+      background: var(--surface-alt); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 20px; margin-bottom: 18px;
+    }
+    .cvss-num-wrap { display: flex; align-items: center; gap: 16px; }
+    .cvss-num {
+      font-size: 42px; font-weight: 900; line-height: 1; min-width: 86px; text-align: center;
+      padding: 12px 14px; border-radius: 14px;
+    }
+    .sev-none { background: var(--surface); color: var(--muted); border: 2px solid var(--border); }
+    .sev-low { background: var(--blue-soft); color: var(--blue); border: 2px solid var(--blue); }
+    .sev-medium { background: var(--amber-soft); color: var(--amber); border: 2px solid var(--amber); }
+    .sev-high { background: #fff7ed; color: #c2410c; border: 2px solid #ea580c; }
+    body.dark .sev-high { background: #431407; color: #fb923c; border-color: #ea580c; }
+    .sev-critical { background: var(--red-soft); color: var(--red); border: 2px solid var(--red); }
+    .metric-card {
+      background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    }
+    .metric-title { font-size: 13.5px; font-weight: 800; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .seg-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg-btn {
+      flex: 1; min-width: 82px; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+      font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: center; transition: all .12s;
+    }
+    .seg-btn:hover { border-color: var(--accent); }
+    .seg-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    body.dark .seg-btn.active { color: #042f2e; }
+    .preset-strip { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .vector-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+    .vector-input {
+      flex: 1; min-width: 260px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+      font-size: 13.5px !important; font-weight: 700;
+    }
+    .hdr-row {
+      background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 12px;
+    }
+    .hdr-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .hdr-toggle { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 14.5px; cursor: pointer; }
+    .hdr-toggle input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+    .format-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .hidden { display: none !important; }
+    .cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <div class="site-nav-inner">
+      <a class="brand-logo" href="../index.html">
+        <span class="brand-dot">RT</span>
+        <span>RelayTools Hub</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a class="nav-link" href="../index.html">Free Tools</a>
+        <a class="nav-link" href="../catalog.html">API Catalog</a>
+        <a class="nav-link" href="../mcp-guide.html">MCP Guide</a>
+        <a class="nav-link" href="../deploy-free.html">Deploy Free</a>
+        <button type="button" id="themeToggleBtn" class="nav-btn" onclick="toggleTheme()">Dark Mode</button>
+        <a class="nav-cta" href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Store &rarr;</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="eyebrow">2-in-1 AppSec Utility &bull; Exact FIRST.org Spec</span>
+      <h1>CVSS v3.1 Calculator &amp; HTTP Security Headers Generator</h1>
+      <p>Score vulnerabilities using the exact FIRST.org CVSS v3.1 Base formula (with Log4Shell, XSS, and Heartbleed presets) and generate production-ready HTTP security headers for Cloudflare Pages, Nginx, Apache, and Vercel.</p>
+    </section>
+
+    <div class="mode-tabs" role="tablist" aria-label="Tool Sections">
+      <button type="button" id="tabCvss" class="mode-tab active" role="tab" aria-selected="true" onclick="setToolTab('cvss')">Part A: CVSS v3.1 Calculator</button>
+      <button type="button" id="tabHeaders" class="mode-tab" role="tab" aria-selected="false" onclick="setToolTab('headers')">Part B: HTTP Security Headers Generator</button>
+      <button type="button" id="tabAll" class="mode-tab" role="tab" aria-selected="false" onclick="setToolTab('both')">Show Both Tools</button>
+    </div>
+
+    <!-- PART A: CVSS v3.1 CALCULATOR -->
+    <section id="partCvss" class="card">
+      <h2>Part A: CVSS v3.1 Base Score Calculator</h2>
+      <p class="small muted" style="margin:0 0 14px;">Implements the official FIRST.org CVSS v3.1 equations, Scope-dependent Privileges Required weights, and integer-scaled <code>Roundup</code> specification.</p>
+
+      <div class="preset-strip">
+        <span class="small muted" style="font-weight:700;">1-Click Presets:</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H')">Log4Shell (10.0)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H')">SQLi RCE (9.8)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H')">Local PrivEsc (7.8)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N')">Heartbleed (7.5)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N')">Reflected XSS (6.1)</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyCvssPreset('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N')">None (0.0)</button>
+      </div>
+
+      <div class="cvss-score-banner">
+        <div class="cvss-num-wrap">
+          <div id="cvssScoreBox" class="cvss-num sev-critical">10.0</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <strong style="font-size:20px;">Base Severity:</strong>
+              <span id="cvssSeverityPill" class="pill pill-red" style="font-size:13px;padding:4px 12px;">CRITICAL</span>
+            </div>
+            <div class="small muted" id="cvssSubscores" style="margin-top:4px;">Impact Subscore: 6.0 &bull; Exploitability Subscore: 3.9 &bull; Scope: Changed</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="copyCvssVector(this)">Copy Vector</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyCvssMarkdown(this)">Copy Advisory MD</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="downloadCvssJson()">Download JSON</button>
+        </div>
+      </div>
+
+      <div class="grid-2" id="cvssMetricsGrid"></div>
+
+      <div class="vector-bar">
+        <label for="vectorInput" class="small" style="font-weight:800;">Vector String:</label>
+        <input type="text" id="vectorInput" class="vector-input" value="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H" aria-label="CVSS v3.1 Vector String">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="parseVectorFromInput()">Parse Vector</button>
+      </div>
+      <div id="vectorParseError" class="alert alert-red hidden"></div>
+    </section>
+
+    <!-- PART B: HTTP SECURITY HEADERS CONFIG GENERATOR -->
+    <section id="partHeaders" class="card hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <div>
+          <h2>Part B: HTTP Security Headers Config Generator</h2>
+          <p class="small muted" style="margin:0;">Toggle hardened browser security headers and export production configs for Cloudflare Pages, Nginx, Apache, or Vercel.</p>
+        </div>
+        <div>
+          <span class="small muted" style="font-weight:700;margin-right:6px;">Estimated Header Grade:</span>
+          <span id="headersGradePill" class="pill pill-green" style="font-size:14px;padding:4px 14px;">A+</span>
+        </div>
+      </div>
+
+      <!-- HSTS -->
+      <div class="hdr-row">
+        <div class="hdr-top">
+          <label class="hdr-toggle"><input type="checkbox" id="chkHsts" checked onchange="rebuildHeaders()"> Strict-Transport-Security (HSTS)</label>
+          <span class="pill pill-green">HTTPS Enforcement</span>
+        </div>
+        <select id="valHsts" onchange="rebuildHeaders()">
+          <option value="max-age=31536000; includeSubDomains" selected>Standard 1-Year (max-age=31536000; includeSubDomains)</option>
+          <option value="max-age=63072000; includeSubDomains; preload">Preload Ready 2-Year (max-age=63072000; includeSubDomains; preload)</option>
+          <option value="max-age=86400">Safe Rollout 24h (max-age=86400)</option>
+        </select>
+      </div>
+
+      <!-- CSP -->
+      <div class="hdr-row">
+        <div class="hdr-top">
+          <label class="hdr-toggle"><input type="checkbox" id="chkCsp" checked onchange="rebuildHeaders()"> Content-Security-Policy (CSP)</label>
+          <label class="small" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;">
+            <input type="checkbox" id="chkCspReportOnly" onchange="rebuildHeaders()"> Report-Only Mode
+          </label>
+        </div>
+        <div class="form-row" style="margin-bottom:8px;">
+          <div class="field">
+            <label for="cspPresetSelect">CSP Preset</label>
+            <select id="cspPresetSelect" onchange="applyCspPreset()">
+              <option value="strict">Strict Static / Zero Inline JS (Recommended)</option>
+              <option value="spa" selected>Modern SPA / Inline Styles Allowed</option>
+              <option value="balanced">Balanced + HTTPS CDNs &amp; Analytics</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="valCsp">Customizable CSP Directive Value</label>
+          <input type="text" id="valCsp" oninput="rebuildHeaders()">
+        </div>
+      </div>
+
+      <!-- X-Frame-Options & X-Content-Type-Options -->
+      <div class="grid-2">
+        <div class="hdr-row">
+          <div class="hdr-top">
+            <label class="hdr-toggle"><input type="checkbox" id="chkXfo" checked onchange="rebuildHeaders()"> X-Frame-Options</label>
+            <span class="pill pill-teal">Clickjacking</span>
+          </div>
+          <select id="valXfo" onchange="rebuildHeaders()">
+            <option value="DENY" selected>DENY (Block all framing)</option>
+            <option value="SAMEORIGIN">SAMEORIGIN (Allow same-origin iframes)</option>
+          </select>
+        </div>
+
+        <div class="hdr-row">
+          <div class="hdr-top">
+            <label class="hdr-toggle"><input type="checkbox" id="chkXcto" checked onchange="rebuildHeaders()"> X-Content-Type-Options</label>
+            <span class="pill pill-teal">MIME Sniffing</span>
+          </div>
+          <input type="text" id="valXcto" value="nosniff" readonly>
+        </div>
+      </div>
+
+      <!-- Referrer-Policy & Permissions-Policy -->
+      <div class="grid-2">
+        <div class="hdr-row">
+          <div class="hdr-top">
+            <label class="hdr-toggle"><input type="checkbox" id="chkRef" checked onchange="rebuildHeaders()"> Referrer-Policy</label>
+            <span class="pill pill-blue">Privacy</span>
+          </div>
+          <select id="valRef" onchange="rebuildHeaders()">
+            <option value="strict-origin-when-cross-origin" selected>strict-origin-when-cross-origin (Recommended)</option>
+            <option value="no-referrer">no-referrer (Maximum Privacy)</option>
+            <option value="same-origin">same-origin</option>
+            <option value="strict-origin">strict-origin</option>
+          </select>
+        </div>
+
+        <div class="hdr-row">
+          <div class="hdr-top">
+            <label class="hdr-toggle"><input type="checkbox" id="chkPerm" checked onchange="rebuildHeaders()"> Permissions-Policy</label>
+            <span class="pill pill-blue">Browser APIs</span>
+          </div>
+          <select id="valPerm" onchange="rebuildHeaders()">
+            <option value="camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()" selected>Strict Lock-down (Disable Camera, Mic, Geo, Payment, USB)</option>
+            <option value="camera=(), microphone=(), geolocation=()">Standard Static Site (Disable Camera, Mic, Geo)</option>
+            <option value="geolocation=(self), camera=(), microphone=()">Allow Self Geo Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Output Format Tabs -->
+      <div style="margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <h3 style="margin:0;">Generated Production Configuration</h3>
+          <div class="format-tabs" style="margin-bottom:0;">
+            <button type="button" id="fmtCloudflare" class="btn btn-primary btn-sm" onclick="setHeaderFormat('cloudflare')">Cloudflare Pages <code>_headers</code></button>
+            <button type="button" id="fmtNginx" class="btn btn-secondary btn-sm" onclick="setHeaderFormat('nginx')">Nginx</button>
+            <button type="button" id="fmtApache" class="btn btn-secondary btn-sm" onclick="setHeaderFormat('apache')">Apache <code>.htaccess</code></button>
+            <button type="button" id="fmtVercel" class="btn btn-secondary btn-sm" onclick="setHeaderFormat('vercel')">Vercel <code>vercel.json</code></button>
+          </div>
+        </div>
+        <pre id="headersOutput"></pre>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button type="button" class="btn btn-primary" onclick="copyElementText('headersOutput', this)">Copy Config</button>
+          <button type="button" class="btn btn-secondary" onclick="downloadHeaderConfig()">Download Config File</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apify Funnel CTA -->
+    <section class="apify-cta">
+      <div>
+        <span class="pill pill-teal" style="margin-bottom:8px;">Automated Vulnerability &amp; Header Intelligence</span>
+        <h3>Track CISA KEV CVEs &amp; audit security headers across hundreds of sites automatically</h3>
+        <p>Enrich your SecOps pipeline via API, n8n, or MCP with real-time NVD/CISA KEV/EPSS intelligence and automated website security header &amp; tech-stack profiling.</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="https://apify.com/regenerative_cornice/cve-kev-security-intel" target="_blank" rel="noopener">CVE &amp; CISA KEV Intel API &rarr;</a>
+        <a class="btn btn-secondary" href="https://apify.com/regenerative_cornice/website-tech-security-profiler" target="_blank" rel="noopener">Website Tech &amp; Security Profiler</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div><strong>RelayTools Hub</strong> &mdash; Free zero-backend browser tools &amp; production Apify APIs / MCP servers.</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <a href="../index.html">All Tools</a>
+        <a href="./email-auth-checker.html">Live Email Auth Checker</a>
+        <a href="./dmarc-spf-generator.html">SPF &amp; DMARC Builder</a>
+        <a href="../catalog.html">API Catalog</a>
+        <a href="https://apify.com/regenerative_cornice" target="_blank" rel="noopener">Apify Profile</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/common.js"></script>
+  <script>
+    // =========================================================================
+    // PART A: EXACT FIRST.ORG CVSS v3.1 BASE SCORE CALCULATOR
+    // =========================================================================
+    const CVSS_METRICS = [
+      {
+        key: 'AV', name: 'Attack Vector (AV)',
+        options: [
+          { code: 'N', label: 'Network (N)' },
+          { code: 'A', label: 'Adjacent (A)' },
+          { code: 'L', label: 'Local (L)' },
+          { code: 'P', label: 'Physical (P)' }
+        ]
+      },
+      {
+        key: 'AC', name: 'Attack Complexity (AC)',
+        options: [
+          { code: 'L', label: 'Low (L)' },
+          { code: 'H', label: 'High (H)' }
+        ]
+      },
+      {
+        key: 'PR', name: 'Privileges Required (PR)',
+        options: [
+          { code: 'N', label: 'None (N)' },
+          { code: 'L', label: 'Low (L)' },
+          { code: 'H', label: 'High (H)' }
+        ]
+      },
+      {
+        key: 'UI', name: 'User Interaction (UI)',
+        options: [
+          { code: 'N', label: 'None (N)' },
+          { code: 'R', label: 'Required (R)' }
+        ]
+      },
+      {
+        key: 'S', name: 'Scope (S)',
+        options: [
+          { code: 'U', label: 'Unchanged (U)' },
+          { code: 'C', label: 'Changed (C)' }
+        ]
+      },
+      {
+        key: 'C', name: 'Confidentiality (C)',
+        options: [
+          { code: 'N', label: 'None (N)' },
+          { code: 'L', label: 'Low (L)' },
+          { code: 'H', label: 'High (H)' }
+        ]
+      },
+      {
+        key: 'I', name: 'Integrity (I)',
+        options: [
+          { code: 'N', label: 'None (N)' },
+          { code: 'L', label: 'Low (L)' },
+          { code: 'H', label: 'High (H)' }
+        ]
+      },
+      {
+        key: 'A', name: 'Availability (A)',
+        options: [
+          { code: 'N', label: 'None (N)' },
+          { code: 'L', label: 'Low (L)' },
+          { code: 'H', label: 'High (H)' }
+        ]
+      }
+    ];
+
+    const CVSS_WEIGHTS = {
+      AV: { N: 0.85, A: 0.62, L: 0.55, P: 0.2 },
+      AC: { L: 0.77, H: 0.44 },
+      PR_U: { N: 0.85, L: 0.62, H: 0.27 },
+      PR_C: { N: 0.85, L: 0.68, H: 0.5 },
+      UI: { N: 0.85, R: 0.62 },
+      CIA: { N: 0, L: 0.22, H: 0.56 }
+    };
+
+    const cvssState = { AV: 'N', AC: 'L', PR: 'N', UI: 'N', S: 'C', C: 'H', I: 'H', A: 'H' };
+
+    // Official FIRST.org CVSS v3.1 Appendix A Roundup implementation
+    function cvssRoundup(input) {
+      const intInput = Math.round(input * 100000);
+      if ((intInput % 10000) === 0) {
+        return intInput / 100000.0;
+      }
+      return (Math.floor(intInput / 10000) + 1) / 10.0;
+    }
+
+    function calculateCvss31(m) {
+      const av = CVSS_WEIGHTS.AV[m.AV];
+      const ac = CVSS_WEIGHTS.AC[m.AC];
+      const pr = m.S === 'C' ? CVSS_WEIGHTS.PR_C[m.PR] : CVSS_WEIGHTS.PR_U[m.PR];
+      const ui = CVSS_WEIGHTS.UI[m.UI];
+      const c = CVSS_WEIGHTS.CIA[m.C];
+      const i = CVSS_WEIGHTS.CIA[m.I];
+      const a = CVSS_WEIGHTS.CIA[m.A];
+
+      const iss = 1 - ((1 - c) * (1 - i) * (1 - a));
+      let impact = 0;
+      if (m.S === 'U') {
+        impact = 6.42 * iss;
+      } else {
+        impact = 7.52 * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15);
+      }
+
+      const exploitability = 8.22 * av * ac * pr * ui;
+
+      let baseScore = 0.0;
+      if (impact <= 0) {
+        baseScore = 0.0;
+      } else if (m.S === 'U') {
+        baseScore = cvssRoundup(Math.min(impact + exploitability, 10));
+      } else {
+        baseScore = cvssRoundup(Math.min(1.08 * (impact + exploitability), 10));
+      }
+
+      let severity = 'None';
+      let sevClass = 'sev-none';
+      let pillClass = 'pill-blue';
+      if (baseScore >= 9.0) { severity = 'Critical'; sevClass = 'sev-critical'; pillClass = 'pill-red'; }
+      else if (baseScore >= 7.0) { severity = 'High'; sevClass = 'sev-high'; pillClass = 'pill-amber'; }
+      else if (baseScore >= 4.0) { severity = 'Medium'; sevClass = 'sev-medium'; pillClass = 'pill-amber'; }
+      else if (baseScore > 0.0) { severity = 'Low'; sevClass = 'sev-low'; pillClass = 'pill-blue'; }
+
+      const vector = 'CVSS:3.1/AV:' + m.AV + '/AC:' + m.AC + '/PR:' + m.PR + '/UI:' + m.UI + '/S:' + m.S + '/C:' + m.C + '/I:' + m.I + '/A:' + m.A;
+
+      return {
+        baseScore: Number(baseScore.toFixed(1)),
+        impactSubscore: Number(Math.max(0, impact).toFixed(1)),
+        exploitabilitySubscore: Number(exploitability.toFixed(1)),
+        severity,
+        sevClass,
+        pillClass,
+        vector
+      };
+    }
+
+    function setToolTab(tab) {
+      const partCvss = document.getElementById('partCvss');
+      const partHeaders = document.getElementById('partHeaders');
+      const map = { cvss: 'tabCvss', headers: 'tabHeaders', both: 'tabAll' };
+
+      Object.keys(map).forEach(k => {
+        const el = document.getElementById(map[k]);
+        const active = k === tab;
+        el.classList.toggle('active', active);
+        el.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+
+      partCvss.classList.toggle('hidden', tab === 'headers');
+      partHeaders.classList.toggle('hidden', tab === 'cvss');
+    }
+
+    function renderCvssGrid() {
+      const grid = document.getElementById('cvssMetricsGrid');
+      grid.innerHTML = CVSS_METRICS.map(metric => {
+        const currentVal = cvssState[metric.key];
+        return '<div class="metric-card">' +
+          '<div class="metric-title"><span>' + escapeHtml(metric.name) + '</span><code>' + escapeHtml(metric.key + ':' + currentVal) + '</code></div>' +
+          '<div class="seg-group">' +
+            metric.options.map(opt =>
+              '<button type="button" class="seg-btn ' + (opt.code === currentVal ? 'active' : '') + '" onclick="setCvssMetric(\'' + metric.key + '\',\'' + opt.code + '\')">' + escapeHtml(opt.label) + '</button>'
+            ).join('') +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function updateCvssDisplay() {
+      const res = calculateCvss31(cvssState);
+      const box = document.getElementById('cvssScoreBox');
+      box.textContent = res.baseScore.toFixed(1);
+      box.className = 'cvss-num ' + res.sevClass;
+
+      const pill = document.getElementById('cvssSeverityPill');
+      pill.textContent = res.severity.toUpperCase();
+      pill.className = 'pill ' + res.pillClass;
+
+      document.getElementById('cvssSubscores').textContent =
+        'Impact Subscore: ' + res.impactSubscore.toFixed(1) +
+        ' • Exploitability Subscore: ' + res.exploitabilitySubscore.toFixed(1) +
+        ' • Scope: ' + (cvssState.S === 'C' ? 'Changed' : 'Unchanged');
+
+      document.getElementById('vectorInput').value = res.vector;
+      document.getElementById('vectorParseError').classList.add('hidden');
+      renderCvssGrid();
+    }
+
+    function setCvssMetric(key, code) {
+      cvssState[key] = code;
+      updateCvssDisplay();
+    }
+
+    function applyCvssPreset(vec) {
+      document.getElementById('vectorInput').value = vec;
+      parseVectorFromInput();
+    }
+
+    function parseVectorFromInput() {
+      const errBox = document.getElementById('vectorParseError');
+      const raw = document.getElementById('vectorInput').value.trim().toUpperCase();
+      const match = raw.match(/^CVSS:3\.[01]\/AV:([NALP])\/AC:([LH])\/PR:([NLH])\/UI:([NR])\/S:([UC])\/C:([NLH])\/I:([NLH])\/A:([NLH])$/);
+      if (!match) {
+        errBox.textContent = 'Invalid CVSS v3.1 vector string. Expected format: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      cvssState.AV = match[1];
+      cvssState.AC = match[2];
+      cvssState.PR = match[3];
+      cvssState.UI = match[4];
+      cvssState.S = match[5];
+      cvssState.C = match[6];
+      cvssState.I = match[7];
+      cvssState.A = match[8];
+      updateCvssDisplay();
+    }
+
+    function copyCvssVector(btn) {
+      const res = calculateCvss31(cvssState);
+      copyText(res.vector, btn);
+    }
+
+    function copyCvssMarkdown(btn) {
+      const res = calculateCvss31(cvssState);
+      const md = '**CVSS v3.1 Base Score:** ' + res.baseScore.toFixed(1) + ' (' + res.severity + ')\n' +
+        '**Vector:** `' + res.vector + '`\n' +
+        '**Impact:** ' + res.impactSubscore.toFixed(1) + ' | **Exploitability:** ' + res.exploitabilitySubscore.toFixed(1);
+      copyText(md, btn);
+    }
+
+    function downloadCvssJson() {
+      const res = calculateCvss31(cvssState);
+      const payload = {
+        version: '3.1',
+        vectorString: res.vector,
+        baseScore: res.baseScore,
+        baseSeverity: res.severity.toUpperCase(),
+        impactSubscore: res.impactSubscore,
+        exploitabilitySubscore: res.exploitabilitySubscore,
+        metrics: Object.assign({}, cvssState)
+      };
+      downloadFile('cvss-v31-' + res.baseScore.toFixed(1) + '.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+    }
+
+    // =========================================================================
+    // PART B: HTTP SECURITY HEADERS CONFIG GENERATOR
+    // =========================================================================
+    const CSP_PRESETS = {
+      strict: "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests",
+      spa: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+      balanced: "default-src 'self'; script-src 'self' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-ancestors 'self'; object-src 'none'"
+    };
+
+    let activeHeaderFormat = 'cloudflare';
+
+    function applyCspPreset() {
+      const preset = document.getElementById('cspPresetSelect').value;
+      document.getElementById('valCsp').value = CSP_PRESETS[preset] || CSP_PRESETS.spa;
+      rebuildHeaders();
+    }
+
+    function collectActiveHeaders() {
+      const list = [];
+      if (document.getElementById('chkHsts').checked) {
+        list.push({ key: 'Strict-Transport-Security', value: document.getElementById('valHsts').value });
+      }
+      if (document.getElementById('chkCsp').checked) {
+        const ro = document.getElementById('chkCspReportOnly').checked;
+        const val = document.getElementById('valCsp').value.trim();
+        if (val) {
+          list.push({ key: ro ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy', value: val });
+        }
+      }
+      if (document.getElementById('chkXfo').checked) {
+        list.push({ key: 'X-Frame-Options', value: document.getElementById('valXfo').value });
+      }
+      if (document.getElementById('chkXcto').checked) {
+        list.push({ key: 'X-Content-Type-Options', value: 'nosniff' });
+      }
+      if (document.getElementById('chkRef').checked) {
+        list.push({ key: 'Referrer-Policy', value: document.getElementById('valRef').value });
+      }
+      if (document.getElementById('chkPerm').checked) {
+        list.push({ key: 'Permissions-Policy', value: document.getElementById('valPerm').value });
+      }
+      return list;
+    }
+
+    function updateHeaderGrade(headers) {
+      const keys = new Set(headers.map(h => h.key));
+      let pts = 0;
+      if (keys.has('Strict-Transport-Security')) pts += 20;
+      if (keys.has('Content-Security-Policy')) pts += 30;
+      else if (keys.has('Content-Security-Policy-Report-Only')) pts += 12;
+      if (keys.has('X-Frame-Options')) pts += 15;
+      if (keys.has('X-Content-Type-Options')) pts += 15;
+      if (keys.has('Referrer-Policy')) pts += 10;
+      if (keys.has('Permissions-Policy')) pts += 10;
+
+      const pill = document.getElementById('headersGradePill');
+      if (pts >= 95) { pill.textContent = 'A+'; pill.className = 'pill pill-green'; }
+      else if (pts >= 80) { pill.textContent = 'A'; pill.className = 'pill pill-green'; }
+      else if (pts >= 65) { pill.textContent = 'B'; pill.className = 'pill pill-teal'; }
+      else if (pts >= 45) { pill.textContent = 'C'; pill.className = 'pill pill-amber'; }
+      else { pill.textContent = 'D / F'; pill.className = 'pill pill-red'; }
+    }
+
+    function formatHeadersConfig(headers, format) {
+      if (!headers.length) {
+        return '# Enable at least one security header above to generate configuration.';
+      }
+      if (format === 'cloudflare') {
+        return '/*\n' + headers.map(h => '  ' + h.key + ': ' + h.value).join('\n');
+      }
+      if (format === 'nginx') {
+        return '# Place inside your nginx server { } block\n' +
+          headers.map(h => 'add_header ' + h.key + ' "' + h.value.replace(/"/g, '\\"') + '" always;').join('\n');
+      }
+      if (format === 'apache') {
+        return '<IfModule mod_headers.c>\n' +
+          headers.map(h => '  Header always set ' + h.key + ' "' + h.value.replace(/"/g, '\\"') + '"').join('\n') +
+          '\n</IfModule>';
+      }
+      if (format === 'vercel') {
+        return JSON.stringify({
+          headers: [
+            {
+              source: '/(.*)',
+              headers: headers.map(h => ({ key: h.key, value: h.value }))
+            }
+          ]
+        }, null, 2);
+      }
+      return '';
+    }
+
+    function setHeaderFormat(fmt) {
+      activeHeaderFormat = fmt;
+      const map = { cloudflare: 'fmtCloudflare', nginx: 'fmtNginx', apache: 'fmtApache', vercel: 'fmtVercel' };
+      Object.keys(map).forEach(k => {
+        document.getElementById(map[k]).className = k === fmt ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      });
+      rebuildHeaders();
+    }
+
+    function rebuildHeaders() {
+      const headers = collectActiveHeaders();
+      updateHeaderGrade(headers);
+      document.getElementById('headersOutput').textContent = formatHeadersConfig(headers, activeHeaderFormat);
+    }
+
+    function downloadHeaderConfig() {
+      const content = document.getElementById('headersOutput').textContent;
+      const filenames = {
+        cloudflare: '_headers',
+        nginx: 'security-headers.conf',
+        apache: '.htaccess',
+        vercel: 'vercel.json'
+      };
+      const mime = activeHeaderFormat === 'vercel' ? 'application/json;charset=utf-8' : 'text/plain;charset=utf-8';
+      downloadFile(filenames[activeHeaderFormat] || 'security-headers.txt', content, mime);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      updateCvssDisplay();
+      applyCspPreset();
+    });
+  </script>
+</body>
+</html>
