@@ -393,8 +393,8 @@ body.dark .filter-pill.active { color: #042f2e; }
   </div>
   <div class="kpi">
     <div class="kpi-label">Live in Apify Store</div>
-    <div class="kpi-value">5</div>
-    <div class="small muted">+35 staged for rollout</div>
+    <div class="kpi-value">10</div>
+    <div class="small muted">+30 staged for rollout</div>
   </div>
   <div class="kpi">
     <div class="kpi-label">Pay-Per-Event Scale</div>
@@ -615,6 +615,18 @@ body.dark .filter-pill.active { color: #042f2e; }
     <article class="card api-feature-card">
   <div class="card-top">
     <span class="pill pill-green">Live in Store</span>
+    <span class="pill pill-teal">$0.004 / event</span>
+  </div>
+  <h3>arXiv AI &amp; Research Papers Structured JSON Extractor</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/arxiv-ai-research-extractor</code></div>
+  <p class="small muted tool-desc">Query the official arXiv Atom API by keyword, category (cs.AI, cs.LG, cs.CR, q-fin.TR), author, and sort order to extract clean structured JSON papers with titles, authors, abstracts, DOIs, and PDF/abs links for RAG pipelines, n8n, and MCP agents.</p>
+  <div class="tool-actions">
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/arxiv-ai-research-extractor" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-arxiv-ai-research-extractor">MCP &amp; Python</a>
+  </div>
+</article><article class="card api-feature-card">
+  <div class="card-top">
+    <span class="pill pill-green">Live in Store</span>
     <span class="pill pill-teal">$0.005 / event</span>
   </div>
   <h3>Bulk Email Auth, SPF, DKIM, DMARC &amp; DNSBL Auditor</h3>
@@ -627,50 +639,38 @@ body.dark .filter-pill.active { color: #042f2e; }
 </article><article class="card api-feature-card">
   <div class="card-top">
     <span class="pill pill-green">Live in Store</span>
-    <span class="pill pill-teal">$0.005 / event</span>
-  </div>
-  <h3>CVE, CISA KEV &amp; Open-Source Package Vulnerability Intelligence</h3>
-  <div class="small muted slug-line"><code>regenerative_cornice/cve-kev-security-intel</code></div>
-  <p class="small muted tool-desc">Unified real-time cybersecurity intelligence from CISA Known Exploited Vulnerabilities (KEV), OSV.dev (npm, PyPI, Go, Maven, Cargo, NuGet), and NIST NVD CVE API v2. Built for DevSecOps alerts, MSPs, n8n Slack bots, and AI coding agents (MCP).</p>
-  <div class="tool-actions">
-    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/cve-kev-security-intel" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
-    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-cve-kev-security-intel">MCP &amp; Python</a>
-  </div>
-</article><article class="card api-feature-card">
-  <div class="card-top">
-    <span class="pill pill-green">Live in Store</span>
     <span class="pill pill-teal">$0.006 / event</span>
   </div>
-  <h3>FDA Recalls, Enforcement &amp; 510(k) Compliance Monitor</h3>
-  <div class="small muted slug-line"><code>regenerative_cornice/fda-recalls-compliance-monitor</code></div>
-  <p class="small muted tool-desc">Extract structured U.S. FDA Food, Drug, and Medical Device recalls plus 510(k) clearances from the official openFDA API. Filter by recall class, keyword, state, or date range for compliance, legal-tech, n8n alerts, and AI agents (MCP).</p>
+  <h3>ClinicalTrials.gov Studies &amp; Biotech Pipeline API</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/clinicaltrials-gov-extractor</code></div>
+  <p class="small muted tool-desc">Extract structured clinical trials from the official U.S. NIH ClinicalTrials.gov REST API v2. Filter by condition, drug/intervention, sponsor, recruitment status, phase, and country for biotech VCs, pharma intelligence, n8n workflows, and AI agents (MCP).</p>
   <div class="tool-actions">
-    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/fda-recalls-compliance-monitor" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
-    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-fda-recalls-compliance-monitor">MCP &amp; Python</a>
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/clinicaltrials-gov-extractor" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-clinicaltrials-gov-extractor">MCP &amp; Python</a>
   </div>
 </article><article class="card api-feature-card">
   <div class="card-top">
     <span class="pill pill-green">Live in Store</span>
-    <span class="pill pill-teal">$0.006 / event</span>
+    <span class="pill pill-teal">$0.004 / event</span>
   </div>
-  <h3>SEC EDGAR Form D Fundraising &amp; 8-K/10-K Extractor</h3>
-  <div class="small muted slug-line"><code>regenerative_cornice/sec-edgar-form-d-fundraising</code></div>
-  <p class="small muted tool-desc">Extract freshly funded startups &amp; private rounds from official SEC EDGAR Form D filings (offering amount, amount sold, industry, state, executives) plus 8-K/10-K/10-Q/S-1 search. Built for VCs, B2B sales enrichment, n8n, and AI agents (MCP).</p>
+  <h3>Crates.io, RubyGems &amp; NuGet Package Intelligence API</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/crates-rubygems-nuget-intel</code></div>
+  <p class="small muted tool-desc">Query Rust Crates.io, RubyGems.org, and .NET NuGet registries in one unified JSON schema for versions, total &amp; recent downloads, licenses, authors/owners, repo links, and update timestamps. Zero API keys. Built for DevTools, AppSec, VCs, n8n, and AI agents (MCP).</p>
   <div class="tool-actions">
-    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/sec-edgar-form-d-fundraising" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
-    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-sec-edgar-form-d-fundraising">MCP &amp; Python</a>
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/crates-rubygems-nuget-intel" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-crates-rubygems-nuget-intel">MCP &amp; Python</a>
   </div>
 </article><article class="card api-feature-card">
   <div class="card-top">
     <span class="pill pill-green">Live in Store</span>
-    <span class="pill pill-teal">$0.005 / event</span>
+    <span class="pill pill-teal">$0.004 / event</span>
   </div>
-  <h3>Website Tech-Stack, Security Headers &amp; SSL Profiler</h3>
-  <div class="small muted slug-line"><code>regenerative_cornice/website-tech-security-profiler</code></div>
-  <p class="small muted tool-desc">Bulk website profiler extracting 50+ tech-stack fingerprints (Shopify, WordPress, Webflow, Next.js, Klaviyo, HubSpot, Stripe), HTTP security header grade, TLS/SSL expiry days, robots/sitemap stats, and public social/email links for n8n &amp; MCP.</p>
+  <h3>Crossref DOI Metadata, Citations &amp; BibTeX Resolver</h3>
+  <div class="small muted slug-line"><code>regenerative_cornice/crossref-doi-citation-resolver</code></div>
+  <p class="small muted tool-desc">Resolve DOIs or search 150M+ Crossref academic works via the official Crossref REST API. Extracts authors, journals, citation counts, funders, licenses, and APA 7th &amp; BibTeX citations for literature reviews, RAG pipelines, n8n workflows, and AI agents (MCP).</p>
   <div class="tool-actions">
-    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/website-tech-security-profiler" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
-    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-website-tech-security-profiler">MCP &amp; Python</a>
+    <a class="btn btn-primary btn-sm" href="https://apify.com/regenerative_cornice/crossref-doi-citation-resolver" target="_blank" rel="noopener">Open on Apify Store &nearr;</a>
+    <a class="btn btn-secondary btn-sm" href="catalog.html#actor-crossref-doi-citation-resolver">MCP &amp; Python</a>
   </div>
 </article><article class="card api-feature-card explore-all-card">
   <div class="card-top">
@@ -711,7 +711,7 @@ body.dark .filter-pill.active { color: #042f2e; }
         &quot;-y&quot;,
         &quot;@apify/actors-mcp-server&quot;,
         &quot;--actors&quot;,
-        &quot;regenerative_cornice/email-auth-dns-auditor,regenerative_cornice/cve-kev-security-intel,regenerative_cornice/fda-recalls-compliance-monitor&quot;
+        &quot;regenerative_cornice/arxiv-ai-research-extractor,regenerative_cornice/email-auth-dns-auditor,regenerative_cornice/clinicaltrials-gov-extractor&quot;
       ],
       &quot;env&quot;: {
         &quot;APIFY_TOKEN&quot;: &quot;&lt;YOUR_APIFY_API_TOKEN&gt;&quot;
