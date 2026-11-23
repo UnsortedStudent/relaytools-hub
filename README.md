@@ -188,4 +188,4 @@ python web_hub/build_hub.py --base-url https://your-site.pages.dev
 
 See the full plain-English walkthrough in [deploy-free.html](https://unsortedstudent.github.io/relaytools-hub/deploy-free.html).
 
-_Catalog automatically generated from `apify_factory/fleet_status.json` (2026-11-22)._
+_Catalog automatically generated from `apify_factory/fleet_status.json` (2026-11-23)._
